@@ -32,8 +32,8 @@ class VersionControlSystem:
         if(time.localtime().tm_min > self.committersFetchedTime):
             self.committersFetchedTime = time.localtime().tm_min
             authors = []
-            
-            f = urllib.urlopen("http://github.com/api/v2/json/commits/list/realXtend/taiga/master")
+            url = "http://github.com/api/v2/json/commits/list/realXtend/%s/master"(self.projectName)
+            f = urllib.urlopen(url)
             s = f.read()
             
             committers = json.loads(s)
@@ -53,7 +53,8 @@ class VersionControlSystem:
         
         if(time.localtime().tm_min > self.contributorsFetchedTime):
             self.contributorsFetchedTime = time.localtime().tm_min
-        f = urllib.urlopen("http://github.com/api/v2/json/repos/show/realXtend/taiga/contributors")
+        url = "http://github.com/api/v2/json/repos/show/realXtend/%s/contributors"%(self.projectName)
+        f = urllib.urlopen(url)
         s = f.read()
         
         jsonString = json.loads(s)
@@ -96,7 +97,7 @@ class VersionControlSystem:
             
         if(time.localtime().tm_min > t ):
             
-            url = "http://github.com/api/v2/json/commits/list/realXtend/taiga/%s"%(branch)
+            url = "http://github.com/api/v2/json/commits/list/realXtend/naali/%s"%(branch)
             f = urllib.urlopen(url)
             s = f.read()
     
@@ -106,7 +107,15 @@ class VersionControlSystem:
             self.latestCommitForBranch[branch] = commit
             
         return self.latestCommitForBranch[branch]
-        
+  
+    def getCommitInformation(self,vId):
+        """ Returns information about specific github commit as a dictionary """
+        url = "http://github.com/api/v2/json/commits/show/realxtend/naali/%s"%(vId)  
+        f = urllib.urlopen(url)
+        s = f.read()
+        commit = json.loads(s)
+
+        return commit
         
     def getCommitsForBranch(self,branch="develop"):
         """Returns latest commits as a dictionary holding all the data that
@@ -121,7 +130,7 @@ class VersionControlSystem:
             
         if(time.localtime().tm_min > t ):
             
-            url = "http://github.com/api/v2/json/commits/list/realXtend/taiga/%s"%(branch)
+            url = "http://github.com/api/v2/json/commits/list/realXtend/naali/%s"%(branch)
             f = urllib.urlopen(url)
             s = f.read()
     
