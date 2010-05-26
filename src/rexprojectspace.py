@@ -17,6 +17,12 @@ import OpenSim.Framework
 clr.AddReference('OpenSim.Region.Framework')
 from OpenSim.Region.Framework.Interfaces import IRegionModule
 
+clr.AddReference('OgreSceneImporter')
+import OgreSceneImporter
+
+clr.AddReference('RexDotMeshLoader')
+from RexDotMeshLoader import DotMeshLoader
+
 from OpenMetaverse import Vector3 as V3
 
 import sys, os, sha
@@ -24,6 +30,11 @@ import threading
 
 import swsourcetree
 import buildbot
+
+import swproject
+import swdeveloper
+
+import versioncontrolsystem
 
 class RexProjectSpace(IRegionModule):
     autoload = True
@@ -52,12 +63,19 @@ class RexProjectSpace(IRegionModule):
         self.scene = scene
         self.config = configsource
         
+        self.developers = []
+        
         self.buildbot = buildbot.BuildBot()
         
         branches = []
         self.tree = swsourcetree.SWSourceTree(scene,"Naali",branches)
         
         self.updateBuildResults()
+        
+        self.vcs = versioncontrolsystem.VersionControlSystem("naali")
+        self.updateCommitters(self.developers)
+        
+        self.project = self.initSWProject()
         
         try:
             rexpy = scene.Modules["RexPythonScriptModule"]
@@ -92,6 +110,28 @@ class RexProjectSpace(IRegionModule):
         else:
             self.tree.setBuildFailed()
     
+    def initSWProject(self):
+        """Mocked solution for now """
+        
+        components = []
+        component.append(SWComponent("Application"))
+        component.append(SWComponent("AssetModule"))
+    
+        project = SWProjext("naali",components)
+    
+        return project
+        
+        
+    def updateCommitters(self,vCommitters):
+        """ Committers from github """
+        contributors = self.vcs.getAllContributors()
+        
+        for value in contributors:
+            login = value["login"]
+            nbrOfCommits = value["contributions"]
+            vCommmitters.append(SWDeveloper(login,nbrOfCommits,"",False))
+
+    
     def cmd_hitMe(self, *args):
         #try to get the tree item
         print "hello"
@@ -125,4 +165,44 @@ class RexProjectSpace(IRegionModule):
         
     def onFrameUpdate(self):
         pass
+        
+
+def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quaternion(0, 0, 0, 1), pos=V3(128, 128, 30), scale=V3(1, 1, 1)):
+    mesh_uuid = OpenMetaverse.UUID.Random()
+    asset = OpenSim.Framework.AssetBase(mesh_uuid, "George")
+    asset.Type = 43 # ??
+    asset.Description = description
+    asset.Data = System.IO.File.ReadAllBytes(meshpath)
+    scene.AssetService.Store(asset)
+    root_avatar_uuid = scene.RegionInfo.MasterAvatarAssignedUUID
+    
+    sceneobjgroup = scene.AddNewPrim(
+        root_avatar_uuid, root_avatar_uuid,
+        pos, rot, OpenSim.Framework.PrimitiveBaseShape.CreateBox())
+    rexObjects = scene.Modules["RexObjectsModule"]
+    sceneobjgroup.RootPart.Scale = scale
+    robject = rexObjects.GetObject(sceneobjgroup.RootPart.UUID)
+    print "root uuid", sceneobjgroup.RootPart.UUID
+    robject.RexMeshUUID = asset.FullID
+    robject.RexDrawDistance = 256
+    robject.RexCastShadows = True
+    robject.RexDrawType = 1;
+    robject.RexCollisionMeshUUID = asset.FullID;
+    matdata = open(materialpath).read()
+    matparser = OgreSceneImporter.OgreMaterialParser(scene)
+    rc, mat2uuid, mat2texture = matparser.ParseAndSaveMaterial(
+        matdata)
+    mat2uuid = dict(mat2uuid)
+    print "mat-uuid dict:", mat2uuid
+    if not rc:
+        print "material parsing failed"
+        return
+
+    matnames, errors = DotMeshLoader.ReadDotMeshMaterialNames(asset.Data)
+    print list(matnames)
+    for i, mname in enumerate(matnames):
+        robject.RexMaterials.AddMaterial(i, mat2uuid[mname])
+        print "material added:", mname
+    return sceneobjgroup, robject        
+        
  

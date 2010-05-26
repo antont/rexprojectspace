@@ -14,7 +14,11 @@ class SWProject:
         #locate correct component
         #parameter holds all the necessary data            
         pass   
-        
+    
+    def createComponentVisualization(self,vComponent):
+        """ Dynamically added components """
+        pass
+      
 class SWComponent:
 
     def __init__(self, vComponentName):
