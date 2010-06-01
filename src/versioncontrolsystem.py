@@ -32,11 +32,11 @@ class VersionControlSystem:
         if(time.localtime().tm_min > self.committersFetchedTime):
             self.committersFetchedTime = time.localtime().tm_min
             authors = []
-            url = "http://github.com/api/v2/json/commits/list/realXtend/%s/master"(self.projectName)
+            url = "http://github.com/api/v2/json/commits/list/realXtend/%s/master"%(self.projectName)
             f = urllib.urlopen(url)
             s = f.read()
             
-            committers = json.loads(s)
+            committers = json.read(s)
             for k,v in committers.iteritems():
                 for a in v:
                     author = {}
@@ -57,7 +57,7 @@ class VersionControlSystem:
         f = urllib.urlopen(url)
         s = f.read()
         
-        jsonString = json.loads(s)
+        jsonString = json.read(s)
        
         contributors = jsonString["contributors"]
        
@@ -75,7 +75,7 @@ class VersionControlSystem:
             f = urllib.urlopen(url)
             s = f.read()
 
-            br = json.loads(s)
+            br = json.read(s)
             for k,v in br.iteritems():
                 for keys,values in v.iteritems():    
                     branches.append(keys)  
@@ -101,7 +101,7 @@ class VersionControlSystem:
             f = urllib.urlopen(url)
             s = f.read()
     
-            allCommits = json.loads(s)#ordered, newest is the first one
+            allCommits = json.read(s)#ordered, newest is the first one
             
             commit = allCommits["commits"][0]
             self.latestCommitForBranch[branch] = commit
@@ -113,7 +113,7 @@ class VersionControlSystem:
         url = "http://github.com/api/v2/json/commits/show/realxtend/naali/%s"%(vId)  
         f = urllib.urlopen(url)
         s = f.read()
-        commit = json.loads(s)
+        commit = json.read(s)
 
         return commit
         
@@ -134,7 +134,7 @@ class VersionControlSystem:
             f = urllib.urlopen(url)
             s = f.read()
     
-            allCommits = json.loads(s)#ordered, newest is the first one
+            allCommits = json.read(s)#ordered, newest is the first one
             
             commits = allCommits["commits"]
             self.commitsForBranch[branch] = commits

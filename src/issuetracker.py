@@ -30,10 +30,7 @@ class IssueTracker:
         issues = []
         
         issuesStringArray = s.splitlines()        
-        g = "4","Defect","Accepted","Low","","laitala.hi","Avatar movement :  Key repeats event though it is released  ","Type-Defect, Priority-Low"
-        #print g
-
-
+        
         for j in range(len(issuesStringArray)):                        
             if(j == len(issuesStringArray) - 1):
                 pass

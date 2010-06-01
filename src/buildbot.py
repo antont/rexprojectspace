@@ -16,7 +16,7 @@ class BuildBot:
            (buildername, buildnumber, build_end, branchname, revision, 
            results, text)"""
         buildPlatforms = self.proxy.getAllBuilders()
-        #print buildPlatforms
+
         results = {}
         
         for platform in buildPlatforms: 
