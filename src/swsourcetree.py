@@ -11,7 +11,12 @@ from ModularRex.RexFramework import IModrexObjectsProvider
 
 clr.AddReference('OpenSim.Region.ScriptEngine.Shared')
 from OpenSim.Region.ScriptEngine.Shared import LSL_Types
+
 clr.AddReference('OpenSim.Framework')
+import OpenSim.Framework
+
+clr.AddReference('OpenSim.Region.Framework')
+import OpenSim.Region.Framework
 
 asm = clr.LoadAssemblyByName('OpenSim.Region.ScriptEngine.Shared')
 
@@ -26,17 +31,11 @@ class Tree:
     def __init__(self,vScene,vName):
         """ "Base" of the tree """
         
-        self.scene = vScene
-        rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("a56f05c7-533b-45a3-864b-d0860ae8482d") #root of tree...
-        self.rop = rexObjects.GetObject(self.UUID)
-        self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
-        
-        self.loc = self.sog.AbsolutePosition
-    
         self.tile_height = 1.0
         
-        print "mesh id for tree base: ", self.rop.RexMeshUUID
+        self.scene = vScene
+        rexObjects = self.scene.Modules["RexObjectsModule"]
+        self.UUID = OpenMetaverse.UUID("eae6822f-dec5-470c-80e6-97fdc0779082") #root of tree...
         
         self.tiles = [] #from bottom to up
         #self.tiles.append(TreeTile(vScene,V3(137.65,129.87,26.2)))
@@ -45,52 +44,78 @@ class Tree:
         
         self.branches = []
         
+        if not self.scene.GetSceneObjectPart(self.UUID):
+            print "No tree..."
+            return
+            
+        self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
+        self.rop = rexObjects.GetObject(self.UUID)
+        
+        
+        self.tiles = [] #from bottom to up
+        #self.tiles.append(TreeTile(vScene,V3(137.65,129.87,26.2)))
+        
+        self.pos = self.sog.AbsolutePosition
+        
+        
+        print "mesh id for tree base: ", self.rop.RexMeshUUID
+        
+        
     
     def addNewBranch(self,vBranchName,vParentName=""):
         """None means to add branch to main tree, otherwise add to
            other branch """         
            
-        #V3(137.65,129.87,26.2)
-        #self.tiles.append(TreeTile(self.scene,self.loc))
-           
         #if vParentName == None:
         nbr = len(self.tiles)
         print "number of tre tiles: ", nbr
         if(nbr == 0):
-            self.tiles.append(TreeTile(self.scene,self.loc))
+            self.tiles.append(TreeTile(self.scene,self.pos))
             nbr = 1
         
         tile = self.tiles[nbr-1]
         currentPlace = tile.currentIndex
+        
+        if currentPlace >= len(tile.locations):
+            temp = self.pos
+            z = self.pos.Z + nbr*self.tile_height
+            newLoc = V3(self.pos.X,self.pos.Y,z)
+            print "New pos: ", newLoc
+            tile = TreeTile(self.scene,newLoc)
+            self.tiles.append(tile)
+        
         #create branch and locate it
-        branch = Branch(self.scene, vBranchName,"",TreeTile.locations[tile.currentIndex],V3(1.0,2.5,2.5),TreeTile.rotations[tile.currentIndex])
-        if tile.currentIndex < len(TreeTile.locations) - 1:
-            tile.currentIndex += 1
-            pass
-        else:
-            temp = self.loc
-            z = self.loc.Z + nbr*self.tile_height
-            newLoc = V3(self.loc.X,self.loc.Y,z)
-            print "New loc: ", newLoc
-            self.tiles.append(TreeTile(self.scene,newLoc))
+        branch = Branch(self.scene, vBranchName,"",tile.locations[tile.currentIndex],V3(1.0,1.0,1.0),tile.rotations[tile.currentIndex])
+        
+        tile.currentIndex += 1
         
         #self.branches.append(branch)
             
 class TreeTile:
-    locations = [V3(136.62,129.91,27.26),V3(136.62,129.91,27.66)] #insert branch locations to here… (with normal scale, relative to tile)
-    rotations = [rexprojectspaceutils.euler_to_quat(20,0,0),rexprojectspaceutils.euler_to_quat(20,0,0)] #insert branch rotations to here, with quats…
-
+    
     def __init__(self,vScene,vPos):
         
         self.currentIndex = 0  #increment on add, fix after testing...
         self.scene = vScene
         self.pos = vPos
+        self.w = 0.5
+        
+        self.locations = []
+
+        for i in range(2):
+            tempPos = V3(self.pos.X + self.w/2 + Branch.w/2 ,self.pos.Y,self.pos.Z + 0.3*(i-1))
+
+            self.locations.append(tempPos)
+        
+        #[V3(136.62,129.91,27.26),V3(136.62,129.91,27.66)] #insert branch locations to here… (with normal scale, relative to tile)
+        self.rotations = [rexprojectspaceutils.euler_to_quat(20,0,0),rexprojectspaceutils.euler_to_quat(30,0,0)] #insert branch rotations to here, with quats…
+
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
         
         #upwards...
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treetile.mesh","treetile.material","tile…",rexprojectspaceutils.euler_to_quat(90,0,0),self.pos)
-    
+            
         print "mesh id for tile: ", self.rop.RexMeshUUID
         
         self.scene.AddNewSceneObject(self.sog, False)
@@ -99,6 +124,7 @@ class TreeTile:
         
     
 class Branch:
+    w = 1
     def __init__(self,vScene,vName,vParentName,vPos,vScale,vRot):
    
         self.scene = vScene
@@ -127,33 +153,57 @@ class SWSourceTree:
                
         self.bCurrentBuildFailed = False
         
-        #self.tree = Tree(vScene,vProjectName)
+        rexObjects = self.scene.Modules["RexObjectsModule"]
+        
+        self.tree = Tree(vScene,vProjectName)
+        self.treerop = rexObjects.GetObject(self.tree.UUID)
+        
+        tempPos = self.tree.pos
+        
+        self.rainPlaceHolderSog = self.createRainPlaceHolder(V3(tempPos.X,tempPos.Y,tempPos.Z + 45))
+        self.rainPlaceHolderRop = rexObjects.GetObject(self.rainPlaceHolderSog.UUID)
                 
         #start from bottom
         for branch in vBranchNames:
             self.tree.branches.append(self.addNewBranch(branch))
+    
+    def createRainPlaceHolder(self,vPos):
         
+        pbs = OpenSim.Framework.PrimitiveBaseShape.CreateBox()
+        pbs.SetHeigth(1)
+        
+        sog = OpenSim.Region.Framework.Scenes.SceneObjectGroup(
+        OpenMetaverse.UUID.Random(),vPos,pbs)
+        
+        sog.RootPart.Scale = V3(0.05,0.05,0.05)
+        sog.RootPart.UpdateRotation(rexprojectspaceutils.euler_to_quat(0,0,90))
+        
+        self.scene.AddNewSceneObject(sog, False)
+        print "placeholder position",vPos
+        return sog    
         
     def setBuildSuccesfull(self):
+        print "build succesfull"
         if self.bCurrentBuildFailed == True:
             #make it rain
-            pass
-        
+            self.rainPlaceHolderRop.RexClassName = "sourcetree.Rain"
+            #add timer so that tree burns...
+            
         self.bCurrentBuildFailed = False
     
     def setBuildFailed(self):
         print "build failed"
-        self.rop.RexClassName = "follower.Follower"
-        
+                
         if self.bCurrentBuildFailed == False:
             #make it burn
-            pass
+            self.treerop.RexClassName = "sourcetree.BurningTree"
         
         self.bCurrentBuildFailed = True
         
-    def addNewBranch(self,vBranchName,vParent=None):
+    def addNewBranch(self,vBranchName,vParentName=""):
         """None means to add branch to main tree, otherwise add to
-           other branch """           
+           other branch """
+        self.tree.addNewBranch(vBranchName,vParentName)
         pass        
         
 class SWSourceTreeBranch:

@@ -28,3 +28,24 @@ class BurningTree(RXCore.rxactor.Actor):
 
     def EventTouch(self,vAvatar):
         pass
+
+        
+class Rain(RXCore.rxactor.Actor):
+    @staticmethod
+    def GetScriptClassName():
+        return "sourcetree.Rain"
+
+    def EventCreated(self):
+        super(self.__class__,self).EventCreated()
+        self.SetRexParticleScriptUUID("c0401b49-8335-46d5-b3f1-7aa0f964eb65")
+        
+        print "sourcetree.Rain EventCreated"
+
+    def EventDestroyed(self):
+        print "sourcetree.Rain EventDestroyed"
+        self.SetRexParticleScriptUUID("")
+        
+        super(self.__class__,self).EventDestroyed()
+
+    def EventTouch(self,vAvatar):
+        pass      

@@ -54,6 +54,32 @@ def euler_to_quat(yaw_deg, pitch_deg, roll_deg):
     z =c1*s2*c3 - s1*c2*s3
     
     return OpenMetaverse.Quaternion(x, y, z, w)
+
+def load_particle_script(scene, avatar, particlescriptpath, description):
+    #not ready
+    """uid = OpenMetaverse.UUID.Random()
+    
+    asset = OpenSim.Framework.AssetBase()
+    asset.Name = "Script..."
+    asset.FullID = uid
+    asset.Type = 47 # ?? particle script??
+    asset.Description = description
+    
+    print "Loading particle script: ", os.path.abspath(meshpath)
+    
+    asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(meshpath))
+     
+    scene.AssetService.Store(asset)
+    
+    list = scene.GetAvatars()
+    if len(list) > 0:
+        sp = list[0]
+    else:
+        print "No avatar, can't upload assets..."
+    root_avatar_uuid = sp.UUID
+    """
+    pass
+    
     
 def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quaternion(0, 0, 0, 1), pos=V3(128, 128, 30), scale=V3(1, 1, 1)):
     uid = OpenMetaverse.UUID.Random()

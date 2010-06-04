@@ -108,12 +108,23 @@ class RexProjectSpaceModule(IRegionModule):
         #self.updateTimer = threading.Timer(1.0,self.updateProjectSpace)
         #self.updateTimer.start()
         
-        self.tree = swsourcetree.Tree(self.scene, "Naali")
+        #self.tree = swsourcetree.Tree(self.scene, "Naali")
+        self.tree = swsourcetree.SWSourceTree(self.scene, "Naali",[])
+        
+        
+        #self.grid = swproject.Component(self.scene,V3(135.2,129.89,25.80),"",4,4)
         
         
         scene.AddCommand(self, "hitMe","","",self.cmd_hitMe)
-        scene.AddCommand(self, "aa","","",self.cmd_aa)
+
         scene.AddCommand(self, "bb","","",self.cmd_bb)
+        
+        #testing branches
+        scene.AddCommand(self, "cb","","",self.cmd_cb)
+        
+        #testing builds
+        scene.AddCommand(self, "bf","","",self.cmd_bf)
+        scene.AddCommand(self, "bs","","",self.cmd_bs)
         
     
     def updateBuildResults(self):
@@ -161,20 +172,35 @@ class RexProjectSpaceModule(IRegionModule):
         #self.scene.AddNewSceneObject(sog, False)
         self.mauno = swdeveloper.SWDeveloper(self.scene,"Mauno User",10,None,False)
         
-    def cmd_aa(self, *args):
-        #try to get the tree item
-        #list = self.scene.GetAvatars()
-        #sp = list[0]
-
-        self.mauno.updateIsAtProjectSpace(True)
-        #self.rexif.
         
     def cmd_bb(self, *args):
         #w = RXCore.rxactor.Actor.GetScriptClassName()
-        self.tree.addNewBranch(self,"Naali")
-        print "haalll"
+        #self.tree.addNewBranch(self,"Naali")
+        self.grid = swproject.Component(self.scene,V3(135.2,129.89,25.80),"",4,4)
+        
         pass
         
+    def cmd_cb(self, *args):
+        #try to get the tree item
+        self.tree.addNewBranch(self,"")
+        #list = self.scene.GetAvatars()
+        #sp = list[0]
+
+        #self.mauno.updateIsAtProjectSpace(True)
+        #self.rexif.        
+        
+    def cmd_bs(self, *args):
+        #w = RXCore.rxactor.Actor.GetScriptClassName()
+        #self.tree.addNewBranch(self,"Naali")
+        self.tree.setBuildSuccesfull()
+        pass
+    
+    def cmd_bf(self, *args):
+        #w = RXCore.rxactor.Actor.GetScriptClassName()
+        #self.tree.addNewBranch(self,"Naali")
+        self.tree.setBuildFailed()
+        pass
+    
     def updateProjectSpace(self):
     
         self.updateTimer = threading.Timer(30.0,self.updateProjectSpace)
