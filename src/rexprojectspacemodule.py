@@ -112,11 +112,14 @@ class RexProjectSpaceModule(IRegionModule):
         self.tree = swsourcetree.SWSourceTree(self.scene, "Naali",[])
         
         
-        #self.grid = swproject.Component(self.scene,V3(135.2,129.89,25.80),"",4,4)
+        self.component = swproject.Component(self.scene,V3(135.2,129.89,25.80),"",4,4)
         
         
         scene.AddCommand(self, "hitMe","","",self.cmd_hitMe)
-
+        
+        #testing component grid
+        scene.AddCommand(self, "ac","","",self.cmd_ac)
+        
         scene.AddCommand(self, "bb","","",self.cmd_bb)
         
         #testing branches
@@ -172,7 +175,10 @@ class RexProjectSpaceModule(IRegionModule):
         #self.scene.AddNewSceneObject(sog, False)
         self.mauno = swdeveloper.SWDeveloper(self.scene,"Mauno User",10,None,False)
         
-        
+    def cmd_ac(self, *args):
+        self.component.addChild()
+        pass
+    
     def cmd_bb(self, *args):
         #w = RXCore.rxactor.Actor.GetScriptClassName()
         #self.tree.addNewBranch(self,"Naali")

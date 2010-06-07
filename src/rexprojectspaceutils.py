@@ -95,13 +95,14 @@ def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quat
     asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(meshpath))
      
     scene.AssetService.Store(asset)
-    #root_avatar_uuid = scene.RegionInfo.MasterAvatarAssignedUUID
-    list = scene.GetAvatars()
+    root_avatar_uuid = scene.RegionInfo.MasterAvatarAssignedUUID
+    """list = scene.GetAvatars()
     if len(list) > 0:
         sp = list[0]
     else:
         print "No avatar, can't upload assets..."
     root_avatar_uuid = sp.UUID
+    """
     
     print "avatar uid:", root_avatar_uuid
     

@@ -31,11 +31,11 @@ class Tree:
     def __init__(self,vScene,vName):
         """ "Base" of the tree """
         
-        self.tile_height = 1.0
+        self.tile_height = 2.0
         
         self.scene = vScene
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("eae6822f-dec5-470c-80e6-97fdc0779082") #root of tree...
+        self.UUID = OpenMetaverse.UUID("20c21cdc-875c-473a-982b-7275996f24f2") #root of tree...
         
         self.tiles = [] #from bottom to up
         #self.tiles.append(TreeTile(vScene,V3(137.65,129.87,26.2)))
@@ -50,6 +50,7 @@ class Tree:
             
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
         self.rop = rexObjects.GetObject(self.UUID)
+        #self.sog.RootPart.UpdateRotation(rexprojectspaceutils.euler_to_quat(0,0,90))
         
         
         self.tiles = [] #from bottom to up
@@ -102,13 +103,19 @@ class TreeTile:
         
         self.locations = []
 
-        for i in range(2):
-            tempPos = V3(self.pos.X + self.w/2 + Branch.w/2 ,self.pos.Y,self.pos.Z + 0.3*(i-1))
-
+        for i in range(4):
+            tempPos = None
+            if i%2 == 0:
+                tempPos = V3(self.pos.X + self.w/2 ,self.pos.Y,self.pos.Z + 0.4*(i+0.1))
+            else:
+                tempPos = V3(self.pos.X - self.w/2 ,self.pos.Y,self.pos.Z + 0.4*(i+0.1))
             self.locations.append(tempPos)
         
         #[V3(136.62,129.91,27.26),V3(136.62,129.91,27.66)] #insert branch locations to here… (with normal scale, relative to tile)
-        self.rotations = [rexprojectspaceutils.euler_to_quat(20,0,0),rexprojectspaceutils.euler_to_quat(30,0,0)] #insert branch rotations to here, with quats…
+        self.rotations = [rexprojectspaceutils.euler_to_quat(20,0,0),
+                          rexprojectspaceutils.euler_to_quat(-20,180,0),
+                          rexprojectspaceutils.euler_to_quat(20,0,0)
+                          ,rexprojectspaceutils.euler_to_quat(-20,180,0)] #insert branch rotations to here, with quats…
 
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
@@ -134,7 +141,7 @@ class Branch:
         self.rot = vRot
 
         #upwards...
-        self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",rexprojectspaceutils.euler_to_quat(0,0,90),self.pos)
+        self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos)
         
         print "mesh id for branch: ", self.rop.RexMeshUUID
         
