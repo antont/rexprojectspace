@@ -1,7 +1,7 @@
 import urllib
 import time
 
-class Issue:
+class IssueData:
     """ Model class for issue"""    
     def __init__(self,issueData):
 
@@ -38,7 +38,7 @@ class IssueTracker:
                 pass
             else:
                 issueString = issuesStringArray[j][1:-1].split(',')             
-                issue = Issue(issueString)
+                issue = IssueData(issueString)
                 issues.append(issue)
 
         return issues

@@ -2,7 +2,8 @@ from versioncontrolsystem import *
 from issuetracker import *
 from buildbot import *
 
-from swdeveloper import *
+
+#from swdeveloper import *
 
 v = VersionControlSystem("naali")
 
@@ -14,16 +15,23 @@ v = VersionControlSystem("naali")
 
 #branches = v.getBranches()
 #print branches
-"""
+
+### get lates commit and print modified file list
+
 latestCommit = v.getLatestCommitForBranch()
-print latestCommit
-"""
 
-commitInfo = v.getCommitInformation("")
-#print commitInfo
+commitId = latestCommit["id"]
 
-for val in commitInfo.values():
-    print val["modified"]
+commitInfo = v.getCommitInformation(commitId)
+
+
+commit = commitInfo["commit"]
+
+mod = commit["modified"]
+
+for m in mod:
+	print m["filename"]
+
 
 """
 commits = v.getCommitsForBranch()
@@ -55,3 +63,6 @@ for value in committers:
     print value
     #print "%s has %d commits"%(login,value["contributions"])
 """  
+
+####
+

@@ -1,5 +1,7 @@
 import urllib
-import json
+#import json
+import simplejson as json
+
 import time
 
 class VersionControlSystem:
@@ -36,7 +38,7 @@ class VersionControlSystem:
             f = urllib.urlopen(url)
             s = f.read()
             
-            committers = json.read(s)
+            committers = json.loads(s)
             for k,v in committers.iteritems():
                 for a in v:
                     author = {}
@@ -57,7 +59,7 @@ class VersionControlSystem:
         f = urllib.urlopen(url)
         s = f.read()
         
-        jsonString = json.read(s)
+        jsonString = json.loads(s)
        
         contributors = jsonString["contributors"]
        
@@ -75,7 +77,7 @@ class VersionControlSystem:
             f = urllib.urlopen(url)
             s = f.read()
 
-            br = json.read(s)
+            br = json.loads(s)
             for k,v in br.iteritems():
                 for keys,values in v.iteritems():    
                     branches.append(keys)  
@@ -101,7 +103,7 @@ class VersionControlSystem:
             f = urllib.urlopen(url)
             s = f.read()
     
-            allCommits = json.read(s)#ordered, newest is the first one
+            allCommits = json.loads(s)#ordered, newest is the first one
             
             commit = allCommits["commits"][0]
             self.latestCommitForBranch[branch] = commit
@@ -113,7 +115,7 @@ class VersionControlSystem:
         url = "http://github.com/api/v2/json/commits/show/realxtend/naali/%s"%(vId)  
         f = urllib.urlopen(url)
         s = f.read()
-        commit = json.read(s)
+        commit = json.loads(s)
 
         return commit
         
@@ -134,7 +136,7 @@ class VersionControlSystem:
             f = urllib.urlopen(url)
             s = f.read()
     
-            allCommits = json.read(s)#ordered, newest is the first one
+            allCommits = json.loads(s)#ordered, newest is the first one
             
             commits = allCommits["commits"]
             self.commitsForBranch[branch] = commits
