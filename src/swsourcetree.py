@@ -35,7 +35,7 @@ class Tree:
         
         self.scene = vScene
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("20c21cdc-875c-473a-982b-7275996f24f2") #root of tree...
+        self.UUID = OpenMetaverse.UUID("2f320581-85c1-4da5-b651-f0c9a4737afc") #root of tree...
         
         self.tiles = [] #from bottom to up
         #self.tiles.append(TreeTile(vScene,V3(137.65,129.87,26.2)))
@@ -50,7 +50,7 @@ class Tree:
             
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
         self.rop = rexObjects.GetObject(self.UUID)
-        #self.sog.RootPart.UpdateRotation(rexprojectspaceutils.euler_to_quat(0,0,90))
+        self.sog.RootPart.UpdateRotation(rexprojectspaceutils.euler_to_quat(0,0,90))
         
         
         self.tiles = [] #from bottom to up

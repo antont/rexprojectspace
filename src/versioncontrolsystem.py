@@ -1,6 +1,8 @@
 import urllib
-import json
-#import simplejson as json
+try:
+    import json
+except:
+    import simplejson as json
 
 import time
 

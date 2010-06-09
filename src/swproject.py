@@ -23,7 +23,7 @@ import rexprojectspaceutils
 import swdeveloper
 
 class Component:
-    offset = 0.2
+    offset = 0.0
     
     def __init__(self,vScene,vPos,vParent,vX=1,vY=1):
         
@@ -39,8 +39,7 @@ class Component:
         self.pos = vPos
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        
-        #upwards...
+
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
         self.sog.RootPart.Scale = V3(vX,vY,1)
         
@@ -51,15 +50,23 @@ class Component:
         self.branches = []
         
     def addChild(self):
-        print "111"
+
         temp = self.sog.AbsolutePosition
-        p = V3((1+self.curColumn) + temp.X + Component.offset,(1+self.curRow) + temp.Y + Component.offset,temp.Z)
-        print "aaaa"
+        p = V3(self.curColumn + temp.X + self.curColumn*Component.offset,
+               self.curRow + temp.Y + self.curRow*Component.offset,
+               temp.Z + 0.5)
+               
         child =  Component(self.scene, p, self, 1,1)
-        print "bbbb"
-        child.sog.RootPart.Scale = V3(1,1,1)
-        print "ccc"
-        self.curColumn += 1
+        
+        child.sog.RootPart.Scale = V3(0.85,0.85,1)
+        
+        if self.curColumn < self.__x - 1: 
+            self.curColumn += 1
+        else:
+            self.curColumn = 0
+            self.curRow += 1
+            
+        return child
         
     
 class SWProject:
@@ -67,12 +74,13 @@ class SWProject:
     def __init__(self, vScene,vProjectName, vDevelopers):
         self.scene = vScene
         self.projectName = vProjectName
-        self.components = []
+        
+        self.components = {}
         self.developers = vDevelopers
         
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("f5255b3a-3955-40ef-b890-247b831d3245") #root of tree...
+        self.UUID = OpenMetaverse.UUID("4fad3aac-7819-42a0-86da-298b54a72791")
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             print "No first sw component..."
@@ -81,26 +89,19 @@ class SWProject:
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
         self.rop = rexObjects.GetObject(self.UUID)
         
+        self.component = Component(vScene, self.sog.AbsolutePosition, None, 5,5)
+        self.component.sog.RootPart.Scale = V3(0,0,0)
+        
     def addComponent(self, vComponentName):
+        self.components[vComponentName] = self.component.addChild()
         pass
+        
     
     def newCommitForDeveloper(self, vDeveloper):
         #locate correct component
         #parameter holds all the necessary data            
         pass   
-    
-    def createComponentVisualization(self,vComponent):
-        """ Dynamically added components """
-        pass
       
-class SWComponent:
-
-    def __init__(self, vComponentName):
-        self.componentName = vComponentName
-        self.commmitters = []
-    
     def addDeveloper(self,vDeveloper):
         pass
-        
-    def removeDeveloper(self,vDeveloper):
-        pass
+ 

@@ -86,8 +86,11 @@ class RexProjectSpaceModule(IRegionModule):
         #self.tree = swsourcetree.SWSourceTree(scene,"Naali",branches)
         #self.updateBuildResults()
         
-        #self.vcs = versioncontrolsystem.VersionControlSystem("naali")
-        #self.updateCommitters(self.developers)
+        self.vcs = versioncontrolsystem.VersionControlSystem("naali")
+        self.updateCommitters(self.developers)
+        
+
+        
         #self.project = self.initSWProject()
         
         try:
@@ -109,10 +112,11 @@ class RexProjectSpaceModule(IRegionModule):
         #self.updateTimer.start()
         
         #self.tree = swsourcetree.Tree(self.scene, "Naali")
-        self.tree = swsourcetree.SWSourceTree(self.scene, "Naali",[])
+        #self.tree = swsourcetree.SWSourceTree(self.scene, "Naali",[])
         
         
-        self.component = swproject.Component(self.scene,V3(135.2,129.89,25.80),"",4,4)
+        #self.component = swproject.Component(self.scene,V3(135.2,129.89,25.80),"",4,4)
+        self.component = swproject.SWProject(self.scene,"naali",[])
         
         
         scene.AddCommand(self, "hitMe","","",self.cmd_hitMe)
@@ -129,6 +133,7 @@ class RexProjectSpaceModule(IRegionModule):
         scene.AddCommand(self, "bf","","",self.cmd_bf)
         scene.AddCommand(self, "bs","","",self.cmd_bs)
         
+    
     
     def updateBuildResults(self):
         builds = self.buildbot.getLatestBuilds()
@@ -166,7 +171,6 @@ class RexProjectSpaceModule(IRegionModule):
             login = value["login"]
             nbrOfCommits = value["contributions"]
             vCommitters.append(swdeveloper.SWDeveloper(self.scene,login,nbrOfCommits,"",False))
-
     
     def cmd_hitMe(self, *args):
         #try to get the tree item
@@ -176,7 +180,7 @@ class RexProjectSpaceModule(IRegionModule):
         self.mauno = swdeveloper.SWDeveloper(self.scene,"Mauno User",10,None,False)
         
     def cmd_ac(self, *args):
-        self.component.addChild()
+        self.component.addComponent("")
         pass
     
     def cmd_bb(self, *args):
