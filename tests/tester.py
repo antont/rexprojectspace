@@ -2,6 +2,8 @@ from versioncontrolsystem import *
 from issuetracker import *
 from buildbot import *
 
+import commitdispatcher
+import swdeveloper
 
 def resolveFolder(vCommit):
 	#print vCommit
@@ -44,37 +46,50 @@ def resolveFolder(vCommit):
 
 #from swdeveloper import *
 
+def cb(vCommit):
+    print vCommit.message
+
 v = VersionControlSystem("naali")
 
-#list = v.getAllCommitters()
-#print list
+### test commit dispatching
+cd = commitdispatcher.CommitDispatcher.dispatcherForProject("naali")
 
-#contributors = v.getAllContributors()
-#print contributors
 
-#branches = v.getBranches()
-#print branches
+cd.targets["TestUser"] = cb
+
+cd.updateCommits()
+
+cd.dispatchCommits([])
+
+
+"""
+list = v.getAllCommitters()
+print list
+"""
+
+"""
+contributors = v.getAllContributors()
+print contributors
+"""
+
+"""
+branches = v.getBranches()
+print branches
+"""
 
 ### get lates commit and print modified file list
+"""
+latestCommit = v.getLatestCommitForBranch()
+commitId = latestCommit["id"]
+commitInfo = v.getCommitInformation(commitId)
+"""
 
-#latestCommit = v.getLatestCommitForBranch()
-
-#commitId = latestCommit["id"]
-
-#commitInfo = v.getCommitInformation(commitId)
-
+### test resolver folder
+"""
 commitInfo = v.getCommitInformation("8a0f0cd5b1603dca2e2a0d6f5238a6e6909bb683")
-
-
 commit = commitInfo["commit"]
-
-mod = commit["modified"]
-
-#for m in mod:
-#	print m["filename"]
-
 resolveFolder(commit)
-
+"""
 
 """
 commits = v.getCommitsForBranch()
