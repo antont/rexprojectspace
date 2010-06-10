@@ -20,6 +20,8 @@ from OpenMetaverse import Vector3 as V3
 
 import rexprojectspaceutils
 
+import commitdispatcher
+
 import swdeveloper
 
 class Component:
@@ -43,11 +45,14 @@ class Component:
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
         self.sog.RootPart.Scale = V3(vX,vY,1)
         
+        
         print "mesh id for component: ", self.rop.RexMeshUUID
         
         self.scene.AddNewSceneObject(self.sog, False)
                       
         self.branches = []
+        
+
         
     def addChild(self):
 
@@ -78,6 +83,8 @@ class SWProject:
         self.components = {}
         self.developers = vDevelopers
         
+        self.dev = swdeveloper.SWDeveloper(self.scene,"dump",0,"",False,"")
+        
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
         self.UUID = OpenMetaverse.UUID("4fad3aac-7819-42a0-86da-298b54a72791")
@@ -92,14 +99,43 @@ class SWProject:
         self.component = Component(vScene, self.sog.AbsolutePosition, None, 5,5)
         self.component.sog.RootPart.Scale = V3(0,0,0)
         
+        self.addComponent("B")
+        self.addComponent("A")
+        
+        print self.components
+        
+        #place developers to their initial positions...
+        for dev in self.developers:
+            latestcommit = dev.latesCommit
+            if latestcommit != None:
+                self.updateDeveloperLocationWithNewCommitData(latestcommit)
+        
+        #get all commits
+        commitdispatcher.CommitDispatcher.register(self.updateDeveloperLocationWithNewCommitData,"naali","toni alatalo")
+        
     def addComponent(self, vComponentName):
         self.components[vComponentName] = self.component.addChild()
         pass
         
     
-    def newCommitForDeveloper(self, vDeveloper):
-        #locate correct component
-        #parameter holds all the necessary data            
+    def updateDeveloperLocationWithNewCommitData(self, vCommit):
+        
+        #we know nothing about this developer
+        if self.developers.count(vCommit.author) < 1:
+            return
+        
+        print "commit directory: ",vCommit.directories[0]
+        
+        #locate correct component and developer
+        component = self.components[vCommit.directories[0]]
+        
+        if not component:
+            return
+
+        print "dev target pos: ", component.sog.AbsolutePosition
+        
+        self.dev.sog.NonPhysicalGrabMovement(component.sog.AbsolutePosition)
+        
         pass   
       
     def addDeveloper(self,vDeveloper):

@@ -1,7 +1,9 @@
 import versioncontrolsystem
 
 class Commit:
-    def __init__(self,vMessage,vDirectories,vFiles):
+    def __init__(self,vDeveloperName,vMessage,vDirectories,vFiles):
+        
+        self.author = vDeveloperName
         self.message = vMessage
         self.directories = vDirectories
         self.files = vFiles
@@ -65,7 +67,7 @@ class CommitDispatcher:
     def dispatchCommits(self,vCommits):
         for k,v in self.targets.iteritems():
             #print commits[developer]
-            v(Commit("new commit",["a","b","c"],["DIR"]))
+            v(Commit("toni alatalo","new commit", ["A","B","C"], ["a","b","c"]))
            
         
            

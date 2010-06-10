@@ -1,9 +1,10 @@
-#import rexprojectspaceutils
+import rexprojectspaceutils
 import commitdispatcher
 
 class SWDeveloper:
 
     def __init__(self, vScene,vName, vNumberOfCommits, vLatesCommit, vIsAtProjectSpace, vAvatar=None):
+        print "dev---created---"
         self.scene = vScene
         self.name = vName
         self.numberOfCommits = vNumberOfCommits
@@ -11,21 +12,20 @@ class SWDeveloper:
         self.isAtProjectSpace = vIsAtProjectSpace
         self.avatar = vAvatar #rxavatar
         
-        """
-        sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data")
-        self.scene.AddNewSceneObject(sog, False)
+        self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+        self.scene.AddNewSceneObject(self.sog, False)
         
         self.updateIsAtProjectSpace(self.isAtProjectSpace)
-        """
+
         
         #start receiving commits for project
         commitdispatcher.CommitDispatcher.register(self.updateCommitData,"naali",self.name)
         
     def updateCommitData(self, vNewCommit):
-        #self.numberOfCommits = self.numberOfCommits + 1
-        self.latesCommit = vNewCommit
-        print vNewCommit
+        pass
+        #print "updating developer vis. with: ", vNewCommit
         #update visualization also...
+        
         
     def updateIsAtProjectSpace(self, vAtProjectSpace):
         """update visualization if necessary """

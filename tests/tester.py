@@ -5,53 +5,119 @@ from buildbot import *
 import commitdispatcher
 import swdeveloper
 
-def resolveFolder(vCommit):
-	#print vCommit
-	#get mod,add,remove
-	files,mod,removed,added = [],[],[],[]
-	try:
-		mod = vCommit["modified"]
-	except:
-		pass
-	try:
-		removed = vCommit["Removed"]
-	except:
-		pass
-	try:
-		added = vCommit["added"]
-	except:
-		pass
-	
-	for m in mod:
-		files.append(m["filename"])	
-	
-	for a in added:
-		files.append(a)	
-	
-	for r in removed:
-		files.append(r)
-				
+def resolveFilesAndFolders(vCommit):
+    #get mod,add,remove
+    files,mod,removed,added = [],[],[],[]
+    try:
+        mod = vCommit["modified"]
+    except:
+        pass
+    try:
+        removed = vCommit["Removed"]
+    except:
+        pass
+    try:
+        added = vCommit["added"]
+    except:
+        pass
+      
+    for m in mod:
+        files.append(m["filename"]) 
+    for a in added:
+        files.append(a) 
+    
+    for r in removed:
+        files.append(r)
+                
 
-	#files.sort()		
-	
-	modifiedfiles = list(set(files))
-	
-	filesandcounts = {}
-	
-	for file in modifiedfiles:
-		filesandcounts[file] = files.count(file)	
-		
-	print filesandcounts
+    #files.sort()       
+    
+    modifiedfiles = list(set(files))
+    
+    files = []
+    folders = []
+    
+    for file in modifiedfiles:
+        files.append(file)
+        
+        temp = file.split("/")
+        if len(temp) > 0:
+            folders.append(temp[0])
+        else:
+            folders.append("/")
 
+    #print folders
+    return files,folders
 
 #from swdeveloper import *
+
+v = VersionControlSystem("naali")
 
 def cb(vCommit):
     print vCommit.message
 
-v = VersionControlSystem("naali")
 
+def initSWProject():
+    """Mocked solution for now """
+    
+    components = []
+    
+    
+    #get all committers
+    committers = v.getAllContributors()
+    print committers
+    
+    commits_for_devs = {}
+    
+    #get all commits 
+    commits = v.getCommitsForBranch()
+    count = len(committers)
+    temp = count
+    for commit in commits:
+        
+        author = commit["author"]
+        try:
+            commits_for_devs[author["name"]]
+        except:
+            commits_for_devs[author["name"]] = commit
+            count -= 1
+        
+        if count < 1:
+            break # every one has commit
+        
+    #now we have commit ids... fetch the data for all committers
+    for keys,values in commits_for_devs.iteritems():
+        id = values["id"]
+        ci = v.getCommitInformation(id)
+        c = ci["commit"]
+        
+        files,folders = resolveFilesAndFolders(c)
+        
+        cur = None
+        #locate correct committer
+        commitcount = 0
+        
+        for committer in committers:
+            author = values["author"]
+            if committer["login"] == author["login"]:
+                cur = committer
+        if cur:
+            commitcount = cur["contributions"]
+        
+        print "number of commits: %d for developer: %s"%(commitcount,keys)
+        #commitdispatcher.Commit(values["author"]["name"],values["message"],folders,files)
+    
+    #init every developer so that each has latest commits, commit count and names in place
+    
+    
+    #project = swproject.SWProject(self.scene,"naali",components)
+    return ""
+
+###
+initSWProject()
+    
 ### test commit dispatching
+"""
 cd = commitdispatcher.CommitDispatcher.dispatcherForProject("naali")
 
 
@@ -60,7 +126,7 @@ cd.targets["TestUser"] = cb
 cd.updateCommits()
 
 cd.dispatchCommits([])
-
+"""
 
 """
 list = v.getAllCommitters()
