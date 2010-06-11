@@ -24,10 +24,14 @@ import commitdispatcher
 
 import swdeveloper
 
+import rexprojectspacemodule
+
 class Component:
     offset = 0.0
     
-    def __init__(self,vScene,vPos,vParent,vX=1,vY=1):
+    def __init__(self,vScene,vName,vPos,vParent,vX=1,vY=1):
+        
+        self.name = vName
         
         self.__x = vX
         self.__y = vY
@@ -41,7 +45,16 @@ class Component:
         self.pos = vPos
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
-
+        """
+        comp = vScene.GetSceneObjectPart(self.name)
+        
+        if comp:
+            "Found component:%s from scene"%(self.name)
+            self.sog = comp
+        else:
+            self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
+            self.sog.RootPart.Scale = V3(vX,vY,1)
+        """
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
         self.sog.RootPart.Scale = V3(vX,vY,1)
         
@@ -54,14 +67,14 @@ class Component:
         
 
         
-    def addChild(self):
+    def addChild(self,vComponentName):
 
         temp = self.sog.AbsolutePosition
         p = V3(self.curColumn + temp.X + self.curColumn*Component.offset,
                self.curRow + temp.Y + self.curRow*Component.offset,
                temp.Z + 0.5)
                
-        child =  Component(self.scene, p, self, 1,1)
+        child =  Component(self.scene, vComponentName, p, self, 1,1)
         
         child.sog.RootPart.Scale = V3(0.85,0.85,1)
         
@@ -76,14 +89,14 @@ class Component:
     
 class SWProject:
 
-    def __init__(self, vScene,vProjectName, vDevelopers):
+    def __init__(self, vScene,vProjectName, vComponents, vDevelopers):
         self.scene = vScene
         self.projectName = vProjectName
         
         self.components = {}
         self.developers = vDevelopers
         
-        self.dev = swdeveloper.SWDeveloper(self.scene,"dump",0,"",False,"")
+        #self.dev = swdeveloper.SWDeveloper(self.scene,"dump",0,"",False,"")
         
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
@@ -96,45 +109,61 @@ class SWProject:
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
         self.rop = rexObjects.GetObject(self.UUID)
         
-        self.component = Component(vScene, self.sog.AbsolutePosition, None, 5,5)
+        self.component = Component(vScene, "naali_root_component" , self.sog.AbsolutePosition, None, 5,5)
         self.component.sog.RootPart.Scale = V3(0,0,0)
         
-        self.addComponent("B")
-        self.addComponent("A")
+        for componentname in vComponents:
+            self.addComponent(componentname)
         
         print self.components
         
         #place developers to their initial positions...
         for dev in self.developers:
             latestcommit = dev.latesCommit
-            if latestcommit != None:
+            if latestcommit != None or latestcommit == "":
+                print latestcommit 
                 self.updateDeveloperLocationWithNewCommitData(latestcommit)
         
         #get all commits
-        commitdispatcher.CommitDispatcher.register(self.updateDeveloperLocationWithNewCommitData,"naali","toni alatalo")
+        #commitdispatcher.CommitDispatcher.register(self.updateDeveloperLocationWithNewCommitData,"naali","toni alatalo")
         
     def addComponent(self, vComponentName):
-        self.components[vComponentName] = self.component.addChild()
+        self.components[vComponentName] = self.component.addChild(vComponentName)
+        self.components[vComponentName].sog.RootPart.Name =  vComponentName
         pass
         
     
     def updateDeveloperLocationWithNewCommitData(self, vCommit):
         
         #we know nothing about this developer
-        if self.developers.count(vCommit.author) < 1:
+        committer = None
+        for dev in self.developers:
+            print "%s developer and %s committer "%(dev.name,vCommit.author)
+            if dev.name == vCommit.author:
+                committer = dev
+                break
+        
+        if committer == None:
+            print "no committer"
             return
         
         print "commit directory: ",vCommit.directories[0]
         
         #locate correct component and developer
-        component = self.components[vCommit.directories[0]]
+        component = None
+        try:
+            component = self.components[vCommit.directories[0]]
+        except:
+            print "No component named: ", vCommit.directories[0]
+            return
         
         if not component:
+            print "No component found from project"
             return
-
-        print "dev target pos: ", component.sog.AbsolutePosition
         
-        self.dev.sog.NonPhysicalGrabMovement(component.sog.AbsolutePosition)
+        print "____________dev target pos________: ", component.sog.AbsolutePosition
+        
+        committer.sog.NonPhysicalGrabMovement(component.sog.AbsolutePosition)
         
         pass   
       

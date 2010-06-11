@@ -30,6 +30,16 @@ class VersionControlSystem:
         self.commitsForBranch = {}
 
         pass
+    
+    def getCommitsFromNetworkData(self):
+        url = "http://github.com/realxtend/%s/network_data_chunk?5bf0e028182efd84f7b379fc4c96f3d6b7637b76&start=0&end1"%(self.projectName)
+        f = urllib.urlopen(url)
+        s = f.read()
+            
+        jsonstring = json.loads(s)
+        commits = jsonstring["commits"]
+        
+        return commits    
         
     def getAllCommitters(self):
         """Returns all commmitters as a list without duplicate entries"""
@@ -50,6 +60,15 @@ class VersionControlSystem:
             self.authors = list(set(authors))
         
         return self.authors
+    
+    def getUserInfo(self,vLogin):
+        """ Returns information about specific github user """
+        url = "http://github.com/api/v2/json/user/show/%s"%(vLogin)  
+        f = urllib.urlopen(url)
+        s = f.read()
+        user = json.loads(s)
+
+        return user
     
     def getAllContributors(self):
         """Returns all contributors as a dictionary without duplicate entries.

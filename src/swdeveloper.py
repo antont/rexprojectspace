@@ -13,6 +13,7 @@ class SWDeveloper:
         self.avatar = vAvatar #rxavatar
         
         self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+        self.sog.RootPart.Name =  vName
         self.scene.AddNewSceneObject(self.sog, False)
         
         self.updateIsAtProjectSpace(self.isAtProjectSpace)
