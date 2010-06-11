@@ -3,7 +3,15 @@ from issuetracker import *
 from buildbot import *
 
 import commitdispatcher
-import swdeveloper
+#import swdeveloper
+#from swdeveloper import *
+
+v = VersionControlSystem("naali")
+
+def cb(vCommit):
+    print vCommit.message
+
+
 
 def resolveFilesAndFolders(vCommit):
     #get mod,add,remove
@@ -49,23 +57,16 @@ def resolveFilesAndFolders(vCommit):
     #print folders
     return files,folders
 
-#from swdeveloper import *
-
-v = VersionControlSystem("naali")
-
-def cb(vCommit):
-    print vCommit.message
-
 
 def initSWProject():
     """Mocked solution for now """
     
     components = []
     
-    
     #get all committers
     committers = v.getAllContributors()
-    print committers
+    print committers[0]
+    devs = []
     
     commits_for_devs = {}
     
@@ -73,18 +74,25 @@ def initSWProject():
     commits = v.getCommitsForBranch()
     count = len(committers)
     temp = count
+
     for commit in commits:
-        
+       
         author = commit["author"]
+        #for every name, insert a commit
         try:
             commits_for_devs[author["name"]]
         except:
+            #print author
+            #print commit["committer"]
             commits_for_devs[author["name"]] = commit
+            
             count -= 1
         
         if count < 1:
             break # every one has commit
         
+    #print commits_for_devs
+    
     #now we have commit ids... fetch the data for all committers
     for keys,values in commits_for_devs.iteritems():
         id = values["id"]
@@ -99,14 +107,15 @@ def initSWProject():
         
         for committer in committers:
             author = values["author"]
-            if committer["login"] == author["login"]:
+
+            if committer["login"] == author["login"] or author["name"] == committer["login"]:
                 cur = committer
         if cur:
             commitcount = cur["contributions"]
         
         print "number of commits: %d for developer: %s"%(commitcount,keys)
-        #commitdispatcher.Commit(values["author"]["name"],values["message"],folders,files)
-    
+        #myCommit = commitdispatcher.Commit(values["author"]["name"],values["message"],folders,files)
+        #swdeveloper.SWDeveloper(self.scene,keys,commitcount,myCommit,False)
     #init every developer so that each has latest commits, commit count and names in place
     
     
@@ -114,8 +123,46 @@ def initSWProject():
     return ""
 
 ###
+"""
 initSWProject()
+"""
+###
+
+coms = v.getCommitsFromNetworkData()
+
+committers = v.getAllContributors()
+
+commits_for_devs = {}
+
+#get all commits 
+count = len(committers)
+temp = count
+
+for commit in coms:
+   
+    author = commit["author"]
+    #for every name, insert a commit
+    try:
+        commits_for_devs[author]
+    except:
+        #print author
+        #print commit["committer"]
+        commits_for_devs[author] = commit
+        print commit["author"]
+        print commit["login"]
+        print commit["message"]
+        print commit["id"]
+        print "_______________"
+        count -= 1
     
+    if count < 1:
+        break # every one has commit
+
+#print count    
+#print commits_for_devs
+ 
+#print v.getUserInfo("antont")
+ 
 ### test commit dispatching
 """
 cd = commitdispatcher.CommitDispatcher.dispatcherForProject("naali")
