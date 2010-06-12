@@ -65,19 +65,58 @@ def initSWProject():
     
     #get all committers
     committers = v.getAllContributors()
-    print committers[0]
+    #print committers[0]
     devs = []
     
     commits_for_devs = {}
     
     #get all commits 
-    commits = v.getCommitsForBranch()
+    commits = v.getCommitsForBranch()   
     count = len(committers)
     temp = count
-
+    
+    
+    coms = v.getCommitsFromNetworkData()
+    print len(coms)
+    coms.reverse()
+    
+    for commit in coms:
+       
+        author = commit["author"]
+        #for every name, insert a commit
+        try:
+            commits_for_devs[author]
+        except:
+            #print author
+            #print commit["committer"]
+            commits_for_devs[author] = commit
+            """
+            print commit["author"]
+            print commit["login"]
+            print commit["message"]
+            print commit["id"]
+            print commit["date"]
+            """
+            print "_______________"
+            
+            count -= 1
+            
+            for committer in committers:
+            
+                name = ""
+                try:
+                    name = committer["name"]
+                except:
+                    pass
+    
+                if committer["login"] == author or commit["login"] == committer["login"] or name == author:
+                    cur = committer
+                    print "commit found for: ",committer["login"]
+            
     for commit in commits:
        
         author = commit["author"]
+        #login = commit["login"]
         #for every name, insert a commit
         try:
             commits_for_devs[author["name"]]
@@ -90,7 +129,7 @@ def initSWProject():
         
         if count < 1:
             break # every one has commit
-        
+    
     #print commits_for_devs
     
     #now we have commit ids... fetch the data for all committers
@@ -107,9 +146,16 @@ def initSWProject():
         
         for committer in committers:
             author = values["author"]
+            
+            name = ""
+            try:
+                name = committer["name"]
+            except:
+                pass
 
-            if committer["login"] == author["login"] or author["name"] == committer["login"]:
+            if committer["login"] == author["login"] or author["name"] == committer["login"] or name == keys:
                 cur = committer
+                print "commit found for: ",committer["login"]
         if cur:
             commitcount = cur["contributions"]
         
@@ -123,11 +169,11 @@ def initSWProject():
     return ""
 
 ###
-"""
-initSWProject()
-"""
-###
 
+initSWProject()
+
+###
+"""
 coms = v.getCommitsFromNetworkData()
 
 committers = v.getAllContributors()
@@ -157,7 +203,7 @@ for commit in coms:
     
     if count < 1:
         break # every one has commit
-
+"""
 #print count    
 #print commits_for_devs
  
