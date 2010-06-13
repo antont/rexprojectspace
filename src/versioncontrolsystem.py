@@ -31,6 +31,19 @@ class VersionControlSystem:
 
         pass
     
+    def getUserInfo(self,vLogin):
+        url = "http://github.com/api/v2/json/user/show/%s"%(vLogin)
+        f = urllib.urlopen(url)
+        s = f.read()
+        
+        jsonstring = json.loads(s)
+        
+        user = jsonstring["user"]
+        user = user["user"]
+        
+        return user
+        
+    
     def getCommitsFromNetworkData(self):
         """ Gets a huge amount of commits from the github network data. """
         url = "http://github.com/realxtend/%s/network_meta"%(self.projectName)
@@ -40,10 +53,10 @@ class VersionControlSystem:
         jsonstring = json.loads(s)
         nethash = jsonstring["nethash"]
         end = len(jsonstring["dates"])
-        print jsonstring["dates"]
-        print "end date: ", end
+        #print jsonstring["dates"]
+        #print "end date: ", end
         url = "http://github.com/realxtend/%s/network_data_chunk?nethash=%s&start=%s&end=%s"%(self.projectName,nethash,str(end - 500),str(end-1))
-        print url
+        #print url
         f = urllib.urlopen(url)
         s = f.read()
         #print s

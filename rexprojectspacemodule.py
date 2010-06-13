@@ -53,11 +53,12 @@ def SetWorld(vW):
     
 
 class DeveloperInfo:
-    def __init__(self,vName,vLogin):
-        self.name = vName
+    def __init__(self,vLogin,vName=""):
         self.login = vLogin
-        self.commit = None
+        self.name = ""
         self.commitcount = 0
+        self.latestcommitid = 0
+        self.latescommit = None 
         
 class RexProjectSpaceModule(IRegionModule):
     autoload = True
@@ -210,84 +211,99 @@ class RexProjectSpaceModule(IRegionModule):
 
 
     def initSWProject(self):
-        
+          
         components = []
         
         #get all committers
         committers = self.vcs.getAllContributors()
+        count = len(committers)
+        temp = count
         
-        devs = {}
-        
-        for committer in committers:
-            devs[committer["login"]] = DeveloperInfo("",committer["login"])
+        #create developerinfo for every dev..
+        devs = []
+        for dev in committers:
+            dinfo = DeveloperInfo(dev["login"],"")
+            dinfo.commitcount = dev["contributions"]
+            name = ""
+            try:
+                name = dev["name"]
+            except:
+                pass
+            dinfo.name = name
+            devs.append(dinfo)
+            
+            #print "%s has %s commits and name is:%s"%(dev["login"],dev["contributions"],name)
         
         commits_for_devs = {}
         
-        #get all commits 
-        commits = self.vcs.getCommitsForBranch()
-        count = len(committers)
-        temp = count
-
-        for commit in commits:
+        #get previous 500 commits 
+        coms = self.vcs.getCommitsFromNetworkData()
+        
+        coms.reverse()#oldest first, so reverse!
+        
+        for commit in coms:
            
             author = commit["author"]
             #for every name, insert a commit
             try:
-                commits_for_devs[author["name"]]
+                commits_for_devs[author]
             except:
                 #print author
                 #print commit["committer"]
-                commits_for_devs[author["name"]] = commit
+                commits_for_devs[author] = commit
+                """
+                print commit["author"]
+                print commit["login"]
+                print commit["message"]
+                print commit["id"]
+                print commit["date"]
+                """
+                print "_______________"
                 
-                count -= 1
-            
+                
+                
+                #match committer to some dinfo
+                for dev in devs:
+                    if dev.name == author or dev.login == commit["login"]  or dev.login == author:
+                        dev.latestcommitid = commit["id"]
+                        print "commit found for: ",dev.login
+                        count -= 1
+                        
             if count < 1:
-                break # every one has commit
-            
-        #print commits_for_devs
-        
+                print "everyone has commits"
+                break
+          
         #now we have commit ids... fetch the data for all committers
-        for keys,values in commits_for_devs.iteritems():
-            id = values["id"]
-            ci = self.vcs.getCommitInformation(id)
+        #and create swdevelopers...
+        swdevs = []
+        for dev in devs:
+            if dev.latestcommitid == 0:
+                continue #no commit
+            
+            ci = self.vcs.getCommitInformation(dev.latestcommitid)
+            print "commit id %s for dev:%s "%(dev.latestcommitid,dev.login)
+            
             c = ci["commit"]
             
-            #
+            files,folders = self.resolveFilesAndFolders(c)
+            message = c["message"]
+            """
+            print "________"
+            print dev.login
+            print dev.latestcommitid
+            print message
+            """
+            devCommit = commitdispatcher.Commit(dev.login,message,folders,files)
+            dev.latestcommit = devCommit
             
-            cur = None
-            #locate correct committer
-            commitcount = 0
-            
-            for committer in committers:
-                author = values["author"]
-
-                if committer["login"] == author["login"]:# or author["name"] == committer["login"]:
-                    cur = committer
-  
-                    dev = devs[committer["login"]]
-                    dev.commitcount = cur["contributions"]
-                    
-                    files,dirs = self.resolveFilesAndFolders(c)
-                    
-                    dev.commit = commitdispatcher.Commit(committer["login"],c["message"],dirs,files)
-            if cur:
-                commitcount = cur["contributions"]
-            
-            print "number of commits: %d for developer: %s"%(commitcount,keys)
+            #init every developer so that each has latest commits, commit count and names in place
+            swdevs.append(swdeveloper.SWDeveloper(self.scene,dev,False))
         
-        swdevelopers = []
         
-        for dev in devs.values():
-            swdevelopers.append(swdeveloper.SWDeveloper(self.scene,dev.login,dev.commitcount,dev.commit,False))
-        
-        #mock components for now
-        components = ["CMakeModules","CommunicationsModule","Core","DebugStatsModule","ECEditorModule",
-                      "EntityComponents","EnvironmentModule","Foundation","RexLogicModule","bin"]
-        
-        project = swproject.SWProject(self.scene,"naali",components,swdevelopers)
+        project = swproject.SWProject(self.scene,"naali",components,swdevs)
         return project
-### 
-        
+
+ 
     def updateCommitters(self,vCommitters):
         """ Committers from github """
         contributors = self.vcs.getAllContributors()

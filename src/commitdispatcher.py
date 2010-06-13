@@ -3,7 +3,7 @@ import versioncontrolsystem
 class Commit:
     def __init__(self,vDeveloperName,vMessage,vDirectories,vFiles):
         
-        self.author = vDeveloperName
+        self.login = vDeveloperName
         self.message = vMessage
         self.directories = vDirectories
         self.files = vFiles

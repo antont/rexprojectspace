@@ -119,8 +119,8 @@ class SWProject:
         
         #place developers to their initial positions...
         for dev in self.developers:
-            latestcommit = dev.latesCommit
-            if latestcommit != None or latestcommit == "":
+            latestcommit = dev.developerinfo.latestcommit
+            if latestcommit != None or latestcommit != "":
                 print latestcommit 
                 self.updateDeveloperLocationWithNewCommitData(latestcommit)
         
@@ -135,21 +135,21 @@ class SWProject:
     
     def updateDeveloperLocationWithNewCommitData(self, vCommit):
         
-        #we know nothing about this developer
+        #locate developer
         committer = None
         for dev in self.developers:
-            print "%s developer and %s committer "%(dev.name,vCommit.author)
-            if dev.name == vCommit.author:
+            if dev.developerinfo.login == vCommit.login:
                 committer = dev
                 break
         
+        #we know nothing about this developer
         if committer == None:
             print "no committer"
             return
         
         print "commit directory: ",vCommit.directories[0]
         
-        #locate correct component and developer
+        #locate correct component 
         component = None
         try:
             component = self.components[vCommit.directories[0]]
