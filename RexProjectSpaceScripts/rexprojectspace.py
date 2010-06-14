@@ -11,6 +11,7 @@ asm = clr.LoadAssemblyByName('OpenSim.Region.ScriptEngine.Shared')
 Vector3 = asm.OpenSim.Region.ScriptEngine.Shared.LSL_Types.Vector3
 
 import rexprojectspacemodule
+import rexprojectspaceutils
 
 class RexProjectSpace(RXCore.rxactor.Actor):
     world2 = None
@@ -19,28 +20,31 @@ class RexProjectSpace(RXCore.rxactor.Actor):
     def GetScriptClassName():
         return "rexprojectspace.RexProjectSpace"
     
-    @staticmethod
-    def GetWorld():
-        print "getting world: " , RexProjectSpace.world2 
-        return RexProjectSpace.world2
-               
+    @classmethod
+    def GetWorld(cls):
+        print "getting world: " , cls.world2 
+        return cls.world2
+    
+    @classmethod
+    def setWorld(cls,vWorld):
+        cls.world2 = vWorld
+           
+    
+    @classmethod
+    def getDeveloper(cls,vName):
+        pass
         
     def getActor(self,vUUID):
         pass
     
     def EventCreated(self):
         super(self.__class__,self).EventCreated()
-        if RexProjectSpace.world2 == None:
-            print "setting world: ", self.MyWorld
-            RexProjectSpace.world2 = "joo"
-            print RexProjectSpace.world2
-            print self.world2
-        else:
-            print "world set, : ", RexProjectSpace.world2
-        print "rexprojectspace.RexProjectSpace EventCreated"
         
-        rexprojectspacemodule.SetWorld("...")
-
+        print "rexprojectspace.RexProjectSpace EventCreated-------------"
+        RexProjectSpace.world2 = "maalima..."
+        print "+++++++world: ", self.MyWorld
+        
+        
     def EventDestroyed(self):
         print "rexprojectspace.RexProjectSpace EventDestroyed"
         

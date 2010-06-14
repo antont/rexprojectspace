@@ -6,6 +6,8 @@ import clr
 import random
 import math
 
+import rexprojectspaceutils
+
 asm = clr.LoadAssemblyByName('OpenSim.Region.ScriptEngine.Shared')
 Vector3 = asm.OpenSim.Region.ScriptEngine.Shared.LSL_Types.Vector3
 
@@ -16,7 +18,9 @@ class BurningTree(RXCore.rxactor.Actor):
 
     def EventCreated(self):
         super(self.__class__,self).EventCreated()
-        self.SetRexParticleScriptUUID("8cb876e0-6a42-4826-b2ca-84fce34ccecf")
+        
+        id = rexprojectspaceutils.load_particle_script("myfire.particle")
+        self.SetRexParticleScriptUUID(id)
         
         print "sourcetree.BurningTree EventCreated"
 
@@ -37,7 +41,9 @@ class Rain(RXCore.rxactor.Actor):
 
     def EventCreated(self):
         super(self.__class__,self).EventCreated()
-        self.SetRexParticleScriptUUID("c0401b49-8335-46d5-b3f1-7aa0f964eb65")
+        
+        id = rexprojectspaceutils.load_particle_script("snow.particle")
+        self.SetRexParticleScriptUUID(id)
         
         print "sourcetree.Rain EventCreated"
 
