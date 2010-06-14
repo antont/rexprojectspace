@@ -1,4 +1,6 @@
 import versioncontrolsystem
+import sys
+import threading
 
 class Commit:
     def __init__(self,vDeveloperName,vMessage,vDirectories,vFiles):
@@ -18,14 +20,14 @@ class CommitDispatcher:
         self.targets = {}
         self.timer = None
         self.latestcommit = "" #id of latest commit
+        self.timer = threading.Timer(60.0,self.updateCommits)#once a minute
+        self.timer.start()
     
     @classmethod
     def register(cls, vTarget, vProject ,vDeveloper = ""):
         """ Registers observer to commits. If no developer name is given
             all new commits are dispatched to target """
-        if vDeveloper == "":
-            pass #not implemented yet
-            
+  
         cls.dispatcherForProject(vProject).targets[vDeveloper] = vTarget
         
     @classmethod
@@ -63,12 +65,15 @@ class CommitDispatcher:
         self.dispatchCommits(newCommits)
         
         latestcommit = commits[0]
+        
+        self.timer.start()
     
     def dispatchCommits(self,vCommits):
-        for k,v in self.targets.iteritems():
-            #print commits[developer]
-            v(Commit("toni alatalo","new commit", ["A","B","C"], ["a","b","c"]))
-           
+        for commit in vCommits:
+            for k,v in self.targets.iteritems():
+                if k == "" or k == commit.login:
+                    v(Commit("antont","new commit", ["SceneManager"], ["a","b","c"]))
+               
         
            
         

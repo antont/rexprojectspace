@@ -43,6 +43,16 @@ class VersionControlSystem:
         
         return user
         
+    def getBlobs(self):
+        url = "http://github.com/api/v2/json/blob/all/realxtend/naali/develop"
+        f = urllib.urlopen(url)
+        s = f.read()
+        
+        jsonstring = json.loads(s)
+        
+        
+        return ""
+        
     
     def getCommitsFromNetworkData(self):
         """ Gets a huge amount of commits from the github network data. """

@@ -93,14 +93,13 @@ class RexProjectSpaceModule(IRegionModule):
         
         self.buildbot = buildbot.BuildBot()
         
-        branches = []
-        #self.tree = swsourcetree.SWSourceTree(scene,"Naali",branches)
-        #self.updateBuildResults()
-        
         self.vcs = versioncontrolsystem.VersionControlSystem("naali")
         #self.updateCommitters(self.developers)
         
-
+        branches = self.vcs.getBranches()
+        self.tree = swsourcetree.SWSourceTree(scene,"Naali",branches)
+        #self.updateBuildResults()
+        
         
         self.project = self.initSWProject()
         
@@ -299,6 +298,11 @@ class RexProjectSpaceModule(IRegionModule):
             #init every developer so that each has latest commits, commit count and names in place
             swdevs.append(swdeveloper.SWDeveloper(self.scene,dev,False))
         
+        #get all the components...
+        components = ["Core","Foundation","Interfaces","RexCommon","SceneManager","OgreRenderingModule"
+                      "Application","RexLogicModule","SupportModules","AssetModule","UiModule","HttpUtilities"
+                      "RpcUtilities","ProtocolUtilities","EnvironmentModule","TextureDecoderModule","ProtocolModuleOpenSim",
+                      "ProtocolModuleTaiga","EntityComponents",]
         
         project = swproject.SWProject(self.scene,"naali",components,swdevs)
         return project

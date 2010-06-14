@@ -44,28 +44,21 @@ class Component:
         self.scene = vScene
         self.pos = vPos
         
-        rexObjects = self.scene.Modules["RexObjectsModule"]
-        """
-        comp = vScene.GetSceneObjectPart(self.name)
-        
-        if comp:
-            "Found component:%s from scene"%(self.name)
-            self.sog = comp
-        else:
+        sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
+             
+        if sop:
+            self.sog = sop.ParentGroup
+            rexObjects = vScene.Modules["RexObjectsModule"]
+            self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
+            print "Component: %s found from scene"%("rps_component_" + self.name)
+        else:    
             self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
             self.sog.RootPart.Scale = V3(vX,vY,1)
-        """
-        self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
-        self.sog.RootPart.Scale = V3(vX,vY,1)
-        
+            self.sog.RootPart.Name =  "rps_component_" + self.name
+            
+            self.scene.AddNewSceneObject(self.sog, False)
         
         print "mesh id for component: ", self.rop.RexMeshUUID
-        
-        self.scene.AddNewSceneObject(self.sog, False)
-                      
-        self.branches = []
-        
-
         
     def addChild(self,vComponentName):
 
@@ -100,7 +93,7 @@ class SWProject:
         
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("4fad3aac-7819-42a0-86da-298b54a72791")
+        self.UUID = OpenMetaverse.UUID("4d6ae22b-1cc8-424c-bf96-f43cf646b5d2")
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             print "No first sw component..."
@@ -125,7 +118,7 @@ class SWProject:
                 self.updateDeveloperLocationWithNewCommitData(latestcommit)
         
         #get all commits
-        #commitdispatcher.CommitDispatcher.register(self.updateDeveloperLocationWithNewCommitData,"naali","toni alatalo")
+        commitdispatcher.CommitDispatcher.register(self.updateDeveloperLocationWithNewCommitData,self.projectName ,"")
         
     def addComponent(self, vComponentName):
         self.components[vComponentName] = self.component.addChild(vComponentName)
@@ -135,7 +128,7 @@ class SWProject:
     
     def updateDeveloperLocationWithNewCommitData(self, vCommit):
         
-        #locate developer
+        #locate deve
         committer = None
         for dev in self.developers:
             if dev.developerinfo.login == vCommit.login:
@@ -164,7 +157,7 @@ class SWProject:
         print "____________dev target pos________: ", component.sog.AbsolutePosition
         
         committer.sog.NonPhysicalGrabMovement(component.sog.AbsolutePosition)
-        
+
         pass   
       
     def addDeveloper(self,vDeveloper):
