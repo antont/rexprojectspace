@@ -34,15 +34,13 @@ class Tree:
         self.tile_height = 2.0
         
         self.scene = vScene
-        rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("fcc8a5f7-0851-4b50-bf24-8ba463dbb6aa") #root of tree...
         
         self.tiles = [] #from bottom to up
-        #self.tiles.append(TreeTile(vScene,V3(137.65,129.87,26.2)))
-        
+        self.branches = []
         self.treeTop = None
         
-        self.branches = []
+        rexObjects = self.scene.Modules["RexObjectsModule"]
+        self.UUID = OpenMetaverse.UUID("fcc8a5f7-0851-4b50-bf24-8ba463dbb6aa") #root of tree...
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             print "No tree..."
@@ -51,25 +49,15 @@ class Tree:
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
         self.rop = rexObjects.GetObject(self.UUID)
         self.sog.RootPart.UpdateRotation(rexprojectspaceutils.euler_to_quat(0,0,90))
-        
-        
-        self.tiles = [] #from bottom to up
-        #self.tiles.append(TreeTile(vScene,V3(137.65,129.87,26.2)))
-        
         self.pos = self.sog.AbsolutePosition
-        
         
         print "mesh id for tree base: ", self.rop.RexMeshUUID
         
-        
-    
     def addNewBranch(self,vBranchName,vParentName=""):
         """None means to add branch to main tree, otherwise add to
            other branch """         
            
-        #if vParentName == None:
         nbr = len(self.tiles)
-        print "number of tre tiles: ", nbr
         if(nbr == 0):
             self.tiles.append(TreeTile(self.scene,self.pos))
             nbr = 1
@@ -81,28 +69,26 @@ class Tree:
             temp = self.pos
             z = self.pos.Z + nbr*self.tile_height
             newLoc = V3(self.pos.X,self.pos.Y,z)
-            print "New pos: ", newLoc
             tile = TreeTile(self.scene,newLoc)
             self.tiles.append(tile)
         
         #create branch and locate it
         branch = Branch(self.scene, vBranchName,"",tile.locations[tile.currentIndex],V3(1.0,1.0,1.0),tile.rotations[tile.currentIndex])
+        self.branches.append(branch)
         
         tile.currentIndex += 1
         
-        #self.branches.append(branch)
             
 class TreeTile:
     
     def __init__(self,vScene,vPos):
         
-        self.currentIndex = 0  #increment on add, fix after testing...
+        self.currentIndex = 0  #increment on add
         self.scene = vScene
         self.pos = vPos
         self.w = 0.5
         
         self.locations = []
-
         for i in range(4):
             tempPos = None
             if i%2 == 0:
@@ -111,7 +97,6 @@ class TreeTile:
                 tempPos = V3(self.pos.X - self.w/2 ,self.pos.Y,self.pos.Z + 0.4*(i+0.1))
             self.locations.append(tempPos)
         
-        #[V3(136.62,129.91,27.26),V3(136.62,129.91,27.66)] #insert branch locations to here… (with normal scale, relative to tile)
         self.rotations = [rexprojectspaceutils.euler_to_quat(20,0,0),
                           rexprojectspaceutils.euler_to_quat(-20,180,0),
                           rexprojectspaceutils.euler_to_quat(20,0,0)
@@ -120,16 +105,12 @@ class TreeTile:
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
         
-        #upwards...
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treetile.mesh","treetile.material","tile…",rexprojectspaceutils.euler_to_quat(90,0,0),self.pos)
             
-        print "mesh id for tile: ", self.rop.RexMeshUUID
+        #print "mesh id for tile: ", self.rop.RexMeshUUID
         
         self.scene.AddNewSceneObject(self.sog, False)
-                      
-        self.branches = []
         
-    
 class Branch:
     w = 1
     def __init__(self,vScene,vName,vParentName,vPos,vScale,vRot):
@@ -143,11 +124,9 @@ class Branch:
         #upwards...
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos)
         
-        print "mesh id for branch: ", self.rop.RexMeshUUID
+        #print "mesh id for branch: ", self.rop.RexMeshUUID
         
         self.scene.AddNewSceneObject(self.sog, False)
-
-    pass    
 
 #data
 class SWSourceTree:

@@ -29,12 +29,14 @@ from OpenMetaverse import Vector3 as V3
 
 import sys, os, sha
 
+__world = None
 
 def setWorld(vWorld):
-    pass
-
+    print "----------world set with: ", vWorld
+    __world = vWorld
+    
 def world():
-    pass
+    return __world
 
 def euler_to_quat(yaw_deg, pitch_deg, roll_deg):
     # lifted & modded from Naali conversions.py
@@ -55,30 +57,22 @@ def euler_to_quat(yaw_deg, pitch_deg, roll_deg):
     
     return OpenMetaverse.Quaternion(x, y, z, w)
 
-def load_particle_script(scene, avatar, particlescriptpath, description):
+def load_particle_script(scene, particlescriptpath, description):
     #not ready
-    """uid = OpenMetaverse.UUID.Random()
-    
+    uid = OpenMetaverse.UUID.Random()
     asset = OpenSim.Framework.AssetBase()
-    asset.Name = "Script..."
+    asset.Name = particlescriptpath
     asset.FullID = uid
     asset.Type = 47 # ?? particle script??
     asset.Description = description
     
-    print "Loading particle script: ", os.path.abspath(meshpath)
+    print "Loading particle script: ", os.path.abspath(particlescriptpath)
     
-    asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(meshpath))
+    asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(particlescriptpath))
      
-    scene.AssetService.Store(asset)
+    val = scene.AssetService.Store(asset)
+    return asset.ID
     
-    list = scene.GetAvatars()
-    if len(list) > 0:
-        sp = list[0]
-    else:
-        print "No avatar, can't upload assets..."
-    root_avatar_uuid = sp.UUID
-    """
-    pass
     
     
 def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quaternion(0, 0, 0, 1), pos=V3(128, 128, 30), scale=V3(1, 1, 1)):
@@ -96,13 +90,6 @@ def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quat
      
     scene.AssetService.Store(asset)
     root_avatar_uuid = scene.RegionInfo.MasterAvatarAssignedUUID
-    """list = scene.GetAvatars()
-    if len(list) > 0:
-        sp = list[0]
-    else:
-        print "No avatar, can't upload assets..."
-    root_avatar_uuid = sp.UUID
-    """
     
     print "avatar uid:", root_avatar_uuid
     
