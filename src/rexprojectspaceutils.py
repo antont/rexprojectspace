@@ -29,15 +29,6 @@ from OpenMetaverse import Vector3 as V3
 
 import sys, os, sha
 
-__world = None
-
-def setWorld(vWorld):
-    print "----------world set with: ", vWorld
-    __world = vWorld
-    
-def world():
-    return __world
-
 def euler_to_quat(yaw_deg, pitch_deg, roll_deg):
     # lifted & modded from Naali conversions.py
     #let's assume that the euler has the yaw,pitch and roll and they are in degrees, changing to radians
@@ -91,7 +82,7 @@ def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quat
     scene.AssetService.Store(asset)
     root_avatar_uuid = scene.RegionInfo.MasterAvatarAssignedUUID
     
-    print "avatar uid:", root_avatar_uuid
+    #print "avatar uid:", root_avatar_uuid
     
     sceneobjgroup = scene.AddNewPrim(
         root_avatar_uuid, root_avatar_uuid,
@@ -99,7 +90,7 @@ def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quat
     rexObjects = scene.Modules["RexObjectsModule"]
     sceneobjgroup.RootPart.Scale = scale
     robject = rexObjects.GetObject(sceneobjgroup.RootPart.UUID)
-    print "root uuid", sceneobjgroup.RootPart.UUID
+    #print "root uuid", sceneobjgroup.RootPart.UUID
     robject.RexMeshUUID = asset.FullID
     robject.RexDrawDistance = 256
     robject.RexCastShadows = True
@@ -121,7 +112,7 @@ def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quat
     matnames, errors = DotMeshLoader.ReadDotMeshMaterialNames(asset.Data)
     for i, mname in enumerate(matnames):
         robject.RexMaterials.AddMaterial(i, mat2uuid[mname])
-        print "material added:", mname
+        #print "material added:", mname
         
     return sceneobjgroup, robject        
 

@@ -54,7 +54,7 @@ class VersionControlSystem:
         return ""
         
     
-    def getCommitsFromNetworkData(self):
+    def getCommitsFromNetworkData(self, vNbrOfCommits):
         """ Gets a huge amount of commits from the github network data. """
         url = "http://github.com/realxtend/%s/network_meta"%(self.projectName)
         f = urllib.urlopen(url)
@@ -65,7 +65,7 @@ class VersionControlSystem:
         end = len(jsonstring["dates"])
         #print jsonstring["dates"]
         #print "end date: ", end
-        url = "http://github.com/realxtend/%s/network_data_chunk?nethash=%s&start=%s&end=%s"%(self.projectName,nethash,str(end - 500),str(end-1))
+        url = "http://github.com/realxtend/%s/network_data_chunk?nethash=%s&start=%s&end=%s"%(self.projectName,nethash,str(end - vNbrOfCommits),str(end-1))
         #print url
         f = urllib.urlopen(url)
         s = f.read()

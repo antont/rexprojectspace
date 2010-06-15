@@ -24,6 +24,8 @@ import OpenMetaverse
 from OpenMetaverse import Vector3 as V3
 
 import rexprojectspaceutils
+import buildresultdispatcher
+import rexprojectspacedataobjects
 
 #UI stuff
 class Tree:
@@ -40,7 +42,7 @@ class Tree:
         self.treeTop = None
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("fcc8a5f7-0851-4b50-bf24-8ba463dbb6aa") #root of tree...
+        self.UUID = OpenMetaverse.UUID("717d3a73-bb92-4631-ab75-86469d0224dd") #root of tree...
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             print "No tree..."
@@ -152,6 +154,8 @@ class SWSourceTree:
         #start from bottom
         for branch in vBranchNames:
             self.tree.branches.append(self.addNewBranch(branch))
+            
+        buildresultdispatcher.BuildResultDispatcher.register(self.updateBuildResult)
     
     def createRainPlaceHolder(self,vPos):
         
@@ -168,8 +172,13 @@ class SWSourceTree:
         print "placeholder position",vPos
         return sog    
         
+    def updateBuildResult(self,vResult):
+        if vResult == True:
+            self.setBuildSuccesfull()
+        else:
+            self.setBuildFailed
+    
     def setBuildSuccesfull(self):
-        print "build succesfull"
         if self.bCurrentBuildFailed == True:
             #make it rain
             self.rainPlaceHolderRop.RexClassName = "sourcetree.Rain"
@@ -178,8 +187,6 @@ class SWSourceTree:
         self.bCurrentBuildFailed = False
     
     def setBuildFailed(self):
-        print "build failed"
-                
         if self.bCurrentBuildFailed == False:
             #make it burn
             self.treerop.RexClassName = "sourcetree.BurningTree"

@@ -93,7 +93,7 @@ class SWProject:
         
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("4d6ae22b-1cc8-424c-bf96-f43cf646b5d2")
+        self.UUID = OpenMetaverse.UUID("eaf5412b-c6fc-4ff2-aaf2-82880fad3ef0")
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             print "No first sw component..."
@@ -137,29 +137,33 @@ class SWProject:
         
         #we know nothing about this developer
         if committer == None:
-            print "no committer"
+            print "no committer with login:%s and name:%s: "%(vCommit.login,vCommit.name)
             return
-        
-        print "commit directory: ",vCommit.directories[0]
-        
+    
         #locate correct component 
         component = None
-        try:
-            component = self.components[vCommit.directories[0]]
-        except:
-            print "No component named: ", vCommit.directories[0]
-            return
         
-        if not component:
-            print "No component found from project"
-            return
-        
+        if len(vCommit.directories) > 0:
+            
+            print "commit directory: ",vCommit.directories[0]
+            
+            try:
+                component = self.components[vCommit.directories[0]]
+            except:
+                print "No component named: ", vCommit.directories[0]
+                return
+            
+            if not component:
+                print "No component found from project"
+                return
+
+        else:
+            component = self.component #no directories, so put dev into "container component"
+                
         print "____________dev target pos________: ", component.sog.AbsolutePosition
         
         committer.sog.NonPhysicalGrabMovement(component.sog.AbsolutePosition)
 
-        pass   
-      
     def addDeveloper(self,vDeveloper):
         pass
  

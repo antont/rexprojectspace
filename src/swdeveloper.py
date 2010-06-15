@@ -1,7 +1,10 @@
 import rexprojectspaceutils
 import commitdispatcher
+import rexprojectspacedataobjects
 
 import clr
+
+import threading
 
 clr.AddReference('ModularRex.RexFramework')
 from ModularRex.RexFramework import IModrexObjectsProvider
@@ -19,6 +22,8 @@ class SWDeveloper:
         self.developerinfo = vDeveloperInfo
         self.isAtProjectSpace = vIsAtProjectSpace
         self.avatar = vAvatar #rxavatar
+        self.script = None
+        self.timer = None
         
         sop =  vScene.GetSceneObjectPart("rps_dev_" + self.developerinfo.login)
              
@@ -40,7 +45,13 @@ class SWDeveloper:
         
         #start receiving commits for project, not needed at the moment
         #commitdispatcher.CommitDispatcher.register(self.updateCommitData,"naali",self.developerinfo.login)
+        
+        #start observing if developers avatar enters to a region
+        self.scene.EventManager.OnNewPresence += self.OnNewPresenceEntered
         print "dev: %s---created---"%(vDeveloperInfo.login)
+    
+    def __del__(self):
+        self.scene.EventManager.OnNewPresence -= self.OnNewPresenceEntered
         
     def updateCommitData(self, vCommitData):
         pass
@@ -53,6 +64,7 @@ class SWDeveloper:
         if self.isAtProjectSpace == False and vAtProjectSpace == True:
             if not self.rop.RexClassName == "follower.Follower":
                 self.rop.RexClassName = "follower.Follower"
+                self.timer = threading.Timer(1,self.OnScriptMaybeCreated)
         elif self.isAtProjectSpace == True and vAtProjectSpace == False:
             pass
         elif self.isAtProjectSpace == True and vAtProjectSpace == True:
@@ -61,3 +73,34 @@ class SWDeveloper:
         elif self.isAtProjectSpace == False and vAtProjectSpace == False:
             pass
         self.isAtProjectSpace = vAtProjectSpace
+    
+    def OnScriptMaybeCreated(self):
+        #try to get script
+        module = self.scene.Modules["RexProjectSpaceModule"]
+        print "Local id: ", (self.sog.LocalId)
+        avr = module.GetActor(self.sog.LocalId.ToString())
+        if not avr:
+            self.timer.stop()
+            self.timer.start()
+            return
+            
+        print "#############avatar: ", avr
+        
+    
+    def OnNewPresenceEntered(self,vScenePresence):
+        #print "avatar entered: ", vScenePresence
+        name = vScenePresence.Firstname + vScenePresence.Lastname
+        print name
+        print self.developerinfo.login
+        if name == self.developerinfo.name or name == self.developerinfo.login or self.developerinfo.login == vScenePresence.Firstname :
+            #self.updateIsAtProjectSpace(True)
+            if self.rop.RexClassName == "follower.Follower":
+                module = self.scene.Modules["RexProjectSpaceModule"]
+                print "Local id: ", (self.sog.LocalId)
+                avr = module.GetActor(self.sog.LocalId.ToString())
+                print "---avatar----",avr
+                
+            self.avatar = vScenePresence
+            print "located avatar!!!"
+            
+            

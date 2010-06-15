@@ -1,14 +1,9 @@
-import versioncontrolsystem
 import sys
 import threading
 
-class Commit:
-    def __init__(self,vDeveloperName,vMessage,vDirectories,vFiles):
-        
-        self.login = vDeveloperName
-        self.message = vMessage
-        self.directories = vDirectories
-        self.files = vFiles
+import versioncontrolsystem
+import rexprojectspacedataobjects
+
 
 class CommitDispatcher:
     dispatchers = {}
@@ -20,7 +15,7 @@ class CommitDispatcher:
         self.targets = {}
         self.timer = None
         self.latestcommit = "" #id of latest commit
-        self.timer = threading.Timer(60.0,self.updateCommits)#once a minute
+        self.timer = threading.Timer(10.0,self.updateCommits)#once a minute
         self.timer.start()
     
     @classmethod
@@ -47,7 +42,8 @@ class CommitDispatcher:
         """ get single commit for every developer and
         store latest commit and if commit is the same
         do not update anything """
-        commits = self.vcs.getCommitsForBranch("develop")
+        commits = self.vcs.getCommitsFromNetworkData(20)
+        commits.reverse()
         
         if( len(commits) < 1 or commits[0]["id"] == self.latestcommit):
             #nothing to update...
@@ -58,22 +54,35 @@ class CommitDispatcher:
         for c in commits:
             if c["id"] == self.latestcommit:
                 break
-                
-            name = c["author"]["name"]
             
-        
+            login = c["login"]
+            
+            #get detailed info also...
+            ci = self.vcs.getCommitInformation(c["id"])
+            
+            commit = ci["commit"]
+            
+            devCommit = rexprojectspacedataobjects.CommitInfo(login,commit)
+            newCommits.append(devCommit)
+            
         self.dispatchCommits(newCommits)
         
-        latestcommit = commits[0]
+        latestcommit = commits[0]["id"]
+        #print newCommits
+        self.timer.cancel()
+        self.timer = 0
         
+        self.timer = threading.Timer(10.0,self.updateCommits)#once a minute
         self.timer.start()
+    
     
     def dispatchCommits(self,vCommits):
         for commit in vCommits:
             for k,v in self.targets.iteritems():
                 if k == "" or k == commit.login:
-                    v(Commit("antont","new commit", ["SceneManager"], ["a","b","c"]))
-               
+                    #v(rexprojectspacedataobjects.CommitInfo("antont","new commit", ["SceneManager"], ["a","b","c"]))
+                    v(commit)
+                    
         
            
         
