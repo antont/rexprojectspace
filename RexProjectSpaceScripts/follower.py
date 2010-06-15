@@ -17,6 +17,7 @@ class Follower(RXCore.rxactor.Actor):
     def EventCreated(self):
         super(self.__class__,self).EventCreated()
         self.va= "abcd"
+        self.avatarname = ""
         
         print "follower.Follower EventCreated"
 
@@ -26,11 +27,16 @@ class Follower(RXCore.rxactor.Actor):
         super(self.__class__,self).EventDestroyed()
 
     def EventTouch(self,vAvatar):
-        
+        print vAvatar
         self.llShout(0,"Following avatar")
         self.AgentId = vAvatar.AgentId
+        
+        print "followers id: ",self.Id
+        
         posvec = Vector3(0, 1, 2) #should add some offset...
         point = 42
         self.AttachObjectToAvatar(vAvatar.AgentId,point,posvec)
-        self.set
-        
+    
+    def SetAvatarName(self,vAvatarName):
+        self.avatarname = vAvatarName
+    

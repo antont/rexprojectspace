@@ -20,30 +20,12 @@ class RexProjectSpace(RXCore.rxactor.Actor):
     def GetScriptClassName():
         return "rexprojectspace.RexProjectSpace"
     
-    @classmethod
-    def GetWorld(cls):
-        print "getting world: " , cls.world2 
-        return cls.world2
-    
-    @classmethod
-    def setWorld(cls,vWorld):
-        cls.world2 = vWorld
-           
-    
-    @classmethod
-    def getDeveloper(cls,vName):
-        pass
-        
-    def getActor(self,vUUID):
-        pass
-    
     def EventCreated(self):
         super(self.__class__,self).EventCreated()
         
-        print "rexprojectspace.RexProjectSpace EventCreated-------------"
-        RexProjectSpace.world2 = "maalima..."
-        print "+++++++world: ", self.MyWorld
-        
+        module = self.MyWorld.CS.World.Modules["RexProjectSpaceModule"]
+        module.SetRexWorld(self.MyWorld)
+       
         
     def EventDestroyed(self):
         print "rexprojectspace.RexProjectSpace EventDestroyed"
