@@ -15,9 +15,14 @@ class BuildBot:
         """Each Build is returned as a tuple in the form:: 
            (buildername, buildnumber, build_end, branchname, revision, 
            results, text)"""
-        buildPlatforms = self.proxy.getAllBuilders()
-
+        
+        buildPlatforms = []
         results = {}
+        
+        try:
+            buildPlatforms = self.proxy.getAllBuilders()
+        except:
+            print "exception in buildbot xmlrpc"
         
         for platform in buildPlatforms: 
             result = self.proxy.getLastBuildResults(platform)

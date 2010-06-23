@@ -42,7 +42,7 @@ class Tree:
         self.treeTop = None
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("717d3a73-bb92-4631-ab75-86469d0224dd") #root of tree...
+        self.UUID = OpenMetaverse.UUID("e7f55728-0f94-4dac-9c95-c32c30f09350") #root of tree...
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             print "No tree..."
@@ -79,6 +79,8 @@ class Tree:
         self.branches.append(branch)
         
         tile.currentIndex += 1
+        
+        return branch
         
             
 class TreeTile:
@@ -124,7 +126,7 @@ class Branch:
         self.rot = vRot
 
         #upwards...
-        self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos)
+        self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos,V3(0,0,0))
         
         #print "mesh id for branch: ", self.rop.RexMeshUUID
         
@@ -153,7 +155,8 @@ class SWSourceTree:
                 
         #start from bottom
         for branch in vBranchNames:
-            self.tree.branches.append(self.addNewBranch(branch))
+            b = self.addNewBranch(branch)
+            self.tree.branches.append(b)
             
         buildresultdispatcher.BuildResultDispatcher.register(self.updateBuildResult)
     
@@ -196,7 +199,8 @@ class SWSourceTree:
     def addNewBranch(self,vBranchName,vParentName=""):
         """None means to add branch to main tree, otherwise add to
            other branch """
-        self.tree.addNewBranch(vBranchName,vParentName)
+        b = self.tree.addNewBranch(vBranchName,vParentName)
+        b.rop.RexClassName = "sourcetree.BranchScaler"
         pass        
         
 class SWSourceTreeBranch:

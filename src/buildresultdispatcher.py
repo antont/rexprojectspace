@@ -9,7 +9,7 @@ class BuildResultDispatcher:
         self.targets = []
         self.buildbot = buildbot.BuildBot()
         
-        self.timer = threading.Timer(10,self.updateBuildResults)
+        self.timer = threading.Timer(60,self.updateBuildResults)
         
     
     @classmethod
@@ -50,7 +50,7 @@ class BuildResultDispatcher:
         self.timer.cancel()
         self.timer = 0
         
-        self.timer = threading.Timer(10,self.updateBuildResults)
+        self.timer = threading.Timer(60,self.updateBuildResults)
         self.timer.start()
         
         

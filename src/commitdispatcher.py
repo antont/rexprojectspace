@@ -15,7 +15,7 @@ class CommitDispatcher:
         self.targets = {}
         self.timer = None
         self.latestcommit = "" #id of latest commit
-        self.timer = threading.Timer(10.0,self.updateCommits)#once a minute
+        self.timer = threading.Timer(60.0,self.updateCommits)#once a minute
         self.timer.start()
     
     @classmethod
@@ -53,6 +53,7 @@ class CommitDispatcher:
         
         for c in commits:
             if c["id"] == self.latestcommit:
+                print "________id matched!!!______"
                 break
             
             login = c["login"]
@@ -67,12 +68,13 @@ class CommitDispatcher:
             
         self.dispatchCommits(newCommits)
         
-        latestcommit = commits[0]["id"]
+        self.latestcommit = commits[0]["id"]
+         
         #print newCommits
         self.timer.cancel()
         self.timer = 0
         
-        self.timer = threading.Timer(10.0,self.updateCommits)#once a minute
+        self.timer = threading.Timer(60.0,self.updateCommits)#once a minute
         self.timer.start()
     
     

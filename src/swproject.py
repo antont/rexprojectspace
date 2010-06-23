@@ -27,9 +27,9 @@ import swdeveloper
 import rexprojectspacemodule
 
 class Component:
-    offset = 0.0
+    offset = 0.3
     
-    def __init__(self,vScene,vName,vPos,vParent,vX=1,vY=1):
+    def __init__(self,vScene,vName,vPos,vParent,vX=1,vY=1,vScale = V3(0,0,0)):
         
         self.name = vName
         
@@ -43,6 +43,7 @@ class Component:
         self.currentIndex = 0  
         self.scene = vScene
         self.pos = vPos
+        self.scale = vScale
         
         sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
              
@@ -52,7 +53,7 @@ class Component:
             self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
             print "Component: %s found from scene"%("rps_component_" + self.name)
         else:    
-            self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
+            self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
             self.sog.RootPart.Scale = V3(vX,vY,1)
             self.sog.RootPart.Name =  "rps_component_" + self.name
             
@@ -67,9 +68,9 @@ class Component:
                self.curRow + temp.Y + self.curRow*Component.offset,
                temp.Z + 0.5)
                
-        child =  Component(self.scene, vComponentName, p, self, 1,1)
+        child =  Component(self.scene, vComponentName, p, self, 1,1,V3(0.85,0.85,0.85))
         
-        child.sog.RootPart.Scale = V3(0.85,0.85,1)
+        #child.sog.RootPart.Scale = V3(0.85,0.85,1)
         
         if self.curColumn < self.__x - 1: 
             self.curColumn += 1
@@ -93,7 +94,7 @@ class SWProject:
         
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("eaf5412b-c6fc-4ff2-aaf2-82880fad3ef0")
+        self.UUID = OpenMetaverse.UUID("4b0a0213-730f-4001-878b-08a8a841ba10")
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             print "No first sw component..."
@@ -102,13 +103,13 @@ class SWProject:
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
         self.rop = rexObjects.GetObject(self.UUID)
         
-        self.component = Component(vScene, "naali_root_component" , self.sog.AbsolutePosition, None, 5,5)
+        self.component = Component(vScene, "naali_root_component" , self.sog.AbsolutePosition, None, 5,5,V3(0,0,0))
         self.component.sog.RootPart.Scale = V3(0,0,0)
         
         for componentname in vComponents:
             self.addComponent(componentname)
         
-        print self.components
+        #print self.components
         
         #place developers to their initial positions...
         for dev in self.developers:
@@ -119,6 +120,8 @@ class SWProject:
         
         #get all commits
         commitdispatcher.CommitDispatcher.register(self.updateDeveloperLocationWithNewCommitData,self.projectName ,"")
+        
+        #versioncontroldatadispatcher.VersionControlDataDispatcher.dispatcherForProject(self.projectName)
         
     def addComponent(self, vComponentName):
         self.components[vComponentName] = self.component.addChild(vComponentName)

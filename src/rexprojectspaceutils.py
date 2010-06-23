@@ -65,6 +65,63 @@ def load_particle_script(scene, particlescriptpath, description):
     return asset.ID
     
     
+def store_mesh(scene, meshpath):
+    uid = OpenMetaverse.UUID.Random()
+    
+    asset = OpenSim.Framework.AssetBase()
+    asset.Name = "George"
+    asset.FullID = uid
+    asset.Type = 43 # ??
+    asset.Description = description
+    
+    print "Loading mesh: ", os.path.abspath(meshpath)
+    
+    asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(meshpath))
+     
+    scene.AssetService.Store(asset)
+    
+    return asset.FullID
+    
+"""
+def bind_mesh(scene, sceneobjgroup , materialpath, description, rot=OpenMetaverse.Quaternion(0, 0, 0, 1), pos=V3(128, 128, 30), scale=V3(1, 1, 1)):
+
+
+    root_avatar_uuid = scene.RegionInfo.MasterAvatarAssignedUUID
+    
+    #print "avatar uid:", root_avatar_uuid
+    
+    sceneobjgroup = scene.AddNewPrim(
+        root_avatar_uuid, root_avatar_uuid,
+        pos, rot, OpenSim.Framework.PrimitiveBaseShape.CreateBox())
+    rexObjects = scene.Modules["RexObjectsModule"]
+    sceneobjgroup.RootPart.Scale = scale
+    robject = rexObjects.GetObject(sceneobjgroup.RootPart.UUID)
+    #print "root uuid", sceneobjgroup.RootPart.UUID
+    robject.RexMeshUUID = asset.FullID
+    robject.RexDrawDistance = 256
+    robject.RexCastShadows = True
+    robject.RexDrawType = 1;
+    robject.RexCollisionMeshUUID = asset.FullID;
+   
+    matdata = open(materialpath).read()
+    
+    #print matdata
+    matparser = OgreSceneImporter.OgreMaterialParser(scene)
+    rc, mat2uuid, mat2texture = matparser.ParseAndSaveMaterial(
+        matdata)
+    mat2uuid = dict(mat2uuid)
+    print "mat-uuid dict:", mat2uuid
+    if not rc:
+        print "material parsing failed"
+        return
+    
+    matnames, errors = DotMeshLoader.ReadDotMeshMaterialNames(asset.Data)
+    for i, mname in enumerate(matnames):
+        robject.RexMaterials.AddMaterial(i, mat2uuid[mname])
+        #print "material added:", mname
+        
+    return sceneobjgroup, robject 
+"""
     
 def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quaternion(0, 0, 0, 1), pos=V3(128, 128, 30), scale=V3(1, 1, 1)):
     uid = OpenMetaverse.UUID.Random()
