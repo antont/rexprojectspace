@@ -55,3 +55,26 @@ class Rain(RXCore.rxactor.Actor):
 
     def EventTouch(self,vAvatar):
         pass      
+        
+class BranchScaler(RXCore.rxactor.Actor):
+    @staticmethod
+    def GetScriptClassName():
+        return "sourcetree.BranchScaler"
+
+    def EventCreated(self):
+        super(self.__class__,self).EventCreated()
+        self.GrowCount = 0
+        self.SetTimer(0.05,True)
+        
+        print "sourcetree.BranchScaler EventCreated"
+
+    def EventDestroyed(self):
+        print "sourcetree.BranchScaler EventDestroyed"
+        
+        super(self.__class__,self).EventDestroyed()
+    def EventTimer(self):
+        self.GrowCount += 1
+        if(self.GrowCount > 50):
+            self.SetTimer(0,False)
+        else:
+            self.Scale = Vector3(0.02*self.GrowCount,0.02*self.GrowCount,0.02*self.GrowCount)

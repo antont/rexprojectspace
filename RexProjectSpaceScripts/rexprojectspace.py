@@ -23,9 +23,14 @@ class RexProjectSpace(RXCore.rxactor.Actor):
     def EventCreated(self):
         super(self.__class__,self).EventCreated()
         
-        module = self.MyWorld.CS.World.Modules["RexProjectSpaceModule"]
+        try:
+            module = self.MyWorld.CS.World.Modules["RexProjectSpaceModule"]
+        except:
+            return
+            
+        print "________Module",module
         module.SetRexWorld(self.MyWorld)
-       
+        module.SetSpawner(self)
         
     def EventDestroyed(self):
         print "rexprojectspace.RexProjectSpace EventDestroyed"
