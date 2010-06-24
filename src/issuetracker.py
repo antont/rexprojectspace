@@ -1,5 +1,7 @@
 import urllib
 import time
+
+import rexprojectspacedataobjects
         
 class IssueTracker:
     """ Data fetcher for issue tracker type of service.
@@ -23,7 +25,7 @@ class IssueTracker:
                 pass
             else:
                 issueString = issuesStringArray[j][1:-1].split(',')             
-                #issue = IssueData(issueString)
+                issue = rexprojectspacedataobjects.IssueInfo(issueString)
                 issues.append(issue)
 
         return issues

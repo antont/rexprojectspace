@@ -11,7 +11,17 @@ class IssueInfo:
     """ Model class for issue"""    
     def __init__(self,issueData):
 
-        self.id = issueData[0]
+        self.id = ""
+        self.type = ""
+        self.status = ""
+        self.priority = ""
+        self.milestone = ""
+        self.owner = ""
+        self.summary = ""
+        self.allLabels = ""
+
+        self.id = issueData[0].strip('"')
+        print self.id
         self.type = issueData[1]
         self.status = issueData[2]
         self.priority = issueData[3]
@@ -19,6 +29,23 @@ class IssueInfo:
         self.owner = issueData[5]
         self.summary = issueData[6]
         self.allLabels = issueData[7]
+
+    def toString(self):
+        print ("Issue object: ID:%s TYPE:%s SUMMARY:%s")%(self.id,self.type,self.summary)
+
+
+    def compare(self,other):
+        print "vertailu--"
+        print "vertailu-----%s"%(other)
+        print self
+
+        if self.id == vOther.id and self.type == vOther.type and self.status == vOther.status and self.priority == vOther.priority and self.milestone == vOther.milestone and self.owner == vOther.owner and self.summary == vOther.summary and self.allLabels == vOther.allLabels:
+            return 1
+        else:
+            return -1 
+
+    #__cmp__ = compare
+    __str__ = toString
 
 class CommitInfo:
     def __init__(self,vLogin,vCommit):
