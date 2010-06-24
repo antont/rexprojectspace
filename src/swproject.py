@@ -20,7 +20,7 @@ from OpenMetaverse import Vector3 as V3
 
 import rexprojectspaceutils
 
-import commitdispatcher
+import rexprojectspacenotificationcenter
 
 import swdeveloper
 
@@ -119,9 +119,16 @@ class SWProject:
                 self.updateDeveloperLocationWithNewCommitData(latestcommit)
         
         #get all commits
-        commitdispatcher.CommitDispatcher.register(self.updateDeveloperLocationWithNewCommitData,self.projectName ,"")
+        #commitdispatcher.CommitDispatcher.register(self.updateDeveloperLocationWithNewCommitData,self.projectName ,"")
+        nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
+        nc.OnNewCommit += self.updateDeveloperLocationWithNewCommitData
         
         #versioncontroldatadispatcher.VersionControlDataDispatcher.dispatcherForProject(self.projectName)
+        
+    def __del__(self):
+        nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
+        nc.OnNewCommit -= self.updateDeveloperLocationWithNewCommitData
+        
         
     def addComponent(self, vComponentName):
         self.components[vComponentName] = self.component.addChild(vComponentName)

@@ -1,5 +1,4 @@
 import rexprojectspaceutils
-import commitdispatcher
 import rexprojectspacedataobjects
 import rexprojectspacemodule
 import clr
@@ -54,8 +53,6 @@ class SWDeveloper:
         
         self.updateIsAtProjectSpace(self.isAtProjectSpace)
         
-        #start receiving commits for project, not needed at the moment
-        #commitdispatcher.CommitDispatcher.register(self.updateCommitData,"naali",self.developerinfo.login)
         
         #start observing if developers avatar enters to a region
         self.scene.EventManager.OnNewPresence += self.OnNewPresenceEntered

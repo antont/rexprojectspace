@@ -24,8 +24,9 @@ import OpenMetaverse
 from OpenMetaverse import Vector3 as V3
 
 import rexprojectspaceutils
-import buildresultdispatcher
 import rexprojectspacedataobjects
+
+import rexprojectspacenotificationcenter
 
 #UI stuff
 class Tree:
@@ -158,7 +159,13 @@ class SWSourceTree:
             b = self.addNewBranch(branch)
             self.tree.branches.append(b)
             
-        buildresultdispatcher.BuildResultDispatcher.register(self.updateBuildResult)
+        nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
+        nc.OnBuild += self.updateBuildResult
+        
+    def __del__(self):
+        nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
+        nc.OnBuild -= self.updateBuildResult
+        
     
     def createRainPlaceHolder(self,vPos):
         
