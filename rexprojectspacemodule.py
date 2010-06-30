@@ -61,27 +61,27 @@ class RexProjectSpaceModule(IRegionModule):
         pos = LSL_Types.Vector3(120, 120, 26)
         localId = self.spawner.SpawnActor(pos,0,False,"developer.Developer")
         developer = self.world.GetActorByLocalID(localId)
-        print "script instance: ",developer
+        #print "script instance: ",developer
         return developer
     
     def SetRexWorld(self,vWorld):
-        print "it's alive"
+        #print "it's alive"
         self.world = vWorld
     
     def GetActor(self, vId):
         if not self.world:
-            print "no world set!!!!!______"
+            #print "no world set!!!!!______"
             return None
         
         actor = self.spawner.MyWorld.GetActorByLocalID(vId)
             
         #actor = self.world.GetActorByLocalID(vId)
-        print actor
+        #print actor
         
         return actor
     
     def SetSpawner(self,vRexProjectSpace):
-        print "spawner set-------"
+        #print "spawner set-------"
         self.spawner = vRexProjectSpace
         
     
@@ -107,11 +107,12 @@ class RexProjectSpaceModule(IRegionModule):
         tex.DefaultTexture.RGBA = texcolor
         sog.RootPart.UpdateTexture(tex)
         self.scene.AddNewSceneObject(sog, False)
+        sog.SetText("pallo",V3(1.0,1.0,0.0),1.0)
         return sog    
     
     
     def getProjectRootFolders(self):  
-        j = self.getBlobs()
+        j = self.vcs.getBlobs()
         
         allFilesAndFolders = j.values()
         
@@ -146,7 +147,7 @@ class RexProjectSpaceModule(IRegionModule):
             rexpy = scene.Modules["RexPythonScriptModule"]
         except KeyError:
             self.rexif = None
-            print "Couldn't get a ref to RexSCriptInterface"
+            #print "Couldn't get a ref to RexSCriptInterface"
         else:
             self.rexif = rexpy.mCSharp
         
@@ -159,30 +160,6 @@ class RexProjectSpaceModule(IRegionModule):
         
         scene.AddCommand(self, "hitMe","","",self.cmd_hitMe)
         
-        #self.bug,self.bugrop = rexprojectspaceutils.load_mesh(self.scene,"Bug.mesh","Bug.material","bug...")
-        
-        #------------ how to create bug
-        
-        #get bug factory
-        
-        #create a bug with bug data from the factory ()
-        
-        #"start" the bug
-        
-        #------------
-        
-        
-        #------------ how to load the bug
-        
-        #load/store texture
-        
-        #load mesh with material
-        
-        #load/store .skeleton
-        
-        #start animation
-        
-        #self.bug,self.bugrop = rexprojectspaceutils.load_mesh(self.scene,"Sphere.mesh","Sphere.material","bug...")
         
         """
         empty = []
@@ -204,12 +181,11 @@ class RexProjectSpaceModule(IRegionModule):
         #testing branches
         scene.AddCommand(self, "cb","","",self.cmd_cb)
         #self.updateCommitters(self.developers)
-        
-        return
+
         
         self.project = self.initSWProject()
         
-        #return
+        return
         
         #self.updateBuildResults()
         
@@ -229,7 +205,7 @@ class RexProjectSpaceModule(IRegionModule):
         scene.AddCommand(self, "commit","","",self.cmd_commit)
     
     def PostInitialise(self):
-        print "postinit..."
+        #print "postinit..."
         pass
     
     def initSWProject(self):
@@ -254,7 +230,7 @@ class RexProjectSpaceModule(IRegionModule):
             dinfo.name = name
             devs.append(dinfo)
             
-            #print "%s has %s commits and name is:%s"%(dev["login"],dev["contributions"],name)
+            print "%s has %s commits and name is:%s"%(dev["login"],dev["contributions"],name)
         
         commits_for_devs = {}
         
@@ -270,17 +246,17 @@ class RexProjectSpaceModule(IRegionModule):
             try:
                 commits_for_devs[author]
             except:
-                #print author
-                #print commit["committer"]
+                ##print author
+                ##print commit["committer"]
                 commits_for_devs[author] = commit
                 """
-                print commit["author"]
-                print commit["login"]
-                print commit["message"]
-                print commit["id"]
-                print commit["date"]
+                #print commit["author"]
+                #print commit["login"]
+                #print commit["message"]
+                #print commit["id"]
+                #print commit["date"]
                 """
-                print "_______________"
+                #print "_______________"
                 
                 
                 
@@ -288,11 +264,11 @@ class RexProjectSpaceModule(IRegionModule):
                 for dev in devs:
                     if dev.name == author or dev.login == commit["login"]  or dev.login == author:
                         dev.latestcommitid = commit["id"]
-                        print "commit found for: ",dev.login
+                        #print "commit found for: ",dev.login
                         count -= 1
                         
             if count < 1:
-                print "everyone has commits"
+                #print "everyone has commits"
                 break
           
         #now we have commit ids... fetch the data for all committers
@@ -303,7 +279,7 @@ class RexProjectSpaceModule(IRegionModule):
                 continue #no commit
             
             ci = self.vcs.getCommitInformation(dev.latestcommitid)
-            print "commit id %s for dev:%s "%(dev.latestcommitid,dev.login)
+            #print "commit id %s for dev:%s "%(dev.latestcommitid,dev.login)
             
             c = ci["commit"]
             
@@ -319,10 +295,14 @@ class RexProjectSpaceModule(IRegionModule):
             #swdevs.append(self.SpawnDeveloper(dev))
         
         #get all the components...
+        """
         components = ["Core","Foundation","Interfaces","RexCommon","SceneManager","OgreRenderingModule"
                       "Application","RexLogicModule","SupportModules","AssetModule","UiModule","HttpUtilities"
                       "RpcUtilities","ProtocolUtilities","EnvironmentModule","TextureDecoderModule","ProtocolModuleOpenSim",
                       "ProtocolModuleTaiga","EntityComponents","bin","doc"]
+        """
+        
+        components = self.getProjectRootFolders()
         
         project = swproject.SWProject(self.scene,"naali",components,swdevs)
         
@@ -349,28 +329,28 @@ class RexProjectSpaceModule(IRegionModule):
         lid = 0
         for ent in self.scene.GetEntities():
             if self.bug.UUID == ent.UUID:
-                print "found local id"
+                #print "found local id"
                 lid = ent.LocalId
                 
         mesh_local_id = lid
         pos_lsl = LSL_Types.Vector3(0, 0, 2)
         rot_lsl = LSL_Types.Quaternion(0, 0, 0, 1)
-        #print 'rot offset before attach', mesh_part.RotationOffset
+        ##print 'rot offset before attach', mesh_part.RotationOffset
         self.rexif.rexAttachObjectToAvatar(mesh_local_id.ToString(),
         avatar_presence.UUID.ToString(),
         28, pos_lsl, rot_lsl, False)
         mesh_part.ParentGroup.UpdateGroupPosition(pos)
 
         mesh_part.ParentGroup.UpdateGroupRotationR(rot)
-        print "attach done"   
+        #print "attach done"   
    
     def cmd_hitMe(self, *args):
         #try to get the tree item
         #self.tree.setBuildFailed()
         #sog,rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data")
         #self.scene.AddNewSceneObject(sog, False)
-        #print rexprojectspaceutils.world()
-        #print self.GetActor("2549818162")
+        ##print rexprojectspaceutils.world()
+        ##print self.GetActor("2549818162")
         #sog,rop = rexprojectspaceutils.load_mesh(self.scene,"Bug.mesh","Bug.material","bug...")
         
         #dev = self.SpawnDeveloper(V3(120,120,24))
@@ -378,10 +358,10 @@ class RexProjectSpaceModule(IRegionModule):
         lid = 0
         for ent in self.scene.GetEntities():
             if self.bug.UUID == ent.UUID:
-                print "found local id"
+                #print "found local id"
                 lid = ent.LocalId
         dev = self.spawner.MyWorld.GetActorByLocalID(lid)
-        print dev
+        #print dev
         #dev.SetDeveloperInfo(self.scene,sog,dinfo)
         """
         avatar = self.scene.GetScenePresences()[0]
@@ -434,11 +414,13 @@ class RexProjectSpaceModule(IRegionModule):
         pass
 
     def PostInitialise(self):
-        print self, 'post-initialise'
+        #print self, 'post-initialise'
+        pass
 
     def Close(self):
-        print self, 'close'
-
+        #print self, 'close'
+        pass
+    
     def getname(self):
         return self.__class__.__name__
 
