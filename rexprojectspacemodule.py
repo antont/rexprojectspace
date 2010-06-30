@@ -110,6 +110,28 @@ class RexProjectSpaceModule(IRegionModule):
         return sog    
     
     
+    def getProjectRootFolders(self):  
+        j = self.getBlobs()
+        
+        allFilesAndFolders = j.values()
+        
+        folders = []        
+        
+        allFilesAndFolders = allFilesAndFolders[0]
+        
+        for item in allFilesAndFolders:
+            
+            t = item.split("/")
+            if len(t) > 1:
+                
+                folders.append(t[0])
+
+        folders = list(set(folders))
+        folders.sort()
+        
+        return folders
+    
+    
     def Initialise(self, scene, configsource):
         
         RexProjectSpaceModule.rexworld = ""

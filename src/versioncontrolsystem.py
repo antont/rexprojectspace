@@ -51,9 +51,9 @@ class VersionControlSystem:
         jsonstring = json.loads(s)
         
         
-        return ""
-        
-    
+        return jsonstring
+
+       
     def getCommitsFromNetworkData(self, vNbrOfCommits):
         """ Gets a huge amount of commits from the github network data. """
         url = "http://github.com/realxtend/%s/network_meta"%(self.projectName)
