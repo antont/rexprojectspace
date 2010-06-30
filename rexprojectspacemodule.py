@@ -39,6 +39,7 @@ import buildbot
 
 import swproject
 import swdeveloper
+import swissue
 
 import versioncontrolsystem
 
@@ -159,7 +160,14 @@ class RexProjectSpaceModule(IRegionModule):
         
         #start animation
         
-        self.bug,self.bugrop = rexprojectspaceutils.load_mesh(self.scene,"Sphere.mesh","Sphere.material","bug...")
+        #self.bug,self.bugrop = rexprojectspaceutils.load_mesh(self.scene,"Sphere.mesh","Sphere.material","bug...")
+        
+        """
+        empty = []
+        issueData = rexprojectspacedataobjects.IssueInfo(empty)
+        issueData.type = "Defect"
+        bug = swissue.CreateIssue(self.scene,issueData)
+        """
         
         #--------------
         
