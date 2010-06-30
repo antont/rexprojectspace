@@ -30,7 +30,7 @@ class SWDeveloper:
             rexpy = self.scene.Modules["RexPythonScriptModule"]
         except KeyError:
             self.rexif = None
-            print "Couldn't get a ref to RexSCriptInterface"
+            #print "Couldn't get a ref to RexSCriptInterface"
         
         if rexpy:    
             self.rexif = rexpy.mCSharp
@@ -41,7 +41,7 @@ class SWDeveloper:
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
             self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
-            print "Developer: %s found from scene"%(self.developerinfo.login)
+            #print "Developer: %s found from scene"%(self.developerinfo.login)
         else:    
             self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
             self.sog.RootPart.Name =  "rps_dev_" + self.developerinfo.login
@@ -62,7 +62,9 @@ class SWDeveloper:
         
         self.rop.RexClassName = ""
         
-        print "dev: %s---created---"%(vDeveloperInfo.login)
+        #print "dev: %s---created---"%(vDeveloperInfo.login)
+        
+        self.sog.SetText(vDeveloperInfo.login,V3(0.0,1.0,0.5),1.0)
         
         
     
@@ -71,16 +73,16 @@ class SWDeveloper:
         
     def updateCommitData(self, vCommitData):
         pass
-        #print "updating developer vis. with: ", vNewCommit
+        ##print "updating developer vis. with: ", vNewCommit
         #update visualization also...
         
     def updateIsAtProjectSpace(self, vAtProjectSpace):
         """update visualization if necessary """
         
-        print "local id for dev: ",self.sog.LocalId
+        #print "local id for dev: ",self.sog.LocalId
         #self.sog.LocalId.ToString()
         #actor = self.mod.GetActor("1338755245")
-        #print actor
+        ##print actor
         #actor.SetAvatarName(self.developerinfo.login)
         
         
@@ -100,19 +102,19 @@ class SWDeveloper:
         """
 
     def OnNewPresenceEntered(self,vScenePresence):
-        #print "avatar entered: ", vScenePresence
+        ##print "avatar entered: ", vScenePresence
         """
         name = vScenePresence.Firstname + vScenePresence.Lastname
-        print name
-        print self.developerinfo.login
+        #print name
+        #print self.developerinfo.login
         if name == self.developerinfo.name or name == self.developerinfo.login or self.developerinfo.login == vScenePresence.Firstname :
             #self.updateIsAtProjectSpace(True)
-            print "located avatar!!!"
+            #print "located avatar!!!"
             avatarpos = self.sog.AbsolutePosition
             for ent in self.scene.GetEntities():
-                #print ent
+                ##print ent
                 if self.sog.UUID == ent.UUID:
-                    print "local matched rexmeshuuid"
+                    #print "local matched rexmeshuuid"
                     mesh_localid = ent.LocalId
                     break
 
@@ -129,7 +131,7 @@ class SWDeveloper:
             
     def OnPresenceLeaved(self,vScenePresence):
         if self.avatar:
-            print "avatart %s exited"%(vScenePresence)
+            #print "avatart %s exited"%(vScenePresence)
             self.scene.DetachSingleAttachmentToGround(
                         self.sog.UUID,
                         self.avatar.ControllingClient)

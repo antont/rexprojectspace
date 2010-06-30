@@ -19,9 +19,12 @@ class IssueInfo:
         self.owner = ""
         self.summary = ""
         self.allLabels = ""
-
+        
+        if len(issueData) < 8:
+            return
+        
         self.id = issueData[0].strip('"')
-        print self.id
+        #print self.id
         self.type = issueData[1]
         self.status = issueData[2]
         self.priority = issueData[3]
@@ -35,9 +38,9 @@ class IssueInfo:
 
 
     def compare(self,other):
-        print "vertailu--"
-        print "vertailu-----%s"%(other)
-        print self
+        #print "vertailu--"
+        #print "vertailu-----%s"%(other)
+        #print self
 
         if self.id == vOther.id and self.type == vOther.type and self.status == vOther.status and self.priority == vOther.priority and self.milestone == vOther.milestone and self.owner == vOther.owner and self.summary == vOther.summary and self.allLabels == vOther.allLabels:
             return 1
@@ -47,18 +50,28 @@ class IssueInfo:
     #__cmp__ = compare
     __str__ = toString
 
+import time
 class CommitInfo:
-    def __init__(self,vLogin,vCommit):
+    def __init__(self,vLogin,vCommit,vAuthor=""):
         
         self.login = vLogin
-        self.name = ""
-        try:
-            vCommit["author"]["name"]
-        except:
-            pass
+        self.name = vAuthor
+        
+        if self.name == "":
+            try:
+                self.name = vCommit["author"]["name"]
+            except:
+                pass
+
         self.message = vCommit["message"]
         self.files,self.directories = self.resolveFilesAndFolders(vCommit)
-
+        datestring = vCommit["authored_date"]
+        datestring = datestring[0:len(datestring)-6]#quite dirty, remove -xx:xx from the end
+        ti = time.strptime(datestring,"%Y-%m-%dT%h:%m:%s")
+        self.date = ti
+        #print ti
+        #print self.login
+        
     def resolveFilesAndFolders(self,vCommit):
         #get mod,add,remove
         files,mod,removed,added = [],[],[],[]
@@ -100,7 +113,7 @@ class CommitInfo:
             else:
                 folders.append("/")
 
-        #print folders
+        ##print folders
         return files,folders
 
         

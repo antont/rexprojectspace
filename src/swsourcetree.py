@@ -34,19 +34,20 @@ class Tree:
     def __init__(self,vScene,vName):
         """ "Base" of the tree """
         
-        self.tile_height = 2.0
+        self.tile_height = 1.5
         
         self.scene = vScene
         
         self.tiles = [] #from bottom to up
         self.branches = []
         self.treeTop = None
+        self.treebase = None
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
         self.UUID = OpenMetaverse.UUID("e7f55728-0f94-4dac-9c95-c32c30f09350") #root of tree...
         
         if not self.scene.GetSceneObjectPart(self.UUID):
-            print "No tree..."
+            #print "No tree..."
             return
             
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
@@ -54,15 +55,42 @@ class Tree:
         self.sog.RootPart.UpdateRotation(rexprojectspaceutils.euler_to_quat(0,0,90))
         self.pos = self.sog.AbsolutePosition
         
-        print "mesh id for tree base: ", self.rop.RexMeshUUID
+        sop =  vScene.GetSceneObjectPart("rps_treebase_" + vName)
         
+        if sop:
+            self.treebasesog = sop.ParentGroup
+            rexObjects = vScene.Modules["RexObjectsModule"]
+            self.treebaserop = rexObjects.GetObject(self.sog.RootPart.UUID)
+            #print "Tree: %s found from scene"%(vName)
+        else:    
+            self.treebasesog,self.treebaserop = rexprojectspaceutils.load_mesh(self.scene,"treebase.mesh","treebase.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
+            self.treebasesog.RootPart.Name =  "rps_treebase_" + vName
+            self.scene.AddNewSceneObject(self.treebasesog, False)
+        
+        sop = None
+        
+        sop =  vScene.GetSceneObjectPart("rps_treetop_" + vName)
+        
+        if sop:
+            self.treetopsog = sop.ParentGroup
+            rexObjects = vScene.Modules["RexObjectsModule"]
+            self.treetoprop = rexObjects.GetObject(self.sog.RootPart.UUID)
+            #print "Tree: %s found from scene"%(vName)
+        else:
+            temp = self.treebasesog.AbsolutePosition
+            self.treetopsog,self.treebaserop = rexprojectspaceutils.load_mesh(self.scene,"treetop.mesh","treetop.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),V3(temp.X,temp.Y,temp.Z+1))
+            self.treetopsog.RootPart.Name =  "rps_treetop_" + vName
+            self.scene.AddNewSceneObject(self.treetopsog, False)
+        
+        #print "mesh id for tree: ", self.rop.RexMeshUUID
+
     def addNewBranch(self,vBranchName,vParentName=""):
         """None means to add branch to main tree, otherwise add to
            other branch """         
            
         nbr = len(self.tiles)
         if(nbr == 0):
-            self.tiles.append(TreeTile(self.scene,self.pos))
+            self.tiles.append(TreeTile(self.scene,self.treebasesog.AbsolutePosition))
             nbr = 1
         
         tile = self.tiles[nbr-1]
@@ -74,6 +102,9 @@ class Tree:
             newLoc = V3(self.pos.X,self.pos.Y,z)
             tile = TreeTile(self.scene,newLoc)
             self.tiles.append(tile)
+            #put top in to a place
+            temp = tile.sog.AbsolutePosition
+            self.treetopsog.NonPhysicalGrabMovement(V3(temp.X,temp.Y,temp.Z+1))
         
         #create branch and locate it
         branch = Branch(self.scene, vBranchName,"",tile.locations[tile.currentIndex],V3(1.0,1.0,1.0),tile.rotations[tile.currentIndex])
@@ -91,15 +122,15 @@ class TreeTile:
         self.currentIndex = 0  #increment on add
         self.scene = vScene
         self.pos = vPos
-        self.w = 0.5
+        self.w = 0.0
         
         self.locations = []
         for i in range(4):
             tempPos = None
             if i%2 == 0:
-                tempPos = V3(self.pos.X + self.w/2 ,self.pos.Y,self.pos.Z + 0.4*(i+0.1))
+                tempPos = V3(self.pos.X, self.pos.Y + self.w/2,self.pos.Z + 0.3*(i+0.15))
             else:
-                tempPos = V3(self.pos.X - self.w/2 ,self.pos.Y,self.pos.Z + 0.4*(i+0.1))
+                tempPos = V3(self.pos.X, self.pos.Y - self.w/2,self.pos.Z + 0.3*(i+0.15))
             self.locations.append(tempPos)
         
         self.rotations = [rexprojectspaceutils.euler_to_quat(20,0,0),
@@ -110,9 +141,9 @@ class TreeTile:
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
         
-        self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treetile.mesh","treetile.material","tile…",rexprojectspaceutils.euler_to_quat(90,0,0),self.pos)
+        self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treetile.mesh","treetile.material","tile…",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
             
-        #print "mesh id for tile: ", self.rop.RexMeshUUID
+        ##print "mesh id for tile: ", self.rop.RexMeshUUID
         
         self.scene.AddNewSceneObject(self.sog, False)
         
@@ -129,7 +160,7 @@ class Branch:
         #upwards...
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos,V3(0,0,0))
         
-        #print "mesh id for branch: ", self.rop.RexMeshUUID
+        ##print "mesh id for branch: ", self.rop.RexMeshUUID
         
         self.scene.AddNewSceneObject(self.sog, False)
 
@@ -161,6 +192,7 @@ class SWSourceTree:
             
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         nc.OnBuild += self.updateBuildResult
+        nc.OnBranchesChanged += self.addNewBranch
         
     def __del__(self):
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
@@ -179,7 +211,7 @@ class SWSourceTree:
         sog.RootPart.UpdateRotation(rexprojectspaceutils.euler_to_quat(0,0,90))
         
         self.scene.AddNewSceneObject(sog, False)
-        print "placeholder position",vPos
+        #print "placeholder position",vPos
         return sog    
         
     def updateBuildResult(self,vResult):

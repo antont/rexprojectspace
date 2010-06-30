@@ -21,6 +21,7 @@ from OpenMetaverse import Vector3 as V3
 import rexprojectspaceutils
 
 import rexprojectspacenotificationcenter
+import rexprojectspacedataobjects
 
 import swdeveloper
 
@@ -51,7 +52,7 @@ class Component:
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
             self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
-            print "Component: %s found from scene"%("rps_component_" + self.name)
+            #print "Component: %s found from scene"%("rps_component_" + self.name)
         else:    
             self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
             self.sog.RootPart.Scale = V3(vX,vY,1)
@@ -59,7 +60,8 @@ class Component:
             
             self.scene.AddNewSceneObject(self.sog, False)
         
-        print "mesh id for component: ", self.rop.RexMeshUUID
+        #print "mesh id for component: ", self.rop.RexMeshUUID
+        self.sog.SetText(self.name,V3(1.0,1.0,0.0),1.0)
         
     def addChild(self,vComponentName):
 
@@ -89,33 +91,38 @@ class SWProject:
         
         self.components = {}
         self.developers = vDevelopers
+        self.latestcommitter = None
+        #print "-----------------",self.developers[0].developerinfo.login
         
-        #self.dev = swdeveloper.SWDeveloper(self.scene,"dump",0,"",False,"")
+        if len(self.developers) > 0:
+            self.latestcommitter = self.developers[0]            
+            self.latestcommitter = self.resolveLatestCommitter()
+            print "-----------------",self.latestcommitter.developerinfo.login
         
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
         self.UUID = OpenMetaverse.UUID("4b0a0213-730f-4001-878b-08a8a841ba10")
         
         if not self.scene.GetSceneObjectPart(self.UUID):
-            print "No first sw component..."
+            #print "No first sw component..."
             return
             
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
         self.rop = rexObjects.GetObject(self.UUID)
         
-        self.component = Component(vScene, "naali_root_component" , self.sog.AbsolutePosition, None, 5,5,V3(0,0,0))
+        self.component = Component(vScene, "naali_root_component" , self.sog.AbsolutePosition, None, 6,6,V3(0,0,0))
         self.component.sog.RootPart.Scale = V3(0,0,0)
         
         for componentname in vComponents:
             self.addComponent(componentname)
         
-        #print self.components
+        ##print self.components
         
         #place developers to their initial positions...
         for dev in self.developers:
             latestcommit = dev.developerinfo.latestcommit
             if latestcommit != None or latestcommit != "":
-                print latestcommit 
+                #print latestcommit 
                 self.updateDeveloperLocationWithNewCommitData(latestcommit)
         
         #get all commits
@@ -129,48 +136,62 @@ class SWProject:
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         nc.OnNewCommit -= self.updateDeveloperLocationWithNewCommitData
         
+    def resolveLatestCommitter(self):
         
+        for dev in self.developers:
+            if dev.developerinfo.latestcommit:
+                if dev.developerinfo.latestcommit.date > self.latestcommitter.developerinfo.latestcommit.date:
+                    print dev.developerinfo.latestcommit.date
+                    self.latestcommitter = dev
+                    
+        return self.latestcommitter
+    
     def addComponent(self, vComponentName):
         self.components[vComponentName] = self.component.addChild(vComponentName)
         self.components[vComponentName].sog.RootPart.Name =  vComponentName
-        pass
+        return self.components[vComponentName]
         
     
     def updateDeveloperLocationWithNewCommitData(self, vCommit):
         
-        #locate deve
+        #locate developer
         committer = None
         for dev in self.developers:
-            if dev.developerinfo.login == vCommit.login:
+            if dev.developerinfo.login == vCommit.login or dev.developerinfo.name == vCommit.name:
                 committer = dev
                 break
         
         #we know nothing about this developer
         if committer == None:
-            print "no committer with login:%s and name:%s: "%(vCommit.login,vCommit.name)
+            print "no committer with login:%s and name:%s, must be a new developer.(message:%s) "%(vCommit.login,vCommit.name,vCommit.message)
+            """
+            developerinfo = rexprojectspacedataobjects.DeveloperInfo(vCommit.login,vCommit.name)
+            developerinfo.latestcommit = vCommit
+            committer = swdeveloper.SWDeveloper(0,self.scene,developerinfo,false)
+            """
             return
-    
+            
         #locate correct component 
         component = None
         
         if len(vCommit.directories) > 0:
             
-            print "commit directory: ",vCommit.directories[0]
+            #print "commit directory: ",vCommit.directories[0]
             
             try:
                 component = self.components[vCommit.directories[0]]
             except:
-                print "No component named: ", vCommit.directories[0]
-                return
+                #print "No component named:%s  , must be a new component"%(vCommit.directories[0])
+                component = self.addComponent(vCommit.directories[0])
             
             if not component:
-                print "No component found from project"
+                #print "No component found from project"
                 return
 
         else:
             component = self.component #no directories, so put dev into "container component"
                 
-        print "____________dev target pos________: ", component.sog.AbsolutePosition
+        #print "____________dev target pos________: ", component.sog.AbsolutePosition
         
         committer.sog.NonPhysicalGrabMovement(component.sog.AbsolutePosition)
 

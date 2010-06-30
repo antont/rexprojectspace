@@ -22,7 +22,8 @@ class BuildBot:
         try:
             buildPlatforms = self.proxy.getAllBuilders()
         except:
-            print "exception in buildbot xmlrpc"
+            pass
+            #print "exception in buildbot xmlrpc"
         
         for platform in buildPlatforms: 
             result = self.proxy.getLastBuildResults(platform)

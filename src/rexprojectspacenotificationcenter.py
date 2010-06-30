@@ -21,7 +21,7 @@ class RexProjectSpaceNotificationCenter:
         try:
             nc = cls.instances[vProjectName]
         except:
-            print "creating notification center for project: ", vProjectName
+            ##print "creating notification center for project: ", vProjectName
             nc = cls(vProjectName)
             cls.instances[vProjectName] = nc
             
@@ -31,34 +31,45 @@ class RexProjectSpaceNotificationCenter:
         """ start listening to all coming events that are related to 
             a project."""
         
-        CommitDispatcher.register(self.NewCommit,vProjectName)
+        CommitDispatcher.registerAsCommitListener(self.NewCommit,vProjectName)
+        CommitDispatcher.registerAsBranchListener(self.NewBranch,vProjectName)
         
         BuildResultDispatcher.register(self.NewBuild)
 
         IssueDispatcher.registerOnNewIssues(self.NewIssue)
         IssueDispatcher.registerOnIssueUpdated(self.IssueUpdated)
-           
-        self.OnNewCommit = rxevent.RexPythonEvent()
         
+        #vcs
+        self.OnNewCommit = rxevent.RexPythonEvent()
+        self.OnBranchesChanged = rxevent.RexPythonEvent()
+        self.OnNewCommitter = rxevent.RexPythonEvent()
+        
+        
+        #issue tracking system
         self.OnNewIssue = rxevent.RexPythonEvent()
         self.OnIssueUpdated = rxevent.RexPythonEvent()
-        
+
+        #build bot
         self.OnBuild = rxevent.RexPythonEvent()
         
     def NewCommit(self,vCommit):
-        print "---commit----"
+        ##print "---commit----"
         self.OnNewCommit(vCommit)
         
+    def NewBranch(self,branches):
+        ##print "---new branch---"
+        self.OnBranchesChanged(branches)
+        
     def NewBuild(self,vBuild):
-        print "---build----"
+        ##print "---build----"
         self.OnBuild(vBuild)
         
     def NewIssue(self,vIssue):
-        print "---new issue----"
+        ##print "---new issue----"
         self.OnNewIssue(vIssue)
         
     def IssueUpdated(self,vIssue):
-        print "---issue updated----"
+        ##print "---issue updated----"
         self.OnIssueUpdated(vIssue)
 
 ########
@@ -74,13 +85,25 @@ class CommitDispatcher:
     def __init__(self,vVCS):
         self.vcs = vVCS
         self.targets = {}
+        self.latestcommit = 0
+        
+        self.branches = []
+        self.branchlisteners = []
+        
         self.timer = None
         self.latestcommit = "" #id of latest commit
-        self.timer = threading.Timer(60.0,self.updateCommits)#once a minute
+        self.timer = threading.Timer(60.0,self.update)#once a minute
         self.timer.start()
     
     @classmethod
-    def register(cls, vTarget, vProject ,vDeveloper = ""):
+    def registerAsBranchListener(cls, vTarget, vProject):
+        """ Registers observer to observe changes in the branch count """
+  
+        cls.dispatcherForProject(vProject).branchlisteners.append(vTarget)
+    
+    
+    @classmethod
+    def registerAsCommitListener(cls, vTarget, vProject ,vDeveloper = ""):
         """ Registers observer to commits. If no developer name is given
             all new commits are dispatched to target """
   
@@ -92,58 +115,82 @@ class CommitDispatcher:
         try:
             dispatcher = cls.dispatchers[vProject]
         except:
-            print "creating dispatcher for project: ", vProject
+            ##print "creating dispatcher for project: ", vProject
             dispatcher = cls(versioncontrolsystem.VersionControlSystem(vProject))
             cls.dispatchers[vProject] = dispatcher
             
         return dispatcher
 
     
-    def updateCommits(self):
-        """ get single commit for every developer and
+    def update(self):
+        """ Get single commit for every developer and
         store latest commit and if commit is the same
-        do not update anything """
+        do not update anything. Get also branch information"""
         commits = self.vcs.getCommitsFromNetworkData(20)
         commits.reverse()
+        
+        #commits = self.vcs.getLatestCommitForBranch()
+        
+        #print "previous id: ", self.latestcommit
+        #print "newest id: ", commits[0]["id"]
         
         if( len(commits) < 1 or commits[0]["id"] == self.latestcommit):
             #nothing to update...
             return
+            
+        self.latestcommit = commits[0]["id"]
         
         newCommits = []
         
         for c in commits:
             if c["id"] == self.latestcommit:
-                print "________id matched!!!______"
+                ##print "________id matched!!!______"
                 break
             
             login = c["login"]
+            print "login: ", login
+            
+            author = ""
+            
+            try:
+                author = c["author"]
+            except:
+                pass
+                
+            print "author: ", author
             
             #get detailed info also...
             ci = self.vcs.getCommitInformation(c["id"])
             
             commit = ci["commit"]
             
-            devCommit = rexprojectspacedataobjects.CommitInfo(login,commit)
+            
+            devCommit = rexprojectspacedataobjects.CommitInfo(login,commit,author)
             newCommits.append(devCommit)
             
         self.dispatchCommits(newCommits)
         
-        self.latestcommit = commits[0]["id"]
-         
-        #print newCommits
+        branches = self.vcs.getBranches()
+        
+        if len(branches) != len(self.branches):
+            self.branches = branches
+            self.dispatchBranches(self.branches)
+            
+        ###print newCommits
         self.timer.cancel()
         self.timer = 0
         
-        self.timer = threading.Timer(60.0,self.updateCommits)#once a minute
+        self.timer = threading.Timer(60.0,self.update)#once a minute
         self.timer.start()
     
+    def dispatchBranches(self,branches):
+        for listener in self.branchlisteners:
+            listener(branches)
     
     def dispatchCommits(self,vCommits):
         for commit in vCommits:
             for k,v in self.targets.iteritems():
                 if k == "" or k == commit.login:
-                    #v(rexprojectspacedataobjects.CommitInfo("antont","new commit", ["SceneManager"], ["a","b","c"]))
                     v(commit)
 #####
 
@@ -173,23 +220,23 @@ class BuildResultDispatcher:
     def dispatcher(cls):
         d = None
         if not cls.dispatcherinstance:
-            print "creating dispatcher for build results: "
+            ##print "creating dispatcher for build results: "
             cls.dispatcherinstance = cls()
         
         return cls.dispatcherinstance
 
     def updateBuildResults(self):
-        print "building"
+        ##print "building"
         builds = self.buildbot.getLatestBuilds()
         
         buildResult = True
         
         for k,v in builds.iteritems():
             if v == "success":
-                print "build succesfull for: ",k
+                ##print "build succesfull for: ",k
                 pass
             else:
-                print "build failed for: ",k
+                ##print "build failed for: ",k
                 buildResult = False
                 
         self.dispatchBuildResults(buildResult)
@@ -242,13 +289,13 @@ class IssueDispatcher:
     def dispatcher(cls):
         d = None
         if not cls.instance:
-            print "creating dispatcher for issues: "
+            ##print "creating dispatcher for issues: "
             cls.instance = cls()
         
         return cls.instance
 
     def updateIssues(self):
-        print "getting issues"
+        ##print "getting issues"
         issues = self.issuetracker.getIssues()
         
         
