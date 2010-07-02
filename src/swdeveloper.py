@@ -28,6 +28,8 @@ class SWDeveloper:
         self.isAtProjectSpace = vIsAtProjectSpace
         self.avatar = vAvatar #rxavatar
         self.script = None
+        self.skeleton_anim_id = 0
+        
         try:
             rexpy = self.scene.Modules["RexPythonScriptModule"]
         except KeyError:
@@ -54,8 +56,9 @@ class SWDeveloper:
         self.sog.RootPart.Scale = V3(scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2)
         
         self.updateIsAtProjectSpace(self.isAtProjectSpace)
-        
-        
+       
+        self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
+       
         #start observing if developers avatar enters to a region
         self.scene.EventManager.OnNewPresence += self.OnNewPresenceEntered
         
@@ -87,8 +90,6 @@ class SWDeveloper:
         ##print actor
         #actor.SetAvatarName(self.developerinfo.login)
         
-        
-        
         """
         if self.isAtProjectSpace == False and vAtProjectSpace == True:
             if not self.rop.RexClassName == "follower.Follower":
@@ -103,6 +104,16 @@ class SWDeveloper:
         self.isAtProjectSpace = vAtProjectSpace
         """
 
+        
+    def updateIsLatestCommitter(self,vIsLatestCommitter):
+        if vIsLatestCommitter:
+            if self.skeleton_anim_id != OpenMetaverse.UUID.Zero:
+                self.skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"Diamond.skeleton")
+            self.rop.RexAnimationPackageUUID = self.skeleton_anim_id
+            self.rop.RexAnimationName = "jump"
+        else:
+            self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
+        
     def OnNewPresenceEntered(self,vScenePresence):
         ##print "avatar entered: ", vScenePresence
         """

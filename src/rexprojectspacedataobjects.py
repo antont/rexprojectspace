@@ -1,4 +1,16 @@
 
+import time
+def parseDate(vDate):
+    datestring = datestring[0:len(datestring)-6]#quite dirty, remove -xx:xx from the end
+    time = time.strptime(datestring,"%Y-%m-%dT%h:%m:%s")
+    return time    
+
+class BranchInfo:
+    def __init__(self,vName,vNumberOfCommits,vLatestCommitDate):
+        self.name = vName
+        self.numberofcommits = vNumberOfCommits
+        self.latestcommitdate = parseDate(vLatestCommitDate)
+
 class DeveloperInfo:
     def __init__(self,vLogin,vName=""):
         self.login = vLogin
@@ -50,7 +62,6 @@ class IssueInfo:
     #__cmp__ = compare
     __str__ = toString
 
-import time
 class CommitInfo:
     def __init__(self,vLogin,vCommit,vAuthor=""):
         
@@ -66,9 +77,7 @@ class CommitInfo:
         self.message = vCommit["message"]
         self.files,self.directories = self.resolveFilesAndFolders(vCommit)
         datestring = vCommit["authored_date"]
-        datestring = datestring[0:len(datestring)-6]#quite dirty, remove -xx:xx from the end
-        ti = time.strptime(datestring,"%Y-%m-%dT%h:%m:%s")
-        self.date = ti
+        self.date = parseDate(datestring)
         #print ti
         #print self.login
         

@@ -105,11 +105,11 @@ class SWProject:
         if len(self.developers) > 0:
             self.latestcommitter = self.developers[0]            
             self.latestcommitter = self.resolveLatestCommitter()
-            print "-----------------",self.latestcommitter.developerinfo.login
+            self.latestcommitter.updateIsLatestCommitter(True)
         
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("df53f4d4-1bb8-43b0-8590-41482fd5a49a")
+        self.UUID = OpenMetaverse.UUID("61a6a034-55db-443e-9d19-964f1040af65")
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             print "No first sw component..."
@@ -121,7 +121,7 @@ class SWProject:
         self.component = Component(vScene, "naali_root_component" , self.sog.AbsolutePosition, None, 6,6,V3(0,0,0))
         self.component.sog.RootPart.Scale = V3(0,0,0)
         
-        self.componentsAndDevelopersDict["naali_root_component"] = [self.component]
+        self.componentsAndDevelopersDict["naali_root_component"] = []
         
         for componentname in vComponents:
             self.componentsAndDevelopersDict[componentname] = []
@@ -134,7 +134,7 @@ class SWProject:
             latestcommit = dev.developerinfo.latestcommit
             if latestcommit != None or latestcommit != "":
                 #print latestcommit 
-                self.updateDeveloperLocationWithNewCommitData(latestcommit)
+                self.updateDeveloperLocationWithNewCommitData(latestcommit,False)
         
         #get all commits
         #commitdispatcher.CommitDispatcher.register(self.updateDeveloperLocationWithNewCommitData,self.projectName ,"")
@@ -163,19 +163,13 @@ class SWProject:
         return self.components[vComponentName]
         
     
-    def updateDeveloperLocationWithNewCommitData(self, vCommit):
+    def updateDeveloperLocationWithNewCommitData(self, vCommit, vMakeCurrent = True):
         
         #locate developer
         committer = None
         for dev in self.developers:
             if dev.developerinfo.login == vCommit.login or dev.developerinfo.name == vCommit.name:
                 committer = dev
-                
-                #unset anim or other visualization for prev latest committer
-                #self.latestcommitter
-                
-                #set the dev as latest commmitter and visualize it
-                #committer
                 break
         
         #we know nothing about this developer
@@ -198,59 +192,81 @@ class SWProject:
             try:
                 component = self.components[vCommit.directories[0]]
             except:
-                #print "No component named:%s  , must be a new component"%(vCommit.directories[0])
+                print "No component named:%s  , must be a new component"%(vCommit.directories[0])
                 #component = self.addComponent(vCommit.directories[0])
                 pass
                 
             if not component:
-                #print "No component found from project"
+                print "No component found from project"
                 return
                 
             devs = self.componentsAndDevelopersDict[component.name]
             devs.append(committer)
             
-            #remove developer from previous componenent
+            #remove developer from previous componenent, k is component name and c lists developers to
+            #component named k, not done yet... 
             """
-            previouscomponent = None
-            for c in self.componentsAndDevelopersDict.values():
+            for k,c in self.componentsAndDevelopersDict.iteritems():
                 if c.count(committer)>0:
-                    c.remove(c.index(committer))
+                    c.remove(committer)
+                    
                     previouscomponent = c
-                    break
-            
-            #rearrange devs...not done
-            h = 0
-            for j in range(len(previouscomponent)):
-                dev = devs[j]
-                h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
-                h += 0.2
-                
-                devPos = V3(pos.X,pos.Y,pos.Z + h)
-                
-                committer.sog.NonPhysicalGrabMovement(pos)
+                    
+                    #rearrange devs
+                    h = 0
+                    for j in range(len(previouscomponent)):
+                        dev = devs[j]
+                        h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
+                        h += 0.2
+                        
+                        comp = self.components[k]#get component instance from dict
+                        
+                        pos = comp.sog.AbsolutePosition
+                        devPos = V3(pos.X,pos.Y,pos.Z + h)
+                        
+                        previouscomponent[j].sog.NonPhysicalGrabMovement(devPos)
+                        
             """
         else:
             component = self.component #no directories, so put dev into "container component"
-                
-        #print "____________dev target pos________: ", component.sog.AbsolutePosition
         
-        pos = component.sog.AbsolutePosition
-        
-        
-        #stack developers, so they dont collide ...
         devs = self.componentsAndDevelopersDict[component.name]
+        devs = self.sortDevelopers(devs)
         
         h = 0
-        for j in range(len(devs)-1):
+        for j in range(len(devs)):
             dev = devs[j]
+            pos = component.sog.AbsolutePosition
+            devPos = V3(pos.X,pos.Y,pos.Z + h)
+        
+            dev.sog.NonPhysicalGrabMovement(devPos)
+        
             h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
             h += 0.2
-            
-        devPos = V3(pos.X,pos.Y,pos.Z + h)
-        pos = devPos
         
-        committer.sog.NonPhysicalGrabMovement(pos)
+        #finally set latest committer if wanted
+        if vMakeCurrent == True:
+            print "developer %s is current committer"%(self.latestcommitter.developerinfo.login)
+            self.latestcommitter.updateIsLatestCommitter(False)
+            
+            self.latestcommitter = committer
+            self.latestcommitter.updateIsLatestCommitter(True)
+            
+        #pos = component.sog.AbsolutePosition
+        #committer.sog.NonPhysicalGrabMovement(pos)
+        
+    from operator import itemgetter,attrgetter
+    def sortDevelopers(self,vDevelopers):
+        """ sort developers based on their commit date, so that newest is at the top
+        """
+        vDevelopers.sort(self.compareCommitDates)
 
+        return vDevelopers
+    
+    def compareCommitDates(self,x,y):
+        return cmp(x.developerinfo.latestcommit.date,y.developerinfo.latestcommit.date)
+ 
+        
     def addDeveloper(self,vDeveloper):
         pass
  

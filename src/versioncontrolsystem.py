@@ -197,6 +197,15 @@ class VersionControlSystem:
             
         return self.commitsForBranch[branch]            
         
+    def getCommitsForFile(self,vFileName):
+        url = "http://github.com/api/v2/json/commits/list/realxtend/naali/develop/%s"%(vFileName)  
+        f = urllib.urlopen(url)
+        s = f.read()
+        commits = json.loads(s)
+
+        return commits
+        
+    
     def getNumberOfCommitsForDay(self,day):
         pass    
         

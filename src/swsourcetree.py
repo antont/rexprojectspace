@@ -44,7 +44,7 @@ class Tree:
         self.treebase = None
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("8916cae2-33c8-4731-83e8-7c902faac0a1") #root of tree...
+        self.UUID = OpenMetaverse.UUID("e0afbfb2-fbac-4bb2-b797-915d2eaa7730") #root of tree...
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             #print "No tree..."
@@ -167,7 +167,7 @@ class Branch:
 #data
 class SWSourceTree:
     
-    def __init__(self, vScene, vProjectName, vBranchNames):
+    def __init__(self, vScene, vProjectName, vBranchInfos):
 
         self.scene = vScene
         self.projectName = vProjectName
@@ -186,9 +186,9 @@ class SWSourceTree:
         self.rainPlaceHolderRop = rexObjects.GetObject(self.rainPlaceHolderSog.UUID)
                 
         #start from bottom
-        for branch in vBranchNames:
-            b = self.addNewBranch(branch)
-            self.tree.branches.append(b)
+        for branch in vBranchInfos:
+            b = self.addNewBranch(branch.name)
+            #self.tree.branches.append(b)
             
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         nc.OnBuild += self.updateBuildResult
@@ -237,10 +237,10 @@ class SWSourceTree:
         
     def addNewBranch(self,vBranchName,vParentName=""):
         """None means to add branch to main tree, otherwise add to
-           other branch """
+           other branch. Evaluate latest commit date and choose color/
+           texture based on that (not done)"""
         b = self.tree.addNewBranch(vBranchName,vParentName)
-        b.rop.RexClassName = "sourcetree.BranchScaler"
-        pass        
+        b.rop.RexClassName = "sourcetree.BranchScaler"        
         
 class SWSourceTreeBranch:
     

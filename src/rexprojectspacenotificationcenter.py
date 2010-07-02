@@ -92,7 +92,7 @@ class CommitDispatcher:
         
         self.timer = None
         self.latestcommit = "" #id of latest commit
-        self.timer = threading.Timer(60.0,self.update)#once a minute
+        self.timer = threading.Timer(10.0,self.update)#once a minute
         self.timer.start()
     
     @classmethod
@@ -131,11 +131,16 @@ class CommitDispatcher:
         
         #commits = self.vcs.getLatestCommitForBranch()
         
-        #print "previous id: ", self.latestcommit
-        #print "newest id: ", commits[0]["id"]
+        print "previous id: ", self.latestcommit
+        print "newest id: ", commits[0]["id"]
         
         if( len(commits) < 1 or commits[0]["id"] == self.latestcommit):
-            #nothing to update...
+            self.timer.cancel()
+            self.timer = 0
+            
+            self.timer = threading.Timer(60.0,self.update)#once a minute
+            self.timer.start()
+    
             return
             
         self.latestcommit = commits[0]["id"]

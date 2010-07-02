@@ -132,7 +132,7 @@ class RexProjectSpaceModule(IRegionModule):
         
         self.vcs = versioncontrolsystem.VersionControlSystem("naali")
         
-        self.tree = self.initTree("naali")
+        #self.tree = self.initTree("naali")
         self.project = self.initSWProject()
 
         #self.setUpTests()
@@ -218,7 +218,7 @@ class RexProjectSpaceModule(IRegionModule):
                 for dev in devs:
                     if dev.name == author or dev.login == commit["login"]  or dev.login == author:
                         dev.latestcommitid = commit["id"]
-                        #print "commit found for: ",dev.login
+                        print "commit found for: ",dev.login
                         count -= 1
                         
             if count < 1:
