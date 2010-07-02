@@ -2,11 +2,11 @@
 import time
 def parseDate(vDateString):
     datestring = vDateString[0:len(vDateString)-6]#quite dirty, remove -xx:xx from the end
-    ti = time.strptime(datestring,"%Y-%m-%dT%h:%m:%s")
+    ti = time.strptime(datestring,"%Y-%m-%dT%H:%M:%S")
     return ti    
 
 class BranchInfo:
-    def __init__(self,vName,vNumberOfCommits,vLatestCommitDate):
+    def __init__(self,vName,vLatestCommitDate,vNumberOfCommits=0):
         self.name = vName
         self.numberofcommits = vNumberOfCommits
         self.latestcommitdate = parseDate(vLatestCommitDate)

@@ -2,7 +2,9 @@ from versioncontrolsystem import *
 from issuetracker import *
 from buildbot import *
 
-import commitdispatcher
+import rexprojectspacedataobjects
+
+#import commitdispatcher
 #import swdeveloper
 #from swdeveloper import *
 
@@ -169,10 +171,12 @@ def initSWProject():
     return ""
 
 ###
-
+"""
 initSWProject()
-
+"""
 ###
+
+
 """
 coms = v.getCommitsFromNetworkData()
 
@@ -282,4 +286,23 @@ for value in committers:
 """  
 
 ####
+
+#test for creating branches and updating the data
+
+def getLatesCommitsForBranches(vBranches):
+    infos = []
+    
+    for b in branches:
+        commit = v.getCommitsForBranch(b)[0]
+        date = commit["committed_date"]
+        branch = rexprojectspacedataobjects.BranchInfo(b,date)
+        infos.append(branch)
+
+    return infos
+
+branches = v.getBranches()
+infos = getLatesCommitsForBranches(branches)
+print infos
+
+
 
