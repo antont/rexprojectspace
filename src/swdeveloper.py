@@ -19,6 +19,8 @@ from OpenSim.Region.ScriptEngine.Shared import LSL_Types
 
 class SWDeveloper:
 
+    HEIGHT = 1.0
+
     def __init__(self, vMod,vScene,vDeveloperInfo, vIsAtProjectSpace ,vAvatar = None):
         self.mod = vMod
         self.scene = vScene

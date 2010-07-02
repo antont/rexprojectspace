@@ -28,7 +28,7 @@ import swdeveloper
 import rexprojectspacemodule
 
 class Component:
-    offset = 0.3
+    offset = 1.0
     
     def __init__(self,vScene,vName,vPos,vParent,vX=1,vY=1,vScale = V3(0,0,0)):
         
@@ -55,6 +55,8 @@ class Component:
             #print "Component: %s found from scene"%("rps_component_" + self.name)
         else:    
             self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
+            #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
+            
             self.sog.RootPart.Scale = V3(vX,vY,1)
             self.sog.RootPart.Name =  "rps_component_" + self.name
             
@@ -91,6 +93,12 @@ class SWProject:
         
         self.components = {}
         self.developers = vDevelopers
+        
+        #map developers to the components, so that project knows where developers
+        #are
+        self.componentsAndDevelopersDict = {}
+        
+        
         self.latestcommitter = None
         #print "-----------------",self.developers[0].developerinfo.login
         
@@ -101,10 +109,10 @@ class SWProject:
         
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("4b0a0213-730f-4001-878b-08a8a841ba10")
+        self.UUID = OpenMetaverse.UUID("df53f4d4-1bb8-43b0-8590-41482fd5a49a")
         
         if not self.scene.GetSceneObjectPart(self.UUID):
-            #print "No first sw component..."
+            print "No first sw component..."
             return
             
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
@@ -113,7 +121,10 @@ class SWProject:
         self.component = Component(vScene, "naali_root_component" , self.sog.AbsolutePosition, None, 6,6,V3(0,0,0))
         self.component.sog.RootPart.Scale = V3(0,0,0)
         
+        self.componentsAndDevelopersDict["naali_root_component"] = [self.component]
+        
         for componentname in vComponents:
+            self.componentsAndDevelopersDict[componentname] = []
             self.addComponent(componentname)
         
         ##print self.components
@@ -159,6 +170,12 @@ class SWProject:
         for dev in self.developers:
             if dev.developerinfo.login == vCommit.login or dev.developerinfo.name == vCommit.name:
                 committer = dev
+                
+                #unset anim or other visualization for prev latest committer
+                #self.latestcommitter
+                
+                #set the dev as latest commmitter and visualize it
+                #committer
                 break
         
         #we know nothing about this developer
@@ -182,18 +199,57 @@ class SWProject:
                 component = self.components[vCommit.directories[0]]
             except:
                 #print "No component named:%s  , must be a new component"%(vCommit.directories[0])
-                component = self.addComponent(vCommit.directories[0])
-            
+                #component = self.addComponent(vCommit.directories[0])
+                pass
+                
             if not component:
                 #print "No component found from project"
                 return
-
+                
+            devs = self.componentsAndDevelopersDict[component.name]
+            devs.append(committer)
+            
+            #remove developer from previous componenent
+            """
+            previouscomponent = None
+            for c in self.componentsAndDevelopersDict.values():
+                if c.count(committer)>0:
+                    c.remove(c.index(committer))
+                    previouscomponent = c
+                    break
+            
+            #rearrange devs...not done
+            h = 0
+            for j in range(len(previouscomponent)):
+                dev = devs[j]
+                h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
+                h += 0.2
+                
+                devPos = V3(pos.X,pos.Y,pos.Z + h)
+                
+                committer.sog.NonPhysicalGrabMovement(pos)
+            """
         else:
             component = self.component #no directories, so put dev into "container component"
                 
         #print "____________dev target pos________: ", component.sog.AbsolutePosition
         
-        committer.sog.NonPhysicalGrabMovement(component.sog.AbsolutePosition)
+        pos = component.sog.AbsolutePosition
+        
+        
+        #stack developers, so they dont collide ...
+        devs = self.componentsAndDevelopersDict[component.name]
+        
+        h = 0
+        for j in range(len(devs)-1):
+            dev = devs[j]
+            h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
+            h += 0.2
+            
+        devPos = V3(pos.X,pos.Y,pos.Z + h)
+        pos = devPos
+        
+        committer.sog.NonPhysicalGrabMovement(pos)
 
     def addDeveloper(self,vDeveloper):
         pass

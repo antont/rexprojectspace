@@ -44,7 +44,7 @@ class Tree:
         self.treebase = None
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("e7f55728-0f94-4dac-9c95-c32c30f09350") #root of tree...
+        self.UUID = OpenMetaverse.UUID("8916cae2-33c8-4731-83e8-7c902faac0a1") #root of tree...
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             #print "No tree..."

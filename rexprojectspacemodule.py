@@ -51,47 +51,12 @@ from RexProjectSpaceScripts.rexprojectspace import *
 import RexProjectSpaceScripts.rexprojectspace 
 
 import rexprojectspacedataobjects
+import rexprojectspacenotificationcenter 
  
 class RexProjectSpaceModule(IRegionModule):
     autoload = True
     rexworld = ""
-    
-    def SpawnDeveloper(self,vDevLoc):
-        """Returs the actual script instance!!! """
-        pos = LSL_Types.Vector3(120, 120, 26)
-        localId = self.spawner.SpawnActor(pos,0,False,"developer.Developer")
-        developer = self.world.GetActorByLocalID(localId)
-        #print "script instance: ",developer
-        return developer
-    
-    def SetRexWorld(self,vWorld):
-        #print "it's alive"
-        self.world = vWorld
-    
-    def GetActor(self, vId):
-        if not self.world:
-            #print "no world set!!!!!______"
-            return None
-        
-        actor = self.spawner.MyWorld.GetActorByLocalID(vId)
-            
-        #actor = self.world.GetActorByLocalID(vId)
-        #print actor
-        
-        return actor
-    
-    def SetSpawner(self,vRexProjectSpace):
-        #print "spawner set-------"
-        self.spawner = vRexProjectSpace
-        
-    
-    def Spawner(self):
-        return spawner
-        
-    def SpawnScriptInstance(self,vPyClass):
-        id = 0
-        return id
-    
+
     def createBall(self):
         sphereRadius = 0.025
         sphereHeigth = 0.05
@@ -158,9 +123,6 @@ class RexProjectSpaceModule(IRegionModule):
         self.rop.RexClassName = "rexprojectspace.RexProjectSpace"
         
         
-        scene.AddCommand(self, "hitMe","","",self.cmd_hitMe)
-        
-        
         """
         empty = []
         issueData = rexprojectspacedataobjects.IssueInfo(empty)
@@ -168,46 +130,38 @@ class RexProjectSpaceModule(IRegionModule):
         bug = swissue.CreateIssue(self.scene,issueData)
         """
         
-        #--------------
-        
-        #return
-        
-        self.buildbot = buildbot.BuildBot()
-        
         self.vcs = versioncontrolsystem.VersionControlSystem("naali")
-        branches = self.vcs.getBranches()
-        self.tree = swsourcetree.SWSourceTree(scene,"Naali",branches)
         
-        #testing branches
-        scene.AddCommand(self, "cb","","",self.cmd_cb)
-        #self.updateCommitters(self.developers)
-
-        
+        self.tree = self.initTree("naali")
         self.project = self.initSWProject()
+
+        #self.setUpTests()
         
-        return
-        
-        #self.updateBuildResults()
-        
-        
-        #testing component grid
-        scene.AddCommand(self, "ac","","",self.cmd_ac)
-        
-        scene.AddCommand(self, "bb","","",self.cmd_bb)
-        
-        
-        
-        #testing builds
-        scene.AddCommand(self, "bf","","",self.cmd_bf)
-        scene.AddCommand(self, "bs","","",self.cmd_bs)
-        
-        #testing commits
-        scene.AddCommand(self, "commit","","",self.cmd_commit)
-    
     def PostInitialise(self):
         #print "postinit..."
         pass
     
+    
+    def Close(self):
+        #print self, 'close'
+        pass
+    
+    def getname(self):
+        return self.__class__.__name__
+
+    Name = property(getname)
+
+    def isshared(self):
+        return False
+
+    IsSharedModule = property(isshared)
+
+    
+    def initTree(self,vProjectName):
+        
+        branches = self.vcs.getBranches()
+        self.tree = swsourcetree.SWSourceTree(self.scene,vProjectName,branches)
+
     def initSWProject(self):
           
         components = []
@@ -282,24 +236,33 @@ class RexProjectSpaceModule(IRegionModule):
             #print "commit id %s for dev:%s "%(dev.latestcommitid,dev.login)
             
             c = ci["commit"]
-            
-            #files,folders = rexprojectspaceutils.resolveFilesAndFolders(c)
-            #message = c["message"]
-            #devCommit = commitdispatcher.CommitInfo(dev.login,message,folders,files)
+           
             devCommit = rexprojectspacedataobjects.CommitInfo(dev.login,c)
             dev.latestcommit = devCommit
             
             #init every developer so that each has latest commits, commit count and names in place
             swdevs.append(swdeveloper.SWDeveloper(self,self.scene,dev,False))
-            #try with scripts
-            #swdevs.append(self.SpawnDeveloper(dev))
-        
+           
         #get all the components...
         """
         components = ["Core","Foundation","Interfaces","RexCommon","SceneManager","OgreRenderingModule"
                       "Application","RexLogicModule","SupportModules","AssetModule","UiModule","HttpUtilities"
                       "RpcUtilities","ProtocolUtilities","EnvironmentModule","TextureDecoderModule","ProtocolModuleOpenSim",
-                      "ProtocolModuleTaiga","EntityComponents","bin","doc"]
+                      "ProtocolModuleTaiga","EntityComponents","bin","doc","QtInputModule"]
+        """
+        
+        """
+        components = ["Application","RexLogicModule","SupportModules","AssetModule","UiModule","HttpUtilities"
+                      "RpcUtilities","ProtocolUtilities","EnvironmentModule"]
+        """
+        
+        """
+        components = ["Core","Foundation","RpcUtilities"]
+        """
+        
+        """
+        components = ["Core","Foundation","RpcUtilities","ProtocolUtilities","EnvironmentModule","TextureDecoderModule","ProtocolModuleOpenSim",
+                      "ProtocolModuleTaiga","EntityComponents","bin","doc","QtInputModule"]
         """
         
         components = self.getProjectRootFolders()
@@ -311,16 +274,6 @@ class RexProjectSpaceModule(IRegionModule):
             dev.updateIsAtProjectSpace(False)
         
         return project
-
- 
-    def updateCommitters(self,vCommitters):
-        """ Committers from github """
-        contributors = self.vcs.getAllContributors()
-        
-        for value in contributors:
-            login = value["login"]
-            nbrOfCommits = value["contributions"]
-            vCommitters.append(swdeveloper.SWDeveloper(self.scene,login,nbrOfCommits,"",False))
 
     def mesh_follow_avatar(self, avatar_presence, mesh_part, pos=V3(1.5, 0, 1),
         rot=OpenMetaverse.Quaternion(0, 0, 0, 1)):
@@ -343,7 +296,26 @@ class RexProjectSpaceModule(IRegionModule):
 
         mesh_part.ParentGroup.UpdateGroupRotationR(rot)
         #print "attach done"   
-   
+    
+    def setUpTests(self):
+        
+        scene = self.scene
+        
+        scene.AddCommand(self, "hitMe","","",self.cmd_hitMe)
+        
+        #testing component grid
+        scene.AddCommand(self, "ac","","",self.cmd_ac)
+       
+        #testing builds
+        scene.AddCommand(self, "bf","","",self.cmd_bf)
+        scene.AddCommand(self, "bs","","",self.cmd_bs)
+        
+        #testing commits
+        scene.AddCommand(self, "commit","","",self.cmd_commit)
+    
+        #testing branches
+        scene.AddCommand(self, "cb","","",self.cmd_cb)
+    
     def cmd_hitMe(self, *args):
         #try to get the tree item
         #self.tree.setBuildFailed()
@@ -370,67 +342,79 @@ class RexProjectSpaceModule(IRegionModule):
         self.mesh_follow_avatar(avatar,self.bug)
         
     def cmd_ac(self, *args):
-        self.component.addComponent("")
-        pass
-    
-    def cmd_bb(self, *args):
-        #w = RXCore.rxactor.Actor.GetScriptClassName()
-        #self.tree.addNewBranch(self,"Naali")
-        #self.grid = swproject.Component(self.scene,V3(135.2,129.89,25.80),"",4,4)
-        
+        self.component.addComponent("test component from regionmodule")
         pass
         
     def cmd_cb(self, *args):
-        #try to get the tree item
-        self.tree.addNewBranch(self,"")
-        #list = self.scene.GetAvatars()
-        #sp = list[0]
-
-        #self.mauno.updateIsAtProjectSpace(True)
-        #self.rexif.        
+        self.tree.addNewBranch(self,"new branch from region module")
         
     def cmd_bs(self, *args):
-        #w = RXCore.rxactor.Actor.GetScriptClassName()
-        #self.tree.addNewBranch(self,"Naali")
         self.tree.setBuildSuccesfull()
-        pass
-    
-    def cmd_bf(self, *args):
-        #w = RXCore.rxactor.Actor.GetScriptClassName()
-        #self.tree.addNewBranch(self,"Naali")
-        self.tree.setBuildFailed()
-        pass
-    
-    def cmd_commit(self, *args):
-        #cd = commitdispatcher.CommitDispatcher.dispatcherForProject("naali")
-        #cd.dispatchCommits( [] )
-        pass
-    
-    def updateProjectSpace(self):
-    
-        self.updateTimer = threading.Timer(30.0,self.updateProjectSpace)
-        self.updateTimer.start()       
         
-        pass
-
-    def PostInitialise(self):
-        #print self, 'post-initialise'
-        pass
-
-    def Close(self):
-        #print self, 'close'
-        pass
-    
-    def getname(self):
-        return self.__class__.__name__
-
-    Name = property(getname)
-
-    def isshared(self):
-        return False
-
-    IsSharedModule = property(isshared)
+    def cmd_bf(self, *args):
+        self.tree.setBuildFailed()
+        
+    def cmd_commit(self, *args):
+        
+        cd = rexprojectspacenotificationcenter.CommitDispatcher.dispatcherForProject("naali")
+        
+        commit = {}
+        commit["message"] = "test commit from region module"
+        
+        commit["authored_date"] = "2010-07-01T09:54:40-07:00"
+        
+        commit["removed"] = []
+        commit["added"] = []
+        commit["modified"] = ["bin"]
+        
+        ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
+        
+        commits = [commit]
+        
+        cd.dispatchCommits( commits )
+        
         
     def onFrameUpdate(self):
         pass
+     
+    #to scripting bridge ---------------------
+    
+    def SpawnDeveloper(self,vDevLoc):
+        """Returs the actual script instance!!! """
+        pos = LSL_Types.Vector3(120, 120, 26)
+        localId = self.spawner.SpawnActor(pos,0,False,"developer.Developer")
+        developer = self.world.GetActorByLocalID(localId)
+        #print "script instance: ",developer
+        return developer
+    
+    def SetRexWorld(self,vWorld):
+        #print "it's alive"
+        self.world = vWorld
+    
+    def GetActor(self, vId):
+        if not self.world:
+            #print "no world set!!!!!______"
+            return None
+        
+        actor = self.spawner.MyWorld.GetActorByLocalID(vId)
+            
+        #actor = self.world.GetActorByLocalID(vId)
+        #print actor
+        
+        return actor
+    
+    def SetSpawner(self,vRexProjectSpace):
+        #print "spawner set-------"
+        self.spawner = vRexProjectSpace
+        
+    
+    def Spawner(self):
+        return spawner
+        
+    def SpawnScriptInstance(self,vPyClass):
+        id = 0
+        return id
+    
+    ####
+        
         
