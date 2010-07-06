@@ -22,10 +22,10 @@ class BurningTree(RXCore.rxactor.Actor):
         id = rexprojectspaceutils.load_particle_script("myfire.particle")
         self.SetRexParticleScriptUUID(id)
         
-        print "sourcetree.BurningTree EventCreated"
+        #print "sourcetree.BurningTree EventCreated"
 
     def EventDestroyed(self):
-        print "sourcetree.BurningTree EventDestroyed"
+        #print "sourcetree.BurningTree EventDestroyed"
         self.SetRexParticleScriptUUID("")
         
         super(self.__class__,self).EventDestroyed()
@@ -45,10 +45,10 @@ class Rain(RXCore.rxactor.Actor):
         id = rexprojectspaceutils.load_particle_script("snow.particle")
         self.SetRexParticleScriptUUID(id)
         
-        print "sourcetree.Rain EventCreated"
+        #print "sourcetree.Rain EventCreated"
 
     def EventDestroyed(self):
-        print "sourcetree.Rain EventDestroyed"
+        #print "sourcetree.Rain EventDestroyed"
         self.SetRexParticleScriptUUID("")
         
         super(self.__class__,self).EventDestroyed()
@@ -66,10 +66,10 @@ class BranchScaler(RXCore.rxactor.Actor):
         self.GrowCount = 0
         self.SetTimer(0.05,True)
         
-        print "sourcetree.BranchScaler EventCreated"
+        #print "sourcetree.BranchScaler EventCreated"
 
     def EventDestroyed(self):
-        print "sourcetree.BranchScaler EventDestroyed"
+        #print "sourcetree.BranchScaler EventDestroyed"
         
         super(self.__class__,self).EventDestroyed()
     def EventTimer(self):

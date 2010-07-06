@@ -26,14 +26,15 @@ class RexProjectSpace(RXCore.rxactor.Actor):
         try:
             module = self.MyWorld.CS.World.Modules["RexProjectSpaceModule"]
         except:
+            print "did not get RexProjectSpaceModule"
             return
             
-        print "________Module",module
+        #print "________Module",module
         module.SetRexWorld(self.MyWorld)
         module.SetSpawner(self)
         
     def EventDestroyed(self):
-        print "rexprojectspace.RexProjectSpace EventDestroyed"
+        #print "rexprojectspace.RexProjectSpace EventDestroyed"
         
         super(self.__class__,self).EventDestroyed()
 

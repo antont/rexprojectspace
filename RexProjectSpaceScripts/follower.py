@@ -19,23 +19,22 @@ class Follower(RXCore.rxactor.Actor):
         self.va= "abcd"
         self.avatarname = ""
         self.MyWorld.MyEventManager.onAddPresence += self.OnAvatarEntered
-        print "follower id: ",self.Id
+        #print "follower id: ",self.Id
         act = self.MyWorld.GetActorByLocalID(self.Id)
-        print "_______________",act
+        #print "_______________",act
         
-        print "follower.Follower EventCreated"
+        #print "follower.Follower EventCreated"
 
     def EventDestroyed(self):
-        print "follower.Follower EventDestroyed"
-        
+        #print "follower.Follower EventDestroyed"
         super(self.__class__,self).EventDestroyed()
 
     def EventTouch(self,vAvatar):
-        print vAvatar
+        #print vAvatar
         self.llShout(0,"Following avatar")
         self.AgentId = vAvatar.AgentId
         
-        print "followers id: ",self.Id
+        #print "followers id: ",self.Id
         
         posvec = Vector3(0, 0, 0) #should add some offset...
         point = 42
@@ -45,5 +44,6 @@ class Follower(RXCore.rxactor.Actor):
         self.avatarname = vAvatarName
     
     def OnAvatarEntered(self,vAvatar):
-        print "++++++++++++++avatar+++++++++++:",vAvatar.GetFullName()
+        pass
+        #print "++++++++++++++avatar+++++++++++:",vAvatar.GetFullName()
     

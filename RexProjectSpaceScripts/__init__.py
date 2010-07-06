@@ -1,4 +1,4 @@
-print "Python:RexProjectSpaceScripts init"
+#print "Python:RexProjectSpaceScripts init"
 
 import rexprojectspace
 import follower
