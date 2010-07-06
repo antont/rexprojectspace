@@ -84,6 +84,7 @@ def load_texture_with_uuid(vScene,vTexturePath,vUUID=-1):
     asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(vTexturePath))
      
     val = vScene.AssetService.Store(asset)
+    print "Did it upload: ", val
     return asset.ID
 
  
@@ -222,40 +223,69 @@ def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quat
     
     ###print matdata
     matparser = OgreSceneImporter.OgreMaterialParser(scene)
-    rctempp, mat2uuidtemp, mat2texturetemp = matparser.ParseAndSaveMaterial(
-        matdata)
-        
-    mat2texturetemp = dict(mat2texturetemp)
-    ##print mat2texturetemp
-    
-    for k,v in enumerate(mat2texturetemp):
-        ##print mat2texturetemp[v]
-        
-        path = v.ToString()
-        ##print path
-        load_texture_with_uuid(scene,path,mat2texturetemp[v].ToString())
-        newString = newString.replace(path,mat2texturetemp[v].ToString())
-    
-    ###print newString
     
     rc, mat2uuid, mat2texture = matparser.ParseAndSaveMaterial(
         matdata)
 
     mat2uuid = dict(mat2uuid)
     
-    ###print mat2texture
-    
-    ##print "mat-uuid dict:", mat2uuid
     if not rc:
-        ##print "material parsing failed"
         return
+    
+    hasTextures = False
+    
+    for k,v in enumerate(mat2texture):
+        hasTextures = True
+        print v.Key
+        print v.Value
+        
+        path = v.Key
+        
+        load_texture_with_uuid(scene,path,v.Value)
+        newString = newString.replace(path,v.Value.ToString())
+    
+    if hasTextures:
+        rc, mat2uuid, mat2texture = matparser.ParseAndSaveMaterial(
+            newString)
+        print newString
     
     matnames, errors = DotMeshLoader.ReadDotMeshMaterialNames(asset.Data)
     for i, mname in enumerate(matnames):
         robject.RexMaterials.AddMaterial(i, mat2uuid[mname])
-        ##print "material added:", mname
         
     return sceneobjgroup, robject        
 
+    
+def load_mesh_new(scene, meshpath):
+    uid = OpenMetaverse.UUID.Random()
+    
+    asset = OpenSim.Framework.AssetBase()
+    asset.Name = "George"
+    asset.FullID = uid
+    asset.Type = 43 # ??
+    asset.Description = "some"
+    
+    ##print "Loading mesh: ", os.path.abspath(meshpath)
+    
+    asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(meshpath))
+     
+    val = scene.AssetService.Store(asset)
+    return val
+
         
- 
+def load_material(scene,matpath):
+    matdata = open(matpath).read()
+    id = OpenMetaverse.UUID.Random()
+    asset = OpenSim.Framework.AssetBase()
+    asset.Name = matpath
+    asset.FullID = uid
+    asset.Type = 0 # ?? texture??
+    asset.Description = matpath
+    
+    ##print "Loading texture script: ", os.path.abspath(vTexturePath)
+    
+    asset.Data = matdata
+     
+    val = vScene.AssetService.Store(asset)
+    return asset.ID
+    

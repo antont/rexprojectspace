@@ -37,10 +37,13 @@ class IssueFactory():
         z = random.uniform(self.start.Z,self.end.Z)
         
         pos = V3(x,y,z)
-        print pos
+        
+        #should set the end position after setting the start
         issue.sog.AbsolutePosition = pos
         
+        
         return issue
+        
 class SWIssue(object):
 
     def __init__(self,vScene,vIssueInfo):
@@ -91,6 +94,16 @@ class SWBug(SWIssue):
         super(SWBug,self).LoadMeshWithTexturedMaterialAndAnimation("Sphere.mesh","bug_wings_rigged_face_Sphere.jpg","Sphere.material","Sphere.skeleton")
         
         if self.sog and self.rop:
+            """
+            try:
+            rexpy = scene.Modules["RexPythonScriptModule"]
+            except KeyError:
+                self.rexif = None
+                #print "Couldn't get a ref to RexSCriptInterface"
+            else:
+                self.rexif = rexpy.mCSharp
+                self.rexif.rexSetTextureMediaURL("http://img810.imageshack.us/img810/5356/bugwingsriggedfacespher.jpg")
+            """
             pass
         else:
             return

@@ -122,7 +122,7 @@ class RexProjectSpaceModule(IRegionModule):
             rexpy = scene.Modules["RexPythonScriptModule"]
         except KeyError:
             self.rexif = None
-            #print "Couldn't get a ref to RexSCriptInterface"
+            print "Couldn't get a ref to RexSCriptInterface"
         else:
             self.rexif = rexpy.mCSharp
         
@@ -139,14 +139,14 @@ class RexProjectSpaceModule(IRegionModule):
         
         projectpos = V3(131,130,25.2)
         
-        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2))
+        #self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2))
     
-        self.initSWIssues()
+        #self.initSWIssues()
         
         self.setUpTests()
         
     def PostInitialise(self):
-        #print "postinit..."
+        print "____postinit..."
         pass
     
     
@@ -339,34 +339,15 @@ class RexProjectSpaceModule(IRegionModule):
         #testing issues
         scene.AddCommand(self, "bug","","",self.cmd_create_bug)
         scene.AddCommand(self, "enhan","","",self.cmd_create_en)
-        
-        
-    
+
     def cmd_hitMe(self, *args):
         #try to get the tree item
-        #self.tree.setBuildFailed()
-        #sog,rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data")
-        #self.scene.AddNewSceneObject(sog, False)
-        ##print rexprojectspaceutils.world()
-        ##print self.GetActor("2549818162")
-        #sog,rop = rexprojectspaceutils.load_mesh(self.scene,"Bug.mesh","Bug.material","bug...")
-        
-        #dev = self.SpawnDeveloper(V3(120,120,24))
-        """dinfo = rexprojectspacedataobjects.DeveloperInfo("antont","")
-        lid = 0
-        for ent in self.scene.GetEntities():
-            if self.bug.UUID == ent.UUID:
-                #print "found local id"
-                lid = ent.LocalId
-        dev = self.spawner.MyWorld.GetActorByLocalID(lid)
-        #print dev
-        #dev.SetDeveloperInfo(self.scene,sog,dinfo)
-        """
-        avatar = self.scene.GetScenePresences()[0]
-            
-        
-        self.mesh_follow_avatar(avatar,self.bug)
-        
+       
+        dev = self.SpawnDeveloper(V3(120,120,24))
+        sog,rop =  rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0))
+
+        dev.SetUUID(rop.RexMeshUUID)
+                
     def cmd_ac(self, *args):
         self.component.addComponent("test component from regionmodule")
         pass
