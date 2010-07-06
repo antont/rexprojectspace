@@ -1,6 +1,6 @@
-import rexprojectspaceutils
 
 import clr
+import random
 
 clr.AddReference('ModularRex.RexFramework')
 from ModularRex.RexFramework import IModrexObjectsProvider
@@ -11,17 +11,36 @@ import OpenSim.Framework
 import OpenMetaverse
 from OpenMetaverse import Vector3 as V3
 
+import rexprojectspaceutils
 import rexprojectspacedataobjects
 
-def CreateIssue(vScene,vIssueData):
-    issue = None
-    if vIssueData.type == "Defect":
-        issue =  SWBug(vScene,vIssueData)
-    else:
-        issue =  SWEnhacement(vScene,vIssueData)
+class IssueFactory():
+    
+    def __init__(self,vScene,vStart,vEnd):
+        """ vStart and vEnd defines a cube by start and end point. By calling
+            factory function CreateIssue, this factory can create issue and position
+            it inside the given cage
+        """
+        self.scene = vScene
+        self.start = vStart
+        self.end = vEnd
+    
+    def CreateIssue(self,vIssueData):
+        issue = None
+        if vIssueData.type == "Defect":
+            issue =  SWBug(self.scene,vIssueData)
+        else:
+            issue =  SWEnhancement(self.scene,vIssueData)
+            
+        x = random.uniform(self.start.X,self.end.X)
+        y = random.uniform(self.start.Y,self.end.Y)
+        z = random.uniform(self.start.Z,self.end.Z)
         
-    return issue
-
+        pos = V3(x,y,z)
+        print pos
+        issue.sog.AbsolutePosition = pos
+        
+        return issue
 class SWIssue(object):
 
     def __init__(self,vScene,vIssueInfo):
@@ -41,28 +60,29 @@ class SWIssue(object):
         else:
             rexprojectspaceutils.load_texture(self.scene,vTexturePath)
             self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,vMeshPath,vMaterialPath,"test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+            self.sog.RootPart.Scale = V3(0.1,0.1,0.1)
             skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,vSkeletonAnimPath)
             self.rop.RexAnimationPackageUUID = skeleton_anim_id
             
             self.sog.RootPart.Name =  "rps_issue_" + self.issueinfo.id
             self.scene.AddNewSceneObject(self.sog, False)
     
-    def Start():
+    def start(self):
         #implemented by sub classes...
         pass
     
 
 class SWEnhancement(SWIssue):
     def __init__(self,vScene,vIssueInfo):
-        super(SWIssue,self).__init__(vScene,vIssueInfo)
-        super(SWIssue,self).LoadMeshWithTexturedMaterialAndAnimation("Sphere.mesh","bug_wings_rigged_face_Sphere.jpg","Sphere.material","Sphere.skeleton")
+        super(SWEnhancement,self).__init__(vScene,vIssueInfo)
+        super(SWEnhancement,self).LoadMeshWithTexturedMaterialAndAnimation("Sphere.mesh","bug_wings_rigged_face_Sphere.jpg","Sphere.material","Sphere.skeleton")
         
         if self.sog and self.rop:
             pass
         else:
             return
 
-    def Start():
+    def start(self):
         self.rop.RexAnimationName = "flying_no_movement"
         
 class SWBug(SWIssue):
@@ -74,12 +94,8 @@ class SWBug(SWIssue):
             pass
         else:
             return
-        
-        #scalefactor = vDeveloperInfo.commitcount
-        #self.sog.RootPart.Resize(V3(0.1,0.1,0.1))
-        #self.sog.RootPart.Scale = V3(scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2)
-    
-    def Start():
+      
+    def start(self):
         self.rop.RexAnimationName = "flying"    
      
     def updateIsAtProjectSpace(self, vAtProjectSpace):

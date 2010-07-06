@@ -5,6 +5,13 @@ def parseDate(vDateString):
     ti = time.strptime(datestring,"%Y-%m-%dT%H:%M:%S")
     return ti    
 
+class FolderInfo:
+    def __init__(self,vName,vNumberOfSubFiles,vLatestCommitDate = 0 ,vNumberOfCommits=0):
+        self.name = vName
+        #self.latestcommitdate = parseDate(vLatestCommitDate)
+        self.numberofcommits = vNumberOfCommits
+        self.numberofsubfiles = vNumberOfSubFiles
+    
 class BranchInfo:
     def __init__(self,vName,vLatestCommitDate,vNumberOfCommits=0):
         self.name = vName

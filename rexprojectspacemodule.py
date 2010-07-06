@@ -42,7 +42,7 @@ import swdeveloper
 import swissue
 
 import versioncontrolsystem
-
+import issuetracker
 import rexprojectspaceutils
 
 import RexProjectSpaceScripts.follower
@@ -52,6 +52,8 @@ import RexProjectSpaceScripts.rexprojectspace
 
 import rexprojectspacedataobjects
 import rexprojectspacenotificationcenter 
+ 
+import random
  
 class RexProjectSpaceModule(IRegionModule):
     autoload = True
@@ -82,8 +84,9 @@ class RexProjectSpaceModule(IRegionModule):
         allFilesAndFolders = j.values()
         
         folders = []        
-        
+        temp = []
         allFilesAndFolders = allFilesAndFolders[0]
+        folderinfos = []
         
         for item in allFilesAndFolders:
             
@@ -91,11 +94,18 @@ class RexProjectSpaceModule(IRegionModule):
             if len(t) > 1:
                 
                 folders.append(t[0])
-
+                temp.append(t[0])
+                
         folders = list(set(folders))
         folders.sort()
         
-        return folders
+        #get file/folder count...
+        for folder in folders:
+            count = temp.count(folder)
+            print "Folder: ",folder,"____Count:",count
+            folderinfos.append(rexprojectspacedataobjects.FolderInfo(folder,count))
+            
+        return folderinfos
     
     
     def Initialise(self, scene, configsource):
@@ -122,20 +132,18 @@ class RexProjectSpaceModule(IRegionModule):
         self.rop = rexObjects.GetObject(ball.UUID)
         self.rop.RexClassName = "rexprojectspace.RexProjectSpace"
         
-        
-        """
-        empty = []
-        issueData = rexprojectspacedataobjects.IssueInfo(empty)
-        issueData.type = "Defect"
-        bug = swissue.CreateIssue(self.scene,issueData)
-        """
-        
         self.vcs = versioncontrolsystem.VersionControlSystem("naali")
         
         #self.tree = self.initTree("naali")
-        self.project = self.initSWProject()
-
-        #self.setUpTests()
+        #self.project = self.initSWProject()
+        
+        projectpos = V3(131,130,25.2)
+        
+        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2))
+    
+        self.initSWIssues()
+        
+        self.setUpTests()
         
     def PostInitialise(self):
         #print "postinit..."
@@ -156,7 +164,19 @@ class RexProjectSpaceModule(IRegionModule):
 
     IsSharedModule = property(isshared)
 
-    
+    def initSWIssues(self):
+        #projectpos = self.project.sog.AbsolutePosition
+        
+        self.issuetracker = issuetracker.IssueTracker()
+        issues = self.issuetracker.getIssues()
+        
+        
+        for i in issues:
+            #print i
+            issuedata = rexprojectspacedataobjects.IssueInfo(i)
+            issue = self.issuefactory.CreateIssue(issuedata)
+            issue.start()
+            
     def initTree(self,vProjectName):
         
         branches = self.vcs.getBranches()
@@ -315,6 +335,12 @@ class RexProjectSpaceModule(IRegionModule):
     
         #testing branches
         scene.AddCommand(self, "cb","","",self.cmd_cb)
+        
+        #testing issues
+        scene.AddCommand(self, "bug","","",self.cmd_create_bug)
+        scene.AddCommand(self, "enhan","","",self.cmd_create_en)
+        
+        
     
     def cmd_hitMe(self, *args):
         #try to get the tree item
@@ -372,7 +398,22 @@ class RexProjectSpaceModule(IRegionModule):
         commits = [commit]
         
         cd.dispatchCommits( commits )
+    
+    def cmd_create_bug(self, *args):
+
+        empty = []
+        issueData = rexprojectspacedataobjects.IssueInfo(empty)
+        issueData.type = "Defect"
+        issueData.id = str(random.randint(0,1000000))
+        bug =  self.issuefactory.CreateIssue(issueData)
         
+    def cmd_create_en(self, *args):
+        
+        empty = []
+        issueData = rexprojectspacedataobjects.IssueInfo(empty)
+        issueData.type = "Enhancement"
+        issueData.id = str(random.randint(0,1000000))
+        bug =  self.issuefactory.CreateIssue(issueData)
         
     def onFrameUpdate(self):
         pass

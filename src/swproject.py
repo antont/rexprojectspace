@@ -29,6 +29,8 @@ import rexprojectspacemodule
 
 class Component:
     offset = 1.0
+    modifiedmaterial = None
+    nonmodifiedmaterial = None
     
     def __init__(self,vScene,vName,vPos,vParent,vX=1,vY=1,vScale = V3(0,0,0)):
         
@@ -45,9 +47,16 @@ class Component:
         self.scene = vScene
         self.pos = vPos
         self.scale = vScale
+        self.color = 0 #blue
         
         sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
-             
+        
+        """
+        if !modifiedmaterial and !nonmodifiedmaterial:
+            modifiedmaterial = rexprojectspaceutils.load_material("modified.material")
+            nonmodifiedmaterial = rexprojectspaceutils.load_material("nonmodified.material")
+        """
+        
         if sop:
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
@@ -83,7 +92,13 @@ class Component:
             self.curRow += 1
             
         return child
-        
+    
+    def setModified(self,vModified = True):
+        print "____MODIFIED____"
+        texcolor = OpenMetaverse.Color4(1, 0, 0, 1)
+        tex = self.sog.RootPart.Shape.Textures
+        tex.DefaultTexture.RGBA = texcolor
+        self.sog.RootPart.UpdateTexture(tex)
     
 class SWProject:
 
@@ -109,7 +124,7 @@ class SWProject:
         
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("61a6a034-55db-443e-9d19-964f1040af65")
+        self.UUID = OpenMetaverse.UUID("5d219e4b-ad4a-4edf-95b3-d6bbb55df4d0")
         
         if not self.scene.GetSceneObjectPart(self.UUID):
             print "No first sw component..."
@@ -123,11 +138,14 @@ class SWProject:
         
         self.componentsAndDevelopersDict["naali_root_component"] = []
         
-        for componentname in vComponents:
-            self.componentsAndDevelopersDict[componentname] = []
-            self.addComponent(componentname)
-        
-        ##print self.components
+        for component in vComponents:
+            self.componentsAndDevelopersDict[component.name] = []
+            c = self.addComponent(component.name)
+            #visualize components "size" and modified date
+            tempscale = c.sog.RootPart.Scale
+            scale = max(0.4,component.numberofsubfiles/25)
+            scale = min(scale,1)
+            c.sog.RootPart.Scale = V3(scale,scale,tempscale.Z)
         
         #place developers to their initial positions...
         for dev in self.developers:
@@ -136,8 +154,9 @@ class SWProject:
                 #print latestcommit 
                 self.updateDeveloperLocationWithNewCommitData(latestcommit,False)
         
+        self.visualizeLatestCommitModifications()
+        
         #get all commits
-        #commitdispatcher.CommitDispatcher.register(self.updateDeveloperLocationWithNewCommitData,self.projectName ,"")
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         nc.OnNewCommit += self.updateDeveloperLocationWithNewCommitData
         
@@ -146,7 +165,22 @@ class SWProject:
     def __del__(self):
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         nc.OnNewCommit -= self.updateDeveloperLocationWithNewCommitData
+    
+    def visualizeLatestCommitModifications(self):
+        if self.latestcommitter:
+            
+            #unset previous modified
+            for component in self.components.values():
+                component.setModified(False)
         
+            #change every components color that was mod,added or removed
+            #within a latest commit
+            for item in self.latestcommitter.developerinfo.latestcommit.directories:
+                #locate component
+                print item
+                component = self.components[item]
+                component.setModified()
+    
     def resolveLatestCommitter(self):
         
         for dev in self.developers:
@@ -159,7 +193,7 @@ class SWProject:
     
     def addComponent(self, vComponentName):
         self.components[vComponentName] = self.component.addChild(vComponentName)
-        self.components[vComponentName].sog.RootPart.Name =  vComponentName
+        #self.components[vComponentName].sog.RootPart.Name =  vComponentName
         return self.components[vComponentName]
         
     
@@ -232,6 +266,8 @@ class SWProject:
         
         devs = self.componentsAndDevelopersDict[component.name]
         devs = self.sortDevelopers(devs)
+        #for d in devs:
+        #    print d.latestcommit.date
         
         h = 0
         for j in range(len(devs)):
@@ -251,6 +287,8 @@ class SWProject:
             
             self.latestcommitter = committer
             self.latestcommitter.updateIsLatestCommitter(True)
+            
+            self.visualizeLatestCommitModifications()
             
         #pos = component.sog.AbsolutePosition
         #committer.sog.NonPhysicalGrabMovement(pos)

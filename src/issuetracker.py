@@ -19,13 +19,15 @@ class IssueTracker:
         issuesStringArray = s.splitlines()        
         
         for j in range(len(issuesStringArray)):                        
+            
             if(j == len(issuesStringArray) - 1):
                 pass
             elif(j == 0):
                 pass
             else:
+                #print j
                 issueString = issuesStringArray[j][1:-1].split(',')             
-                issue = rexprojectspacedataobjects.IssueInfo(issueString)
-                issues.append(issue)
+                #issue = rexprojectspacedataobjects.IssueInfo(issueString)
+                issues.append(issueString)
 
         return issues
