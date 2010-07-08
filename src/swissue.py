@@ -13,6 +13,7 @@ from OpenMetaverse import Vector3 as V3
 
 import rexprojectspaceutils
 import rexprojectspacedataobjects
+import avatarfollower
 
 class IssueFactory():
     
@@ -51,6 +52,11 @@ class SWIssue(object):
         self.issueinfo = vIssueInfo
         self.isResponsibleAvatartAtProjectSpace = False
         self.avatar = None #rxavatar
+        
+        self.follower = avatarfollower.AvatarFollower(vScene,0,[vIssueInfo.owner,vIssueInfo.owner])
+        
+        self.follower.OnAvatarEntered += self.AvatarEntered
+        self.follower.OnAvatarExited += self.AvatarExited 
 
     def LoadMeshWithTexturedMaterialAndAnimation(self,vMeshPath,vTexturePath,vMaterialPath,vSkeletonAnimPath):
         sop =  self.scene.GetSceneObjectPart("rps_issue_" + self.issueinfo.id)
@@ -70,6 +76,23 @@ class SWIssue(object):
             self.sog.RootPart.Name =  "rps_issue_" + self.issueinfo.id
             self.scene.AddNewSceneObject(self.sog, False)
     
+    def AvatarEntered(self):
+        self.newposition = self.sog.AbsolutePosition
+    
+    def AvatarExited(self):
+        
+        #create visualization again, since follower destroys sog...
+        #self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+        #self.follower.sog = self.sog 
+        
+        #self.initVisualization(self.sog)
+        #self.move(self.newposition)
+        
+    def move(self, vTargetPos):
+        self.newposition = vTargetPos
+        if self.follower.bFollowing:
+            self.sog.NonPhysicalGrabMovement(vTargetPos)
+    
     def start(self):
         #implemented by sub classes...
         pass
@@ -81,6 +104,7 @@ class SWEnhancement(SWIssue):
         super(SWEnhancement,self).LoadMeshWithTexturedMaterialAndAnimation("Sphere.mesh","bug_wings_rigged_face_Sphere.jpg","Sphere.material","Sphere.skeleton")
         
         if self.sog and self.rop:
+            self.follower.sog = self.sog
             pass
         else:
             return
@@ -94,6 +118,7 @@ class SWBug(SWIssue):
         super(SWBug,self).LoadMeshWithTexturedMaterialAndAnimation("Sphere.mesh","bug_wings_rigged_face_Sphere.jpg","Sphere.material","Sphere.skeleton")
         
         if self.sog and self.rop:
+            self.follower.sog = self.sog
             """
             try:
             rexpy = scene.Modules["RexPythonScriptModule"]
