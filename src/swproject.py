@@ -258,7 +258,7 @@ class SWProject:
                         pos = comp.sog.AbsolutePosition
                         devPos = V3(pos.X,pos.Y,pos.Z + h)
                         
-                        previouscomponent[j].sog.NonPhysicalGrabMovement(devPos)
+                        previouscomponent[j].move(devPos)
                         
             """
         else:
@@ -274,9 +274,9 @@ class SWProject:
             dev = devs[j]
             pos = component.sog.AbsolutePosition
             devPos = V3(pos.X,pos.Y,pos.Z + h)
-        
-            dev.sog.NonPhysicalGrabMovement(devPos)
-        
+            
+            dev.move(devPos)
+            
             h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
             h += 0.2
         
@@ -290,8 +290,6 @@ class SWProject:
             
             self.visualizeLatestCommitModifications()
             
-        #pos = component.sog.AbsolutePosition
-        #committer.sog.NonPhysicalGrabMovement(pos)
         
     from operator import itemgetter,attrgetter
     def sortDevelopers(self,vDevelopers):
