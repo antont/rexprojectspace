@@ -139,7 +139,7 @@ class RexProjectSpaceModule(IRegionModule):
         
         projectpos = V3(131,130,25.2)
         
-        #self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2))
+        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2))
     
         #self.initSWIssues()
         
@@ -163,7 +163,7 @@ class RexProjectSpaceModule(IRegionModule):
         return False
 
     IsSharedModule = property(isshared)
-
+    
     def initSWIssues(self):
         #projectpos = self.project.sog.AbsolutePosition
         
@@ -261,7 +261,7 @@ class RexProjectSpaceModule(IRegionModule):
             dev.latestcommit = devCommit
             
             #init every developer so that each has latest commits, commit count and names in place
-            swdevs.append(swdeveloper.SWDeveloper(self,self.scene,dev,False))
+            swdevs.append(swdeveloper.SWDeveloper(None,self.scene,dev,False)) #add spawner when feature is done
            
         #get all the components...
         """
@@ -289,33 +289,7 @@ class RexProjectSpaceModule(IRegionModule):
         
         project = swproject.SWProject(self.scene,"naali",components,swdevs)
         
-        #update developers status information
-        for dev in swdevs:
-            dev.updateIsAtProjectSpace(False)
-        
         return project
-
-    def mesh_follow_avatar(self, avatar_presence, mesh_part, pos=V3(1.5, 0, 1),
-        rot=OpenMetaverse.Quaternion(0, 0, 0, 1)):
-        #mesh_local_id = self.get_mesh_local_id(mesh_part)
-        
-        lid = 0
-        for ent in self.scene.GetEntities():
-            if self.bug.UUID == ent.UUID:
-                #print "found local id"
-                lid = ent.LocalId
-                
-        mesh_local_id = lid
-        pos_lsl = LSL_Types.Vector3(0, 0, 2)
-        rot_lsl = LSL_Types.Quaternion(0, 0, 0, 1)
-        ##print 'rot offset before attach', mesh_part.RotationOffset
-        self.rexif.rexAttachObjectToAvatar(mesh_local_id.ToString(),
-        avatar_presence.UUID.ToString(),
-        28, pos_lsl, rot_lsl, False)
-        mesh_part.ParentGroup.UpdateGroupPosition(pos)
-
-        mesh_part.ParentGroup.UpdateGroupRotationR(rot)
-        #print "attach done"   
     
     def setUpTests(self):
         
@@ -323,6 +297,9 @@ class RexProjectSpaceModule(IRegionModule):
         
         scene.AddCommand(self, "hitMe","","",self.cmd_hitMe)
         
+        #testing adding developer
+        scene.AddCommand(self, "developer","","",self.cmd_add_developer)
+       
         #testing component grid
         scene.AddCommand(self, "ac","","",self.cmd_ac)
        
@@ -341,16 +318,62 @@ class RexProjectSpaceModule(IRegionModule):
         scene.AddCommand(self, "enhan","","",self.cmd_create_en)
 
     def cmd_hitMe(self, *args):
-        #try to get the tree item
-       
-        dev = self.SpawnDeveloper(V3(120,120,24))
+        self.developers[0].DropFromAvatar()
+        """
         sog,rop =  rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0))
-
-        dev.SetUUID(rop.RexMeshUUID)
-                
+        #uuid = rexprojectspaceutils.load_mesh_new(self.scene,"component.mesh")
+        #sop = self.scene.GetSceneObjectPart(uuid)
+        
+        mesh_local_id = sog.RootPart.LocalId
+        
+        print mesh_local_id
+        
+        #root_avatar_uuid = self.scene.RegionInfo.MasterAvatarAssignedUUID
+        #print root_avatar_uuid
+        
+        avatars = self.scene.GetAvatars()
+        root_avatar_uuid = avatars[0].UUID
+        print avatars[0]
+        print root_avatar_uuid
+        
+        pos_lsl = LSL_Types.Vector3(0, 0, 2)
+        rot_lsl = LSL_Types.Quaternion(0, 0, 0, 1)
+        
+        self.rexif.rexAttachObjectToAvatar(mesh_local_id.ToString(),root_avatar_uuid.ToString(), 1,pos_lsl, rot_lsl, False)
+        """
+        
+        """
+        dev = self.SpawnDeveloper(V3(128, 128, 30))
+        
+        #uuid = sog.UUID.ToString()
+        
+        dev.SetUUID(OpenMetaverse.UUID(uuid))
+        
+        rexObjects = self.scene.Modules["RexObjectsModule"]
+        rop = rexObjects.GetObject(OpenMetaverse.UUID(uuid))
+        print "class name ::::::: ", rop.RexClassName
+        #dev.llSetStatus(1,1)
+        dev.llSetPos(LSL_Types.Vector3(128, 120, 40))
+        dev.llSetText("mauno",LSL_Types.Vector3(0.0,1.0,0.5),1.0)
+        dev.llSetObjectName("mauno__")
+        
+        sop = self.scene.GetSceneObjectPart("mauno__")
+        print sop
+        
+        sog = sop.ParentGroup
+        print sog
+        """
+    
+    def cmd_add_developer(self, *args):
+        dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka user","")
+        dinfo.commitcount = 40
+        dinfo.name = "maukka user"
+        dinfo.latestcommit = ""
+        dev = swdeveloper.SWDeveloper(self.spawner,self.scene,dinfo,False)
+        self.developers.append(dev)
+        
     def cmd_ac(self, *args):
         self.component.addComponent("test component from regionmodule")
-        pass
         
     def cmd_cb(self, *args):
         self.tree.addNewBranch(self,"new branch from region module")
@@ -385,8 +408,10 @@ class RexProjectSpaceModule(IRegionModule):
         empty = []
         issueData = rexprojectspacedataobjects.IssueInfo(empty)
         issueData.type = "Defect"
+        issueData.owner = "maukka user"
         issueData.id = str(random.randint(0,1000000))
         bug =  self.issuefactory.CreateIssue(issueData)
+        bug.start()
         
     def cmd_create_en(self, *args):
         
@@ -403,9 +428,10 @@ class RexProjectSpaceModule(IRegionModule):
     
     def SpawnDeveloper(self,vDevLoc):
         """Returs the actual script instance!!! """
-        pos = LSL_Types.Vector3(120, 120, 26)
+        pos = LSL_Types.Vector3(128, 128, 30)
         localId = self.spawner.SpawnActor(pos,0,False,"developer.Developer")
-        developer = self.world.GetActorByLocalID(localId)
+       
+        developer = self.spawner.MyWorld.GetActorByLocalID(localId)
         #print "script instance: ",developer
         return developer
     
