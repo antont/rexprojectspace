@@ -38,44 +38,47 @@ class SWDeveloper:
         
         if rexpy:    
             self.rexif = rexpy.mCSharp
-       
+        
         sop =  vScene.GetSceneObjectPart("rps_dev_" + self.developerinfo.login)
              
         if sop:
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
             self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
-            #print "Developer: %s found from scene"%(self.developerinfo.login)
+            print "Developer: %s found from scene"%(self.developerinfo.login)
         else:    
             self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
-            self.sog.RootPart.Name =  "rps_dev_" + self.developerinfo.login
-            self.scene.AddNewSceneObject(self.sog, False)
         
-        scalefactor = vDeveloperInfo.commitcount
-        #self.sog.RootPart.Resize(V3(0.1,0.1,0.1))
-        self.sog.RootPart.Scale = V3(scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2)
+        self.initVisualization()
         
-        self.updateIsAtProjectSpace(self.isAtProjectSpace)
-       
-        self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
-       
         #start observing if developers avatar enters to a region
         self.scene.EventManager.OnNewPresence += self.OnNewPresenceEntered
         
         #start observing if developers avatar leaves region
         self.scene.EventManager.OnRemovePresence += self.OnPresenceLeaved
         
+    
+    def __del__(self):
+        self.scene.EventManager.OnNewPresence -= self.OnNewPresenceEntered
+        self.scene.EventManager.OnRemovePresence -= self.OnPresenceLeaved
+    
+    def initVisualization(self):
+        self.sog.RootPart.Name =  "rps_dev_" + self.developerinfo.login
+        
+        scalefactor = self.developerinfo.commitcount
+        self.sog.RootPart.Scale = V3(scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2)
+        
+        self.updateIsAtProjectSpace(self.isAtProjectSpace)
+       
+        self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
+
         self.rop.RexClassName = ""
         
         #print "dev: %s---created---"%(vDeveloperInfo.login)
         
-        self.sog.SetText(vDeveloperInfo.login,V3(0.0,1.0,0.5),1.0)
-        
+        self.sog.SetText(self.developerinfo.login,V3(0.0,1.0,0.5),1.0)
         
     
-    def __del__(self):
-        self.scene.EventManager.OnNewPresence -= self.OnNewPresenceEntered
-        
     def updateCommitData(self, vCommitData):
         pass
         ##print "updating developer vis. with: ", vNewCommit
@@ -113,39 +116,61 @@ class SWDeveloper:
             self.rop.RexAnimationName = "jump"
         else:
             self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
-        
-    def OnNewPresenceEntered(self,vScenePresence):
-        ##print "avatar entered: ", vScenePresence
-        """
-        name = vScenePresence.Firstname + vScenePresence.Lastname
-        #print name
-        #print self.developerinfo.login
-        if name == self.developerinfo.name or name == self.developerinfo.login or self.developerinfo.login == vScenePresence.Firstname :
-            #self.updateIsAtProjectSpace(True)
-            #print "located avatar!!!"
-            avatarpos = self.sog.AbsolutePosition
-            for ent in self.scene.GetEntities():
-                ##print ent
-                if self.sog.UUID == ent.UUID:
-                    #print "local matched rexmeshuuid"
-                    mesh_localid = ent.LocalId
-                    break
-
-            pos = LSL_Types.Vector3(0, 0, 2) 
-            self.rexif.rexAttachObjectToAvatar(mesh_localid.ToString(),
-                                              vScenePresence.UUID.ToString(),
-                                              42, pos, LSL_Types.Quaternion(0, 0, 0, 1), False)
-                        
-            self.avatar = vScenePresence
-            """
-            
-        
-        pass
-            
-    def OnPresenceLeaved(self,vScenePresence):
+    
+    def AttachToAvatar(self):
         if self.avatar:
-            #print "avatart %s exited"%(vScenePresence)
-            self.scene.DetachSingleAttachmentToGround(
-                        self.sog.UUID,
-                        self.avatar.ControllingClient)
-            self.avatar = None   
+            if not self.rexif:
+                try:
+                    rexpy = self.scene.Modules["RexPythonScriptModule"]
+                except KeyError:
+                    self.rexif = None
+                    #print "Couldn't get a ref to RexSCriptInterface"
+                
+                if rexpy:    
+                    self.rexif = rexpy.mCSharp
+
+            print "about to attach dev in to a avatar"
+            mesh_local_id = self.sog.RootPart.LocalId
+            
+            print mesh_local_id
+            
+            pos_lsl = LSL_Types.Vector3(0, 0, 2)
+            rot_lsl = LSL_Types.Quaternion(0, 0, 1, 1)
+            
+            #clientview = self.avatar.ControllingClient
+            #self.scene.AttachObject(clientview,self.avatar.UUID.ToString(), 1,pos_lsl, rot_lsl, False)
+
+            
+            self.rexif.rexAttachObjectToAvatar(mesh_local_id.ToString(),self.avatar.UUID.ToString(), 1,pos_lsl, rot_lsl, False)
+            self.timer = 0
+    
+    def OnNewPresenceEntered(self,vScenePresence):
+        name = vScenePresence.Firstname + " " + vScenePresence.Lastname
+        print "avatar entered: ", name
+        
+        if name == self.developerinfo.login:
+            print "avatar name matched"
+            self.avatar = vScenePresence
+            self.timer = threading.Timer(2, self.AttachToAvatar)
+            self.timer.start()  
+        
+        
+            
+    def OnPresenceLeaved(self,vScenePresenceUUID):
+        if self.avatar:
+            if vScenePresenceUUID == self.avatar.UUID:
+                self.DropFromAvatar()
+                #self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+        
+                #self.initVisualization()
+        
+                
+    def DropFromAvatar(self):
+        clientview = self.avatar.ControllingClient
+        print "Droppig dev from avatar"
+        #self.scene.DetachSingleAttachmentToGround(self.sog.RootPart.UUID,clientview)
+        #self.avatar.Appearance.DetachAttachment(self.sog.UUID)
+        #self.sog = 0 #for some reason sog gets deleted
+        #self.rop = 0
+        
+            
