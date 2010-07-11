@@ -39,6 +39,8 @@ class RexProjectSpaceNotificationCenter:
         IssueDispatcher.registerOnNewIssues(self.NewIssue)
         IssueDispatcher.registerOnIssueUpdated(self.IssueUpdated)
         
+        IrcMessageDispatcher.registerOnNewMessage(self.NewIrcMessage)
+        
         #vcs
         self.OnNewCommit = rxevent.RexPythonEvent()
         self.OnBranchesChanged = rxevent.RexPythonEvent()
@@ -51,6 +53,9 @@ class RexProjectSpaceNotificationCenter:
 
         #build bot
         self.OnBuild = rxevent.RexPythonEvent()
+        
+        #irc bot
+        #self.OnNewIrcMessage = rxevent.RexPythonEvent()
         
     def NewCommit(self,vCommit):
         ##print "---commit----"
@@ -71,6 +76,9 @@ class RexProjectSpaceNotificationCenter:
     def IssueUpdated(self,vIssue):
         ##print "---issue updated----"
         self.OnIssueUpdated(vIssue)
+        
+    def NewIrcMessage(self,vMessage):
+        self.OnNewIrcMessage(vMessage)
 
 ########
 
@@ -330,4 +338,35 @@ class IssueDispatcher:
         
         self.timer = threading.Timer(10,self.updateIssues)
         self.timer.start()
+        
+        
+#####
+
+import ircbot
+
+class IrcMessageDispatcher:
+    dispatcherinstance = None
+    
+    def __init__(self):
+        self.targets = []
+        self.ircbot = ircbot.IrcBot(self.OnMessage)
+        
+    @classmethod
+    def registerOnNewMessage(cls, vTarget):
+        """ Registers observer to new irc messages"""  
+        cls.dispatcher().targets.append(vTarget)
+        
+    @classmethod
+    def dispatcher(cls):
+        d = None
+        if not cls.dispatcherinstance:
+            cls.dispatcherinstance = cls()
+        
+        return cls.dispatcherinstance
+
+    def OnMessage(self,vMessage):
+        for target in self.targets:
+            target(vMessage)            
+#####        
+        
         

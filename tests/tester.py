@@ -289,6 +289,7 @@ for value in committers:
 
 #test for creating branches and updating the data
 
+"""
 def getLatesCommitsForBranches(vBranches):
     infos = []
     
@@ -303,6 +304,24 @@ def getLatesCommitsForBranches(vBranches):
 branches = v.getBranches()
 infos = getLatesCommitsForBranches(branches)
 print infos
+"""
+
+import ircbot
+
+#login to irc server
+def Test(vMessage):
+    print vMessage 
+
+print "hello"            
+b = ircbot.IrcBot(Test)
+b.start()
+while 1:
+    if b.bIsLoggedIn:
+        break
+print "logged in to irc server: %s"%(ircbot.HOST)
+quit()
+
+
 
 
 
