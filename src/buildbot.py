@@ -3,6 +3,7 @@ import time
 import datetime
 import xmlrpclib
 
+import rexprojectspacedataobjects
         
 class BuildBot:
     """ Data fetcher for build bot type of service.
@@ -29,6 +30,28 @@ class BuildBot:
             result = self.proxy.getLastBuildResults(platform)
             results[platform] = result
             
+        return results
+
+
+    def GetLatestBuilds(self):
+        """Returns list of BuildInfo objects"""
+        
+        buildPlatforms = []
+        results = []
+        
+        try:
+            buildPlatforms = self.proxy.getAllBuilders()
+        except:
+            pass
+           
+            #print "exception in buildbot xmlrpc"
+        
+        for platform in buildPlatforms:
+            result = self.proxy.getLastBuildResults(platform)
+            #time = 
+            binfo = rexprojectspacedataobjects.BuildInfo(platform,result)
+            results.append(binfo)
+
         return results
 
     def getBuildsForDay(theDay):

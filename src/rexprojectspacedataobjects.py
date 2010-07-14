@@ -5,6 +5,15 @@ def parseDate(vDateString):
     ti = time.strptime(datestring,"%Y-%m-%dT%H:%M:%S")
     return ti    
 
+class BuildInfo:
+    def __init__(self,vPlatformName,vResult,vTime = None):
+        self.platformname = vPlatformName
+        self.result = vResult
+        self.time = 0
+        if vTime:
+            self.time = parseDate(vTime)
+        
+
 class FolderInfo:
     def __init__(self,vName,vNumberOfSubFiles,vLatestCommitDate = 0 ,vNumberOfCommits=0):
         self.name = vName

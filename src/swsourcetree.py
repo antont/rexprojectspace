@@ -214,11 +214,18 @@ class SWSourceTree:
         #print "placeholder position",vPos
         return sog    
         
-    def updateBuildResult(self,vResult):
-        if vResult == True:
+    def updateBuildResult(self,vBuilds):
+        res = True
+        for build in vBuilds:
+            if build.result != "success":
+                res = False
+                break
+            
+        if res == True:
             self.setBuildSuccesfull()
         else:
-            self.setBuildFailed
+            self.setBuildFailed()
+        
     
     def setBuildSuccesfull(self):
         if self.bCurrentBuildFailed == True:
