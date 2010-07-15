@@ -42,7 +42,7 @@ import swdeveloper
 import swissue
 
 import versioncontrolsystem
-import issuetracker
+
 import rexprojectspaceutils
 
 import RexProjectSpaceScripts.follower
@@ -52,8 +52,6 @@ import RexProjectSpaceScripts.rexprojectspace
 
 import rexprojectspacedataobjects
 import rexprojectspacenotificationcenter 
- 
-import random
  
 class RexProjectSpaceModule(IRegionModule):
     autoload = True
@@ -79,14 +77,13 @@ class RexProjectSpaceModule(IRegionModule):
     
     
     def getProjectRootFolders(self):  
-        j = self.vcs.getBlobs()
+        j = self.vcs.GetBlobs()
         
         allFilesAndFolders = j.values()
         
         folders = []        
-        temp = []
+        
         allFilesAndFolders = allFilesAndFolders[0]
-        folderinfos = []
         
         for item in allFilesAndFolders:
             
@@ -94,18 +91,11 @@ class RexProjectSpaceModule(IRegionModule):
             if len(t) > 1:
                 
                 folders.append(t[0])
-                temp.append(t[0])
-                
+
         folders = list(set(folders))
         folders.sort()
         
-        #get file/folder count...
-        for folder in folders:
-            count = temp.count(folder)
-            print "Folder: ",folder,"____Count:",count
-            folderinfos.append(rexprojectspacedataobjects.FolderInfo(folder,count))
-            
-        return folderinfos
+        return folders
     
     
     def Initialise(self, scene, configsource):
@@ -122,7 +112,7 @@ class RexProjectSpaceModule(IRegionModule):
             rexpy = scene.Modules["RexPythonScriptModule"]
         except KeyError:
             self.rexif = None
-            print "Couldn't get a ref to RexSCriptInterface"
+            #print "Couldn't get a ref to RexSCriptInterface"
         else:
             self.rexif = rexpy.mCSharp
         
@@ -132,21 +122,23 @@ class RexProjectSpaceModule(IRegionModule):
         self.rop = rexObjects.GetObject(ball.UUID)
         self.rop.RexClassName = "rexprojectspace.RexProjectSpace"
         
+        
+        """
+        empty = []
+        issueData = rexprojectspacedataobjects.IssueInfo(empty)
+        issueData.type = "Defect"
+        bug = swissue.CreateIssue(self.scene,issueData)
+        """
+        
         self.vcs = versioncontrolsystem.VersionControlSystem("naali")
         
         #self.tree = self.initTree("naali")
-        #self.project = self.initSWProject()
-        
-        projectpos = V3(131,130,25.2)
-        
-        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2))
-    
-        #self.initSWIssues()
-        
-        self.setUpTests()
+        self.project = self.initSWProject()
+
+        #self.setUpTests()
         
     def PostInitialise(self):
-        print "____postinit..."
+        #print "postinit..."
         pass
     
     
@@ -163,23 +155,11 @@ class RexProjectSpaceModule(IRegionModule):
         return False
 
     IsSharedModule = property(isshared)
+
     
-    def initSWIssues(self):
-        #projectpos = self.project.sog.AbsolutePosition
-        
-        self.issuetracker = issuetracker.IssueTracker()
-        issues = self.issuetracker.getIssues()
-        
-        
-        for i in issues:
-            #print i
-            issuedata = rexprojectspacedataobjects.IssueInfo(i)
-            issue = self.issuefactory.CreateIssue(issuedata)
-            issue.start()
-            
     def initTree(self,vProjectName):
         
-        branches = self.vcs.getBranches()
+        branches = self.vcs.GetBranches()
         self.tree = swsourcetree.SWSourceTree(self.scene,vProjectName,branches)
 
     def initSWProject(self):
@@ -187,7 +167,7 @@ class RexProjectSpaceModule(IRegionModule):
         components = []
         
         #get all committers
-        committers = self.vcs.getAllContributors()
+        committers = self.vcs.GetAllContributors()
         count = len(committers)
         temp = count
         
@@ -209,7 +189,7 @@ class RexProjectSpaceModule(IRegionModule):
         commits_for_devs = {}
         
         #get previous 500 commits 
-        coms = self.vcs.getCommitsFromNetworkData(500)
+        coms = self.vcs.GetCommitsFromNetworkData(500)
         
         coms.reverse()#oldest first, so reverse!
         
@@ -252,7 +232,7 @@ class RexProjectSpaceModule(IRegionModule):
             if dev.latestcommitid == 0:
                 continue #no commit
             
-            ci = self.vcs.getCommitInformation(dev.latestcommitid)
+            ci = self.vcs.GetCommitInformation(dev.latestcommitid)
             #print "commit id %s for dev:%s "%(dev.latestcommitid,dev.login)
             
             c = ci["commit"]
@@ -261,7 +241,7 @@ class RexProjectSpaceModule(IRegionModule):
             dev.latestcommit = devCommit
             
             #init every developer so that each has latest commits, commit count and names in place
-            swdevs.append(swdeveloper.SWDeveloper(None,self.scene,dev,False)) #add spawner when feature is done
+            swdevs.append(swdeveloper.SWDeveloper(self,self.scene,dev,False))
            
         #get all the components...
         """
@@ -289,7 +269,33 @@ class RexProjectSpaceModule(IRegionModule):
         
         project = swproject.SWProject(self.scene,"naali",components,swdevs)
         
+        #update developers status information
+        for dev in swdevs:
+            dev.updateIsAtProjectSpace(False)
+        
         return project
+
+    def mesh_follow_avatar(self, avatar_presence, mesh_part, pos=V3(1.5, 0, 1),
+        rot=OpenMetaverse.Quaternion(0, 0, 0, 1)):
+        #mesh_local_id = self.get_mesh_local_id(mesh_part)
+        
+        lid = 0
+        for ent in self.scene.GetEntities():
+            if self.bug.UUID == ent.UUID:
+                #print "found local id"
+                lid = ent.LocalId
+                
+        mesh_local_id = lid
+        pos_lsl = LSL_Types.Vector3(0, 0, 2)
+        rot_lsl = LSL_Types.Quaternion(0, 0, 0, 1)
+        ##print 'rot offset before attach', mesh_part.RotationOffset
+        self.rexif.rexAttachObjectToAvatar(mesh_local_id.ToString(),
+        avatar_presence.UUID.ToString(),
+        28, pos_lsl, rot_lsl, False)
+        mesh_part.ParentGroup.UpdateGroupPosition(pos)
+
+        mesh_part.ParentGroup.UpdateGroupRotationR(rot)
+        #print "attach done"   
     
     def setUpTests(self):
         
@@ -297,9 +303,6 @@ class RexProjectSpaceModule(IRegionModule):
         
         scene.AddCommand(self, "hitMe","","",self.cmd_hitMe)
         
-        #testing adding developer
-        scene.AddCommand(self, "developer","","",self.cmd_add_developer)
-       
         #testing component grid
         scene.AddCommand(self, "ac","","",self.cmd_ac)
        
@@ -312,68 +315,35 @@ class RexProjectSpaceModule(IRegionModule):
     
         #testing branches
         scene.AddCommand(self, "cb","","",self.cmd_cb)
-        
-        #testing issues
-        scene.AddCommand(self, "bug","","",self.cmd_create_bug)
-        scene.AddCommand(self, "enhan","","",self.cmd_create_en)
-
-    def cmd_hitMe(self, *args):
-        self.developers[0].DropFromAvatar()
-        """
-        sog,rop =  rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0))
-        #uuid = rexprojectspaceutils.load_mesh_new(self.scene,"component.mesh")
-        #sop = self.scene.GetSceneObjectPart(uuid)
-        
-        mesh_local_id = sog.RootPart.LocalId
-        
-        print mesh_local_id
-        
-        #root_avatar_uuid = self.scene.RegionInfo.MasterAvatarAssignedUUID
-        #print root_avatar_uuid
-        
-        avatars = self.scene.GetAvatars()
-        root_avatar_uuid = avatars[0].UUID
-        print avatars[0]
-        print root_avatar_uuid
-        
-        pos_lsl = LSL_Types.Vector3(0, 0, 2)
-        rot_lsl = LSL_Types.Quaternion(0, 0, 0, 1)
-        
-        self.rexif.rexAttachObjectToAvatar(mesh_local_id.ToString(),root_avatar_uuid.ToString(), 1,pos_lsl, rot_lsl, False)
-        """
-        
-        """
-        dev = self.SpawnDeveloper(V3(128, 128, 30))
-        
-        #uuid = sog.UUID.ToString()
-        
-        dev.SetUUID(OpenMetaverse.UUID(uuid))
-        
-        rexObjects = self.scene.Modules["RexObjectsModule"]
-        rop = rexObjects.GetObject(OpenMetaverse.UUID(uuid))
-        print "class name ::::::: ", rop.RexClassName
-        #dev.llSetStatus(1,1)
-        dev.llSetPos(LSL_Types.Vector3(128, 120, 40))
-        dev.llSetText("mauno",LSL_Types.Vector3(0.0,1.0,0.5),1.0)
-        dev.llSetObjectName("mauno__")
-        
-        sop = self.scene.GetSceneObjectPart("mauno__")
-        print sop
-        
-        sog = sop.ParentGroup
-        print sog
-        """
     
-    def cmd_add_developer(self, *args):
-        dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka user","")
-        dinfo.commitcount = 40
-        dinfo.name = "maukka user"
-        dinfo.latestcommit = ""
-        dev = swdeveloper.SWDeveloper(self.spawner,self.scene,dinfo,False)
-        self.developers.append(dev)
+    def cmd_hitMe(self, *args):
+        #try to get the tree item
+        #self.tree.setBuildFailed()
+        #sog,rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data")
+        #self.scene.AddNewSceneObject(sog, False)
+        ##print rexprojectspaceutils.world()
+        ##print self.GetActor("2549818162")
+        #sog,rop = rexprojectspaceutils.load_mesh(self.scene,"Bug.mesh","Bug.material","bug...")
+        
+        #dev = self.SpawnDeveloper(V3(120,120,24))
+        """dinfo = rexprojectspacedataobjects.DeveloperInfo("antont","")
+        lid = 0
+        for ent in self.scene.GetEntities():
+            if self.bug.UUID == ent.UUID:
+                #print "found local id"
+                lid = ent.LocalId
+        dev = self.spawner.MyWorld.GetActorByLocalID(lid)
+        #print dev
+        #dev.SetDeveloperInfo(self.scene,sog,dinfo)
+        """
+        avatar = self.scene.GetScenePresences()[0]
+            
+        
+        self.mesh_follow_avatar(avatar,self.bug)
         
     def cmd_ac(self, *args):
         self.component.addComponent("test component from regionmodule")
+        pass
         
     def cmd_cb(self, *args):
         self.tree.addNewBranch(self,"new branch from region module")
@@ -402,24 +372,7 @@ class RexProjectSpaceModule(IRegionModule):
         commits = [commit]
         
         cd.dispatchCommits( commits )
-    
-    def cmd_create_bug(self, *args):
-
-        empty = []
-        issueData = rexprojectspacedataobjects.IssueInfo(empty)
-        issueData.type = "Defect"
-        issueData.owner = "maukka user"
-        issueData.id = str(random.randint(0,1000000))
-        bug =  self.issuefactory.CreateIssue(issueData)
-        bug.start()
         
-    def cmd_create_en(self, *args):
-        
-        empty = []
-        issueData = rexprojectspacedataobjects.IssueInfo(empty)
-        issueData.type = "Enhancement"
-        issueData.id = str(random.randint(0,1000000))
-        bug =  self.issuefactory.CreateIssue(issueData)
         
     def onFrameUpdate(self):
         pass
@@ -428,10 +381,9 @@ class RexProjectSpaceModule(IRegionModule):
     
     def SpawnDeveloper(self,vDevLoc):
         """Returs the actual script instance!!! """
-        pos = LSL_Types.Vector3(128, 128, 30)
+        pos = LSL_Types.Vector3(120, 120, 26)
         localId = self.spawner.SpawnActor(pos,0,False,"developer.Developer")
-       
-        developer = self.spawner.MyWorld.GetActorByLocalID(localId)
+        developer = self.world.GetActorByLocalID(localId)
         #print "script instance: ",developer
         return developer
     

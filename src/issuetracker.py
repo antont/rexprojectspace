@@ -10,7 +10,7 @@ class IssueTracker:
     def __init__(self):
         pass
         
-    def getIssues(self):
+    def GetIssues(self):
         f = urllib.urlopen("http://code.google.com/p/realxtend-naali/issues/csv")
         s = f.read()
         
@@ -19,15 +19,13 @@ class IssueTracker:
         issuesStringArray = s.splitlines()        
         
         for j in range(len(issuesStringArray)):                        
-            
             if(j == len(issuesStringArray) - 1):
                 pass
             elif(j == 0):
                 pass
             else:
-                #print j
                 issueString = issuesStringArray[j][1:-1].split(',')             
-                #issue = rexprojectspacedataobjects.IssueInfo(issueString)
-                issues.append(issueString)
+                issue = rexprojectspacedataobjects.IssueInfo(issueString)
+                issues.append(issue)
 
         return issues

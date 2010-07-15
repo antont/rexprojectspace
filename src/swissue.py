@@ -80,7 +80,7 @@ class SWIssue(object):
         self.newposition = self.sog.AbsolutePosition
     
     def AvatarExited(self):
-        
+        pass
         #create visualization again, since follower destroys sog...
         #self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
         #self.follower.sog = self.sog 

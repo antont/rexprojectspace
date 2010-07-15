@@ -22,10 +22,12 @@ class FolderInfo:
         self.numberofsubfiles = vNumberOfSubFiles
     
 class BranchInfo:
-    def __init__(self,vName,vLatestCommitDate,vNumberOfCommits=0):
+    def __init__(self,vName,vLatestCommitDate = 0,vNumberOfCommits=0):
         self.name = vName
         self.numberofcommits = vNumberOfCommits
-        self.latestcommitdate = parseDate(vLatestCommitDate)
+        self.latestcommitdate = 0
+        if vLatestCommitDate != 0:
+            parseDate(vLatestCommitDate)
 
 class DeveloperInfo:
     def __init__(self,vLogin,vName=""):

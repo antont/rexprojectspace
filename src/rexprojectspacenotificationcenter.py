@@ -134,10 +134,10 @@ class CommitDispatcher:
         """ Get single commit for every developer and
         store latest commit and if commit is the same
         do not update anything. Get also branch information"""
-        commits = self.vcs.getCommitsFromNetworkData(20)
+        commits = self.vcs.GetCommitsFromNetworkData(20)
         commits.reverse()
         
-        #commits = self.vcs.getLatestCommitForBranch()
+        #commits = self.vcs.GetLatestCommitForBranch()
         
         print "previous id: ", self.latestcommit
         print "newest id: ", commits[0]["id"]
@@ -173,7 +173,7 @@ class CommitDispatcher:
             print "author: ", author
             
             #get detailed info also...
-            ci = self.vcs.getCommitInformation(c["id"])
+            ci = self.vcs.GetCommitInformation(c["id"])
             
             commit = ci["commit"]
             
@@ -183,7 +183,7 @@ class CommitDispatcher:
             
         self.dispatchCommits(newCommits)
         
-        branches = self.vcs.getBranches()
+        branches = self.vcs.GetBranches()
         
         if len(branches) != len(self.branches):
             self.branches = branches
@@ -298,7 +298,7 @@ class IssueDispatcher:
 
     def updateIssues(self):
         ##print "getting issues"
-        issues = self.issuetracker.getIssues()
+        issues = self.issuetracker.GetIssues()
         
         
         for i in issues:

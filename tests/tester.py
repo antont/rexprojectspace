@@ -15,25 +15,34 @@ class Tester:
         self.bb = buildbot.BuildBot()
 
     def Run(self):
-        self.GetBuildResult()
+        print self.GetBuildResult()
+        print self.GetBranches()
         
     def GetBuildResult(self):
         builds = self.bb.GetLatestBuilds()
         print builds
         if len(builds) > 0:
-            print builds[0].result
-            if build.result == "success" or build.result == "failure":
-                return True
+            for build in builds:
+                if build.result == "success" or build.result == "failure":
+                    return True
         return False
         
     def GetIssues(self):
+        issues = self.it.GetIssues()
         pass
     
     def GetLatestCommit(self):
         pass
     
     def GetBranches(self):
-        pass
+        branches = self.vcs.GetBranches()
+        found = False
+        if len(branches) > 0:
+            for b in branches:
+                 if b.name == "master":
+                    found = True
+                    
+        return found
 
     def GetAllBlobs(self):
         pass
