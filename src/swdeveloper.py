@@ -94,15 +94,13 @@ class SWDeveloper:
     
     def AvatarExited(self):
         
-        #create visualization again, since follower destroys sog...
-        self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
         self.follower.sog = self.sog 
         
-        self.initVisualization(self.sog)
+        # self.initVisualization(self.sog)
         self.move(self.newposition)
         
     def move(self, vTargetPos):
         self.newposition = vTargetPos
-        if self.follower.bFollowing:
+        if self.follower.bFollowing == False:
             self.sog.NonPhysicalGrabMovement(vTargetPos)
             

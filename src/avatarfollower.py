@@ -101,9 +101,9 @@ class AvatarFollower(object):
     def DropFromAvatar(self):
         clientview = self.avatar.ControllingClient
         print "Droppig dev from avatar"
-        self.scene.DetachSingleAttachmentToGround(self.sog.RootPart.UUID,clientview)
-        self.scene.DeleteSceneObject(self.sog,False)
-        
-        self.sog = 0
+        #self.scene.DetachSingleAttachmentToGround(self.sog.RootPart.UUID,clientview)
+        #self.scene.DeleteSceneObject(self.sog,False)
+        self.sog.DetachToGround()
+        #self.sog = 0
 
         

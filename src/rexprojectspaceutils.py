@@ -84,8 +84,13 @@ def load_texture_with_uuid(vScene,vTexturePath,vUUID=-1):
     asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(vTexturePath))
      
     val = vScene.AssetService.Store(asset)
+    print "texture full id: ", asset.FullID
+    
+    print "texture id: ", asset.ID
     print "Did it upload: ", val
+    
     return asset.ID
+    
 
  
 def load_skeletonanimation(vScene,vSkeletonAnimPath):
@@ -233,7 +238,7 @@ def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quat
         return
     
     hasTextures = False
-    
+    """
     for k,v in enumerate(mat2texture):
         hasTextures = True
         print v.Key
@@ -242,15 +247,20 @@ def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quat
         path = v.Key
         
         load_texture_with_uuid(scene,path,v.Value)
-        newString = newString.replace(path,v.Value.ToString())
-    
+        newString = newString.replace("texture "+path,"texture "+v.Value.ToString())
+    """
     if hasTextures:
         rc, mat2uuid, mat2texture = matparser.ParseAndSaveMaterial(
             newString)
         print newString
     
     matnames, errors = DotMeshLoader.ReadDotMeshMaterialNames(asset.Data)
+    
+    print "errors: ", errors
+    print mat2uuid
+    
     for i, mname in enumerate(matnames):
+        print mname
         robject.RexMaterials.AddMaterial(i, mat2uuid[mname])
         
     return sceneobjgroup, robject        
@@ -273,13 +283,13 @@ def load_mesh_new(scene, meshpath):
     return val
 
         
-def load_material(scene,matpath):
-    matdata = open(matpath).read()
-    id = OpenMetaverse.UUID.Random()
+def load_material(vScene,matpath):
+    matdata = System.IO.File.ReadAllBytes(os.path.abspath(matpath))
+    uid = OpenMetaverse.UUID.Random()
     asset = OpenSim.Framework.AssetBase()
     asset.Name = matpath
     asset.FullID = uid
-    asset.Type = 0 # ?? texture??
+    asset.Type = 45 # ?? material??
     asset.Description = matpath
     
     ##print "Loading texture script: ", os.path.abspath(vTexturePath)
@@ -287,5 +297,18 @@ def load_material(scene,matpath):
     asset.Data = matdata
      
     val = vScene.AssetService.Store(asset)
-    return asset.ID
+    return val
     
+def load_and_send_urltexture(vScene,vSog,vRop,vUrl):
+    if vSog and vRop and vScene:
+        try:
+            am = vScene.Modules["AssetMediaURLModule"]
+        except KeyError:
+            print "module not found"
+            return
+        
+        id = vSog.RootPart.Shape.Textures.DefaultTexture.TextureID
+        am.SetAssetData(id, vUrl, 1)
+        vRop.RexMaterials.AddMaterial(0,id)
+        
+        am.SendMediaURLtoAll(id)
