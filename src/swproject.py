@@ -64,7 +64,7 @@ class Component:
             #print "Component: %s found from scene"%("rps_component_" + self.name)
         else:    
             self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
-            #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
+            #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
             
             self.sog.RootPart.Scale = V3(vX,vY,1)
             self.sog.RootPart.Name =  "rps_component_" + self.name
@@ -124,14 +124,24 @@ class SWProject:
         
         #create first component representing self
         rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("5d219e4b-ad4a-4edf-95b3-d6bbb55df4d0")
+        self.UUID = OpenMetaverse.UUID("41cb4157-80e1-45d4-b2a1-fb1ea3f9c303")
         
-        if not self.scene.GetSceneObjectPart(self.UUID):
+        
+        
+        if not self.scene.GetSceneObjectPart("first_component"):
             print "No first sw component..."
             return
+        
+        self.sog = self.scene.GetSceneObjectPart("first_component").ParentGroup
+        self.rop = rexObjects.GetObject(self.sog.UUID)
+        
+        
+        #if not self.scene.GetSceneObjectPart(self.UUID):
+        #    print "No first sw component..."
+        #    return
             
-        self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
-        self.rop = rexObjects.GetObject(self.UUID)
+        #self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
+        #self.rop = rexObjects.GetObject(self.UUID)
         
         self.component = Component(vScene, "naali_root_component" , self.sog.AbsolutePosition, None, 6,6,V3(0,0,0))
         self.component.sog.RootPart.Scale = V3(0,0,0)

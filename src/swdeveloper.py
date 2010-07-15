@@ -51,7 +51,7 @@ class SWDeveloper:
             rop = rexObjects.GetObject(sog.RootPart.UUID)
             print "Developer: %s found from scene"%(self.developerinfo.login)
         else:    
-            sog,rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+            sog,rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
         
         self.initVisualization(sog)
         self.newposition = sog.AbsolutePosition
@@ -83,7 +83,7 @@ class SWDeveloper:
     def updateIsLatestCommitter(self,vIsLatestCommitter):
         if vIsLatestCommitter:
             if self.skeleton_anim_id != OpenMetaverse.UUID.Zero:
-                self.skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"Diamond.skeleton")
+                self.skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"diamond.skeleton")
             self.rop.RexAnimationPackageUUID = self.skeleton_anim_id
             self.rop.RexAnimationName = "jump"
         else:

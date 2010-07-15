@@ -81,7 +81,9 @@ class RexProjectSpaceModule(IRegionModule):
         
         allFilesAndFolders = j.values()
         
-        folders = []        
+        folders = []    
+        temp = []
+        folderinfos = []
         
         allFilesAndFolders = allFilesAndFolders[0]
         
@@ -91,11 +93,19 @@ class RexProjectSpaceModule(IRegionModule):
             if len(t) > 1:
                 
                 folders.append(t[0])
-
+                
+        temp = folders
         folders = list(set(folders))
         folders.sort()
         
-        return folders
+        print temp
+        
+        #now count sub items
+        for folder in folders:
+            count = temp.count(folder)
+            folderinfos.append(rexprojectspacedataobjects.FolderInfo(folder,count))
+        
+        return folderinfos
     
     
     def Initialise(self, scene, configsource):
@@ -135,7 +145,7 @@ class RexProjectSpaceModule(IRegionModule):
         #self.tree = self.initTree("naali")
         self.project = self.initSWProject()
 
-        #self.setUpTests()
+        self.setUpTests()
         
     def PostInitialise(self):
         #print "postinit..."
@@ -269,10 +279,6 @@ class RexProjectSpaceModule(IRegionModule):
         
         project = swproject.SWProject(self.scene,"naali",components,swdevs)
         
-        #update developers status information
-        for dev in swdevs:
-            dev.updateIsAtProjectSpace(False)
-        
         return project
 
     def mesh_follow_avatar(self, avatar_presence, mesh_part, pos=V3(1.5, 0, 1),
@@ -315,31 +321,22 @@ class RexProjectSpaceModule(IRegionModule):
     
         #testing branches
         scene.AddCommand(self, "cb","","",self.cmd_cb)
+        
+        #testing issues
+        
+        #testing developers
+        scene.AddCommand(self, "developer","","",self.cmd_developer)
+        
+        #testing project
+        scene.AddCommand(self, "project","","",self.cmd_project)
+        
     
     def cmd_hitMe(self, *args):
         #try to get the tree item
         #self.tree.setBuildFailed()
-        #sog,rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data")
-        #self.scene.AddNewSceneObject(sog, False)
-        ##print rexprojectspaceutils.world()
-        ##print self.GetActor("2549818162")
-        #sog,rop = rexprojectspaceutils.load_mesh(self.scene,"Bug.mesh","Bug.material","bug...")
-        
-        #dev = self.SpawnDeveloper(V3(120,120,24))
-        """dinfo = rexprojectspacedataobjects.DeveloperInfo("antont","")
-        lid = 0
-        for ent in self.scene.GetEntities():
-            if self.bug.UUID == ent.UUID:
-                #print "found local id"
-                lid = ent.LocalId
-        dev = self.spawner.MyWorld.GetActorByLocalID(lid)
-        #print dev
-        #dev.SetDeveloperInfo(self.scene,sog,dinfo)
-        """
-        avatar = self.scene.GetScenePresences()[0]
-            
-        
-        self.mesh_follow_avatar(avatar,self.bug)
+        sog,rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data")
+        self.scene.AddNewSceneObject(sog, False)
+
         
     def cmd_ac(self, *args):
         self.component.addComponent("test component from regionmodule")
@@ -373,7 +370,16 @@ class RexProjectSpaceModule(IRegionModule):
         
         cd.dispatchCommits( commits )
         
+    def cmd_developer(self, *args):
+        dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka","maukka user")
+        self.dev = swdeveloper.SWDeveloper(self,self.scene,dinfo,False)
         
+    def cmd_project(self, *args):
+        dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka","maukka user")
+        self.dev = swdeveloper.SWDeveloper(self,self.scene,dinfo,False)
+    
+        self.testproject = swproject.SWProject(self.scene,"test_project",[],[self.dev])
+    
     def onFrameUpdate(self):
         pass
      
@@ -407,13 +413,13 @@ class RexProjectSpaceModule(IRegionModule):
         #print "spawner set-------"
         self.spawner = vRexProjectSpace
         
-    
-    def Spawner(self):
-        return spawner
         
-    def SpawnScriptInstance(self,vPyClass):
-        id = 0
-        return id
+        def Spawner(self):
+            return spawner
+            
+        def SpawnScriptInstance(self,vPyClass):
+            id = 0
+            return id
     
     ####
         
