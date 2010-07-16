@@ -31,7 +31,7 @@ class SWDeveloper:
         self.isAtProjectSpace = vIsAtProjectSpace
         self.avatar = vAvatar #rxavatar
         self.script = None
-        self.skeleton_anim_id = 0
+        self.skeleton_anim_id = OpenMetaverse.UUID.Zero
         
         try:
             rexpy = self.scene.Modules["RexPythonScriptModule"]
@@ -55,6 +55,8 @@ class SWDeveloper:
         
         self.initVisualization(sog)
         self.newposition = sog.AbsolutePosition
+        rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
+        rop.RexAnimationName = ""
         
         self.follower = avatarfollower.AvatarFollower(vScene,sog,[vDeveloperInfo.login,vDeveloperInfo.name])
         
@@ -82,8 +84,11 @@ class SWDeveloper:
     
     def updateIsLatestCommitter(self,vIsLatestCommitter):
         if vIsLatestCommitter:
-            if self.skeleton_anim_id != OpenMetaverse.UUID.Zero:
-                self.skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"diamond.skeleton")
+            print "Latest committer is :", self.developerinfo.name
+            self.skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"diamond.skeleton")
+            
+            print "developer animation package uuid:", self.skeleton_anim_id
+            
             self.rop.RexAnimationPackageUUID = self.skeleton_anim_id
             self.rop.RexAnimationName = "jump"
         else:

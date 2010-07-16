@@ -63,7 +63,8 @@ def load_texture(vScene,vTexturePath):
     asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(vTexturePath))
      
     val = vScene.AssetService.Store(asset)
-    return asset.ID
+    
+    return asset.FullID
  
  
 
@@ -261,6 +262,7 @@ def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quat
     
     for i, mname in enumerate(matnames):
         print mname
+        print mat2uuid[mname]
         robject.RexMaterials.AddMaterial(i, mat2uuid[mname])
         
     return sceneobjgroup, robject        

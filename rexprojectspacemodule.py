@@ -97,9 +97,7 @@ class RexProjectSpaceModule(IRegionModule):
         temp = folders
         folders = list(set(folders))
         folders.sort()
-        
-        print temp
-        
+      
         #now count sub items
         for folder in folders:
             count = temp.count(folder)
@@ -132,19 +130,15 @@ class RexProjectSpaceModule(IRegionModule):
         self.rop = rexObjects.GetObject(ball.UUID)
         self.rop.RexClassName = "rexprojectspace.RexProjectSpace"
         
-        
-        """
-        empty = []
-        issueData = rexprojectspacedataobjects.IssueInfo(empty)
-        issueData.type = "Defect"
-        bug = swissue.CreateIssue(self.scene,issueData)
-        """
-        
         self.vcs = versioncontrolsystem.VersionControlSystem("naali")
         
         #self.tree = self.initTree("naali")
         self.project = self.initSWProject()
 
+        projectpos = V3(131,130,25.2)
+        issuespawnpos = V3(125,125,25.2)
+        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
+    
         self.setUpTests()
         
     def PostInitialise(self):
@@ -311,6 +305,10 @@ class RexProjectSpaceModule(IRegionModule):
         
         #testing component grid
         scene.AddCommand(self, "ac","","",self.cmd_ac)
+        scene.AddCommand(self, "modcom","","",self.cmd_modify)
+        scene.AddCommand(self, "remcom","","",self.cmd_remove)
+        scene.AddCommand(self, "addcom","","",self.cmd_add)
+        
        
         #testing builds
         scene.AddCommand(self, "bf","","",self.cmd_bf)
@@ -323,7 +321,9 @@ class RexProjectSpaceModule(IRegionModule):
         scene.AddCommand(self, "cb","","",self.cmd_cb)
         
         #testing issues
-        
+        scene.AddCommand(self, "bug","","",self.cmd_create_bug)
+        scene.AddCommand(self, "enhan","","",self.cmd_create_en)
+
         #testing developers
         scene.AddCommand(self, "developer","","",self.cmd_developer)
         
@@ -335,12 +335,26 @@ class RexProjectSpaceModule(IRegionModule):
         #try to get the tree item
         #self.tree.setBuildFailed()
         sog,rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data")
+        
+        #load texture
+        tex = rexprojectspaceutils.load_texture(self.scene,"rpstextures/diamond_blue.jp2")
+        rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+
         self.scene.AddNewSceneObject(sog, False)
 
         
     def cmd_ac(self, *args):
-        self.component.addComponent("test component from regionmodule")
-        pass
+        self.testcomponent = swproject.Component(self.scene, "test_component_11" , V3(126,126,25.5), None, 2,2,V3(1,1,1))
+    
+    def cmd_remove(self, *args):
+        self.testcomponent.SetState("removed") 
+
+    def cmd_modify(self, *args):
+        self.testcomponent.SetState("modified")
+        
+    def cmd_add(self, *args):
+        self.testcomponent.SetState("added")
+        
         
     def cmd_cb(self, *args):
         self.tree.addNewBranch(self,"new branch from region module")
@@ -369,10 +383,32 @@ class RexProjectSpaceModule(IRegionModule):
         commits = [commit]
         
         cd.dispatchCommits( commits )
+    
+    def cmd_create_bug(self, *args):
+
+        empty = []
+        issueData = rexprojectspacedataobjects.IssueInfo(empty)
+        issueData.type = "Defect"
+        issueData.owner = "maukka user"
+        issueData.id = str(random.randint(0,1000000))
+        bug =  self.issuefactory.CreateIssue(issueData)
+        bug.start()
         
+    def cmd_create_en(self, *args):
+        
+        empty = []
+        issueData = rexprojectspacedataobjects.IssueInfo(empty)
+        issueData.type = "Enhancement"
+        issueData.owner = "maukka user"
+        issueData.id = str(random.randint(0,1000000))
+        bug =  self.issuefactory.CreateIssue(issueData)
+        bug.start()
+        print bug
+    
     def cmd_developer(self, *args):
         dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka","maukka user")
         self.dev = swdeveloper.SWDeveloper(self,self.scene,dinfo,False)
+        
         
     def cmd_project(self, *args):
         dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka","maukka user")

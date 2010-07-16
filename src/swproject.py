@@ -27,10 +27,40 @@ import swdeveloper
 
 import rexprojectspacemodule
 
+#MESHUUID = OpenMetaverse.UUID.Zero
+#MODIFIEDMESHUUID = OpenMetaverse.UUID.Zero
+
+#MATERIALUUID = OpenMetaverse.UUID.Zero
+#MODIFIEDMATERIALUUID = OpenMetaverse.UUID.Zero
+
+class ComponentBase(object):
+    def __init__(self):
+        pass
+    
+    def SetState(self,vState):
+        pass
+    
+    def AddChild(self,vComponentBase):
+        pass
+    
+    def RemoveChild(self,vComponentBase):
+        pass
+        
+
+        
+class File(ComponentBase):
+    def __init__(self):
+        pass
+    
+    def SetState(self,vState):
+        pass
+    
 class Component:
     offset = 1.0
-    modifiedmaterial = None
-    nonmodifiedmaterial = None
+    
+    modifiedtextureid = None
+    removedtextureid = None
+    addedtextureid = None
     
     def __init__(self,vScene,vName,vPos,vParent,vX=1,vY=1,vScale = V3(0,0,0)):
         
@@ -49,21 +79,24 @@ class Component:
         self.scale = vScale
         self.color = 0 #blue
         
-        sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
+        if not Component.modifiedtextureid:
+            print "loading  textures"
+            Component.modifiedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/bugi_red.jp2")
+            Component.removedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/bugi_green.jp2")
+            Component.addedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/addedcomponent.jp2")
         
-        """
-        if !modifiedmaterial and !nonmodifiedmaterial:
-            modifiedmaterial = rexprojectspaceutils.load_material("modified.material")
-            nonmodifiedmaterial = rexprojectspaceutils.load_material("nonmodified.material")
-        """
+        sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
+        self.currenttexid = Component.addedtextureid
         
         if sop:
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
             self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
-            #print "Component: %s found from scene"%("rps_component_" + self.name)
-        else:    
+            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(Component.addedtextureid))
+             #print "Component: %s found from scene"%("rps_component_" + self.name)
+        else:
             self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
+            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
             #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
             
             self.sog.RootPart.Scale = V3(vX,vY,1)
@@ -71,8 +104,19 @@ class Component:
             
             self.scene.AddNewSceneObject(self.sog, False)
         
+       
+        
+        self.MESHUUID = self.rop.RexMeshUUID
+        
+        #MATERIALUUID = self.rop.RexMaterials[self.rop.RexMaterials.Keys[0]]
+        
+        self.MODIFIEDMESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"componentmod.mesh")
+        self.MODIFIEDMATERIALUUID = rexprojectspaceutils.load_material(self.scene,"componentmod.material")
+        
         #print "mesh id for component: ", self.rop.RexMeshUUID
         self.sog.SetText(self.name,V3(1.0,1.0,0.0),1.0)
+        
+        self.modified = False
         
     def addChild(self,vComponentName):
 
@@ -92,14 +136,20 @@ class Component:
             self.curRow += 1
             
         return child
-    
-    def setModified(self,vModified = True):
-        print "____MODIFIED____"
-        texcolor = OpenMetaverse.Color4(1, 0, 0, 1)
-        tex = self.sog.RootPart.Shape.Textures
-        tex.DefaultTexture.RGBA = texcolor
-        self.sog.RootPart.UpdateTexture(tex)
-    
+            
+    def SetState(self,vState):
+        print "component: ",self.name, "is at state: ",vState
+        tex = self.currenttexid
+        if vState == "modified":
+            tex = Component.modifiedtextureid
+        elif vState == "removed" or vState == "Removed":
+            tex = Component.removedtextureid
+        elif vState == "added":
+            tex = Component.addedtextureid
+        
+        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+        self.currenttexid = tex
+
 class SWProject:
 
     def __init__(self, vScene,vProjectName, vComponents, vDevelopers):
@@ -118,8 +168,8 @@ class SWProject:
         #print "-----------------",self.developers[0].developerinfo.login
         
         if len(self.developers) > 0:
-            self.latestcommitter = self.developers[0]            
-            self.latestcommitter = self.resolveLatestCommitter()
+            self.latestcommitter = self.developers[0]
+            #self.latestcommitter = self.resolveLatestCommitter()
             self.latestcommitter.updateIsLatestCommitter(True)
         
         #create first component representing self
@@ -181,15 +231,15 @@ class SWProject:
             
             #unset previous modified
             for component in self.components.values():
-                component.setModified(False)
-        
+                component.SetState("added")#return to default
+                
             #change every components color that was mod,added or removed
             #within a latest commit
             for item in self.latestcommitter.developerinfo.latestcommit.directories:
                 #locate component
                 print item
                 component = self.components[item]
-                component.setModified()
+                component.SetState("modified")#until we can say if component
     
     def resolveLatestCommitter(self):
         

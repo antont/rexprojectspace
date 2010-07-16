@@ -15,23 +15,75 @@ import rexprojectspaceutils
 import rexprojectspacedataobjects
 import avatarfollower
 
+import rexprojectspacenotificationcenter
+
+BUGTEXTUREURI = "http://img716.imageshack.us/img716/518/bugired.jpg"
+ENHANCEMENTTEXTUREURI = "http://img38.imageshack.us/img38/1619/bugigreen.jpg"
+
+def enmaterial():
+        return """
+material Material.001/SOLID/TEX/bugi_unwrapped_n_w_bones_Sphere.jpg
+{
+	technique
+	{
+		pass
+		{
+			diffuse 0.800000 0.800000 0.800000
+			specular 0.500000 0.500000 0.500000 12.500000
+		}
+	}
+}
+
+            """
+            
+
+def bugmaterial(vImagePath):
+        return """
+material Material.001/SOLID/TEX/bugi_unwrapped_n_w_bones_Sphere.jpg
+{
+	technique
+	{
+		pass
+		{
+			diffuse 0.800000 0.800000 0.800000
+			specular 0.500000 0.500000 0.500000 12.500000
+			texture_unit
+			{
+				texture %s
+			}
+		}
+	}
+}
+
+            """ % (vImagePath)
+
 class IssueFactory():
     
-    def __init__(self,vScene,vStart,vEnd):
-        """ vStart and vEnd defines a cube by start and end point. By calling
-            factory function CreateIssue, this factory can create issue and position
+    def __init__(self,vScene,vStart,vEnd,vSpawnPosition = V3(125,125,25)):
+        """ vStart and vEnd defines a cube by start and end point. vSpawnPosition defines 
+            a single point in scene that will be used a spawn position for spawned issues.
+            By calling factory function CreateIssue, this factory can create issue and position
             it inside the given cage
         """
         self.scene = vScene
         self.start = vStart
         self.end = vEnd
+        
+        self.spawnpos = vSpawnPosition
+        
+        self.issues = {} #issueid,issue object dictionary
+        
+        #nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
+        
+        #nc.OnNewIssue +=  self.CreateIssue
+        #nc.OnIssueUpdated += self.UpdateIssue
     
     def CreateIssue(self,vIssueData):
         issue = None
         if vIssueData.type == "Defect":
-            issue =  SWBug(self.scene,vIssueData)
+            issue =  SWBug(self.scene,vIssueData,self.spawnpos)
         else:
-            issue =  SWEnhancement(self.scene,vIssueData)
+            issue =  SWEnhancement(self.scene,vIssueData,self.spawnpos)
             
         x = random.uniform(self.start.X,self.end.X)
         y = random.uniform(self.start.Y,self.end.Y)
@@ -39,15 +91,22 @@ class IssueFactory():
         
         pos = V3(x,y,z)
         
-        #should set the end position after setting the start
-        issue.sog.AbsolutePosition = pos
+        #should set the end position after setting the start, so that one could see the bug flying...
+        issue.move(pos)
         
+        self.issues[vIssueData.id] = issue
         
         return issue
-        
+    
+    def UpdateIssue(self,vIssueInfo):
+        issue = self.issues[vIssueInfo.id]
+        if issue:
+            issue.issueinfo = vIssueInfo
+            issue.DataChanged()
+            
 class SWIssue(object):
 
-    def __init__(self,vScene,vIssueInfo):
+    def __init__(self,vScene,vIssueInfo,vPos):
         self.scene = vScene
         self.issueinfo = vIssueInfo
         self.isResponsibleAvatartAtProjectSpace = False
@@ -58,31 +117,39 @@ class SWIssue(object):
         self.follower.OnAvatarEntered += self.AvatarEntered
         self.follower.OnAvatarExited += self.AvatarExited 
 
-    def LoadMeshWithTexturedMaterialAndAnimation(self,vMeshPath,vTexturePath,vMaterialPath,vSkeletonAnimPath):
+    def LoadMeshWithMaterialAndTextures(self,vMeshPath,vMaterialPath,vTexturePaths,vPos):
         sop =  self.scene.GetSceneObjectPart("rps_issue_" + self.issueinfo.id)
-             
+        sog = 0
+        rop = 0  
         if sop:
-            self.sog = sop.ParentGroup
+            sog = sop.ParentGroup
             rexObjects = self.scene.Modules["RexObjectsModule"]
-            self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
+            rop = rexObjects.GetObject(sog.RootPart.UUID)
             #print "Issue: %s found from scene"%(self.issueinfo.id)
         else:
-            rexprojectspaceutils.load_texture(self.scene,vTexturePath)
-            self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,vMeshPath,vMaterialPath,"test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
-            self.sog.RootPart.Scale = V3(0.1,0.1,0.1)
-            skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,vSkeletonAnimPath)
-            self.rop.RexAnimationPackageUUID = skeleton_anim_id
             
-            self.sog.RootPart.Name =  "rps_issue_" + self.issueinfo.id
-            self.scene.AddNewSceneObject(self.sog, False)
+            sog,rop = rexprojectspaceutils.load_mesh(self.scene,vMeshPath,vMaterialPath,"test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),vPos,V3(0.1,0.1,0.1))
+            
+            i = 1
+            for texture in vTexturePaths:
+                tex = rexprojectspaceutils.load_texture(self.scene,texture)
+                rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+                i = i + 1
+            sog.RootPart.Name =  "rps_issue_" + self.issueinfo.id
+            self.scene.AddNewSceneObject(sog, False)
+        
+        return sog,rop
     
     def AvatarEntered(self):
+        """ Override if needed """
+        print "avatar entered"
         self.newposition = self.sog.AbsolutePosition
     
     def AvatarExited(self):
-        pass
+        """ Override if needed """
+        self.sog.AbsolutePosition = self.newposition
         #create visualization again, since follower destroys sog...
-        #self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"Diamond.mesh","Diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+        #self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
         #self.follower.sog = self.sog 
         
         #self.initVisualization(self.sog)
@@ -90,62 +157,57 @@ class SWIssue(object):
         
     def move(self, vTargetPos):
         self.newposition = vTargetPos
-        if self.follower.bFollowing:
-            self.sog.NonPhysicalGrabMovement(vTargetPos)
-    
+
     def start(self):
-        #implemented by sub classes...
+        #override this
+        self.follower.sog = self.sog
+        
+    def DataChanged(self,vNewIssueInfo):
         pass
+    
     
 
 class SWEnhancement(SWIssue):
-    def __init__(self,vScene,vIssueInfo):
-        super(SWEnhancement,self).__init__(vScene,vIssueInfo)
-        super(SWEnhancement,self).LoadMeshWithTexturedMaterialAndAnimation("Sphere.mesh","bug_wings_rigged_face_Sphere.jpg","Sphere.material","Sphere.skeleton")
+    def __init__(self,vScene,vIssueInfo,vPos):
+        super(SWEnhancement,self).__init__(vScene,vIssueInfo,vPos)
         
-        if self.sog and self.rop:
-            self.follower.sog = self.sog
-            pass
-        else:
-            return
-
+        vMaterialPath = "enhgenerated.material"
+        
+        self.sog,self.rop = super(SWEnhancement,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_green.jp2"],vPos)
+        skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"bug.skeleton")
+        self.rop.RexAnimationPackageUUID = skeleton_anim_id
+       
+        
     def start(self):
-        self.rop.RexAnimationName = "flying_no_movement"
-        
-class SWBug(SWIssue):
-    def __init__(self,vScene,vIssueInfo):
-        super(SWBug,self).__init__(vScene,vIssueInfo)
-        super(SWBug,self).LoadMeshWithTexturedMaterialAndAnimation("Sphere.mesh","bug_wings_rigged_face_Sphere.jpg","Sphere.material","Sphere.skeleton")
-        
-        if self.sog and self.rop:
-            self.follower.sog = self.sog
-            """
-            try:
-            rexpy = scene.Modules["RexPythonScriptModule"]
-            except KeyError:
-                self.rexif = None
-                #print "Couldn't get a ref to RexSCriptInterface"
-            else:
-                self.rexif = rexpy.mCSharp
-                self.rexif.rexSetTextureMediaURL("http://img810.imageshack.us/img810/5356/bugwingsriggedfacespher.jpg")
-            """
-            pass
-        else:
-            return
-      
-    def start(self):
+        super(SWEnhancement,self).start()
         self.rop.RexAnimationName = "flying"    
-     
-    def updateIsAtProjectSpace(self, vAtProjectSpace):
-        """update visualization if necessary """
-        if self.isResponsibleAvatartAtProjectSpace == False and vAtProjectSpace == True:
-            if not self.rop.RexClassName == "follower.Follower":
-                self.rop.RexClassName = "follower.Follower"
-        elif self.isResponsibleAvatartAtProjectSpace == True and vAtProjectSpace == False:
-            pass
-        elif self.isResponsibleAvatartAtProjectSpace == True and vAtProjectSpace == True:
-            if not self.rop.RexClassName == "follower.Follower":
-                self.rop.RexClassName = "follower.Follower"
-        elif self.isResponsibleAvatartAtProjectSpace == False and vAtProjectSpace == False:
-            pass
-        self.isResponsibleAvatartAtProjectSpace = vAtProjectSpace
+        #self.rop.RexAnimationName = "flying_no_movement"
+
+    def DataChanged(self,vNewIssueInfo):
+        pass
+        
+    def move(self, vTargetPos):
+        super(SWEnhancement,self).move(vTargetPos)
+        self.sog.AbsolutePosition = vTargetPos
+    
+class SWBug(SWIssue):
+    def __init__(self,vScene,vIssueInfo,vPos):
+        super(SWBug,self).__init__(vScene,vIssueInfo,vPos)
+        
+        vMaterialPath = "enhgenerated.material"
+        
+        self.sog,self.rop = super(SWBug,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_red.jp2"],vPos)
+        skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"bug.skeleton")
+        self.rop.RexAnimationPackageUUID = skeleton_anim_id
+            
+    def start(self):
+        super(SWBug,self).start()
+        self.rop.RexAnimationName = "flying"    
+ 
+    def DataChanged(self,vNewIssueInfo):
+        pass
+        
+    def move(self, vTargetPos):
+        super(SWBug,self).move(vTargetPos)
+        self.sog.AbsolutePosition = vTargetPos
+    
