@@ -163,6 +163,11 @@ class SWProject:
         #are
         self.componentsAndDevelopersDict = {}
         
+        #will contain developers that could have caused a build break
+        self.blameList = []
+        
+        self.lastBuildTime = 0
+        self.bLatestBuildFailed  = False
         
         self.latestcommitter = None
         #print "-----------------",self.developers[0].developerinfo.login
@@ -220,7 +225,7 @@ class SWProject:
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         nc.OnNewCommit += self.updateDeveloperLocationWithNewCommitData
         
-        #versioncontroldatadispatcher.VersionControlDataDispatcher.dispatcherForProject(self.projectName)
+        nc.OnBuild += self.buildFinished
         
     def __del__(self):
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
@@ -239,7 +244,10 @@ class SWProject:
                 #locate component
                 print item
                 component = self.components[item]
-                component.SetState("modified")#until we can say if component
+                #perhaps one day we might tell component/file if
+                #it was removed,added or modified, but now we have
+                #only root level folders...
+                component.SetState("modified")
     
     def resolveLatestCommitter(self):
         
@@ -365,4 +373,45 @@ class SWProject:
         
     def addDeveloper(self,vDeveloper):
         pass
+ 
+    def buildFinished(self,vBuilds):
+        bResult = True
+        
+        if len(vBuilds) < 1:
+            return
+        
+        for build in vBuilds:
+            if build.result != "success":
+                bResult = False
+                break
+        
+        build = vBuilds[0]
+        
+        if bResult == False:
+            if self.bLatestBuildFailed == True:
+                #don't update blamelist, because build was allready failing...
+                return
+            else:
+                bLatestBuildFailed = True
+                #make blamelist
+                for d in self.developers:
+                    if d.developerinfo.latestcommit.date > self.lastBuildTime:
+                        print "dev added to blamelist: ", d.developerinfo.login
+                        self.blameList.append(d)
+                        
+                self.visualizeBlameListMembers()
+        else:
+            self.bLatestBuildFailed = False
+            self.unsetBlameListMemberVisualizations()
+            self.blameList = []
+            
+        self.lastBuildTime = build.time
+       
+    def visualizeBlameListMembers(self):
+        for d in self.blameList:
+            d.updateDidBrakeBuild(True)
+    
+    def unsetBlameListMemberVisualizations(self):
+        for d in self.blameList:
+            d.updateDidBrakeBuild(False)
  

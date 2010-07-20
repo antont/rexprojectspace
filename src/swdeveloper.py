@@ -20,7 +20,10 @@ clr.AddReference('OpenSim.Region.ScriptEngine.Shared')
 from OpenSim.Region.ScriptEngine.Shared import LSL_Types
 
 class SWDeveloper:
-
+    
+    greentextureid = 0
+    redtextureid = 0
+    
     HEIGHT = 1.0
 
     def __init__(self, vMod,vScene,vDeveloperInfo, vIsAtProjectSpace ,vAvatar = None):
@@ -53,15 +56,21 @@ class SWDeveloper:
         else:    
             sog,rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
         
+        if SWDeveloper.greentextureid == 0:
+            SWDeveloper.greentextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devgreen.jp2")
+            SWDeveloper.redtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devred.jp2")
+        
+        self.currenttexid = SWDeveloper.greentextureid
+        self.sog = sog
+        self.rop = rop
+            
         self.initVisualization(sog)
         self.newposition = sog.AbsolutePosition
         rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
         rop.RexAnimationName = ""
         
         self.follower = avatarfollower.AvatarFollower(vScene,sog,[vDeveloperInfo.login,vDeveloperInfo.name])
-        
-        self.sog = sog
-        self.rop = rop
+
         self.follower.OnAvatarEntered += self.AvatarEntered
         self.follower.OnAvatarExited += self.AvatarExited
     
@@ -74,6 +83,8 @@ class SWDeveloper:
         
         scalefactor = self.developerinfo.commitcount
         sog.RootPart.Scale = V3(scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2)
+
+        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
         
         sog.SetText(self.developerinfo.login,V3(0.0,1.0,0.5),1.0)
         
@@ -93,6 +104,22 @@ class SWDeveloper:
             self.rop.RexAnimationName = "jump"
         else:
             self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
+    
+    def updateDidBrakeBuild(self,vDidBrakeBuild):
+        if vDidBrakeBuild and self.currenttexid == SWDeveloper.redtextureid:
+            return
+        elif vDidBrakeBuild == False and self.currenttexid == SWDeveloper.greentextureid:
+            return
+        
+        tex = self.currenttexid
+        if vDidBrakeBuild:
+            tex =  SWDeveloper.redtextureid
+        else:
+            tex =  SWDeveloper.greentextureid
+           
+        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+        self.currenttexid = tex
+        
     
     def AvatarEntered(self):
         self.newposition = self.sog.AbsolutePosition

@@ -81,9 +81,14 @@ class IssueInfo:
 
 class CommitInfo:
     def __init__(self,vLogin,vCommit,vAuthor=""):
-        
+
+        print "before folders"
+    
         self.login = vLogin
         self.name = vAuthor
+        self.removed = []
+        self.added = []
+        self.modified = []
         
         if self.name == "":
             try:
@@ -93,9 +98,14 @@ class CommitInfo:
 
         self.message = vCommit["message"]
         self.files,self.directories = self.resolveFilesAndFolders(vCommit)
+        
+        print "before time"
+        
+        
         datestring = vCommit["authored_date"]
         self.date = parseDate(datestring)
-        #print ti
+        
+        print "after time"
         #print self.login
         
     def resolveFilesAndFolders(self,vCommit):
@@ -116,11 +126,14 @@ class CommitInfo:
           
         for m in mod:
             files.append(m["filename"]) 
+            self.modified.append(m["filename"])
         for a in added:
-            files.append(a) 
+            files.append(a)
+            self.added.append(a)
         
         for r in removed:
             files.append(r)
+            self.removed.append(r)
                     
 
         #files.sort()       

@@ -53,6 +53,9 @@ import RexProjectSpaceScripts.rexprojectspace
 import rexprojectspacedataobjects
 import rexprojectspacenotificationcenter 
  
+import time
+import datetime 
+ 
 class RexProjectSpaceModule(IRegionModule):
     autoload = True
     rexworld = ""
@@ -147,6 +150,7 @@ class RexProjectSpaceModule(IRegionModule):
     
     
     def Close(self):
+        print "Closing projectspace"
         #print self, 'close'
         pass
     
@@ -316,6 +320,7 @@ class RexProjectSpaceModule(IRegionModule):
         
         #testing commits
         scene.AddCommand(self, "commit","","",self.cmd_commit)
+        scene.AddCommand(self, "blame","","",self.cmd_blame)#commit and fail build
     
         #testing branches
         scene.AddCommand(self, "cb","","",self.cmd_cb)
@@ -329,21 +334,49 @@ class RexProjectSpaceModule(IRegionModule):
         
         #testing project
         scene.AddCommand(self, "project","","",self.cmd_project)
-        
     
     def cmd_hitMe(self, *args):
-        #try to get the tree item
-        #self.tree.setBuildFailed()
-        sog,rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data")
+        pass
+    
+    def cmd_blame(self, *args):
         
-        #load texture
-        tex = rexprojectspaceutils.load_texture(self.scene,"rpstextures/diamond_blue.jp2")
-        rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
-
-        self.scene.AddNewSceneObject(sog, False)
-
+        t = time.time() #Epoch time, set the new commit after this moment of time
+        self.project.lastBuildTime = time.gmtime(t)
         
+        commit = {}
+        commit["message"] = "test commit from region module"
+        
+        commit["authored_date"] = "2010-07-31T09:54:40-07:00"
+        
+        commit["removed"] = ["bin"]
+        commit["added"] = ["doc"]
+        commit["modified"] = []
+        
+        ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
+
+        #locate antont
+        dev =  None
+        
+        for d in self.project.developers:
+            if d.developerinfo.login == "antont":
+                dev = d
+                break
+                
+        if dev == None:
+            return
+        
+        
+        dev.developerinfo.latestcommit = ci
+        
+        t = time.time() #Epoch time
+        ti = time.gmtime(t)
+        
+        binfo = rexprojectspacedataobjects.BuildInfo("",False,ti)
+        
+        self.project.buildFinished([binfo])
+
     def cmd_ac(self, *args):
+        #self.testcomponent = self.project.components.values[0]
         self.testcomponent = swproject.Component(self.scene, "test_component_11" , V3(126,126,25.5), None, 2,2,V3(1,1,1))
     
     def cmd_remove(self, *args):
@@ -354,7 +387,6 @@ class RexProjectSpaceModule(IRegionModule):
         
     def cmd_add(self, *args):
         self.testcomponent.SetState("added")
-        
         
     def cmd_cb(self, *args):
         self.tree.addNewBranch(self,"new branch from region module")
@@ -375,7 +407,7 @@ class RexProjectSpaceModule(IRegionModule):
         commit["authored_date"] = "2010-07-01T09:54:40-07:00"
         
         commit["removed"] = []
-        commit["added"] = []
+        commit["added"] = ["doc"]
         commit["modified"] = ["bin"]
         
         ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
