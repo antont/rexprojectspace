@@ -9,9 +9,8 @@ class BuildInfo:
     def __init__(self,vPlatformName,vResult,vTime = None):
         self.platformname = vPlatformName
         self.result = vResult
-        self.time = 0
-        if vTime:
-            self.time = parseDate(vTime)
+        self.time = vTime
+        
         
 
 class FolderInfo:

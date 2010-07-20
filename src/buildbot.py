@@ -22,23 +22,16 @@ class BuildBot:
             buildPlatforms = self.proxy.getAllBuilders()
         except:
             pass
-           
             #print "exception in buildbot xmlrpc"
         
         for platform in buildPlatforms:
-            result = self.proxy.getLastBuildResults(platform)
-            #time = 
-            binfo = rexprojectspacedataobjects.BuildInfo(platform,result)
+            build = self.proxy.getLastBuilds(platform, 1)
+            build = build[0]
+            result = build[6]
+
+            t = time.gmtime(build[2])
+ 
+            binfo = rexprojectspacedataobjects.BuildInfo(platform,result,t)
             results.append(binfo)
 
         return results
-
-    def GetBuildsForDay(vDate):
-        """Argument is give as datetime.date object.
-           Each Build is returned as a tuple in the form:: 
-           (buildername, buildnumber, build_end, branchname, revision, 
-           results, text)"""
-        #start = time.
-        #builds = self.proxy.getAllBuildsInInterval(start,stop)
-        #return builds
-        pass
