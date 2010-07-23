@@ -54,13 +54,13 @@ class IssueInfo:
         
         self.id = issueData[0].strip('"')
         #print self.id
-        self.type = issueData[1]
-        self.status = issueData[2]
-        self.priority = issueData[3]
-        self.milestone = issueData[4]
-        self.owner = issueData[5]
-        self.summary = issueData[6]
-        self.allLabels = issueData[7]
+        self.type = issueData[1].strip('"')
+        self.status = issueData[2].strip('"')
+        self.priority = issueData[3].strip('"')
+        self.milestone = issueData[4].strip('"')
+        self.owner = issueData[5].strip('"')
+        self.summary = issueData[6].strip('"')
+        self.allLabels = issueData[7].strip('"')
 
     def toString(self):
         print ("Issue object: ID:%s TYPE:%s SUMMARY:%s")%(self.id,self.type,self.summary)

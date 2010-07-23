@@ -139,11 +139,11 @@ class RexProjectSpaceModule(IRegionModule):
         projectpos = V3(131,130,25.2)
         issuespawnpos = V3(125,125,25.2)
         
-        self.tree = self.initTree("naali")
-        self.project = self.initSWProject()
+        #self.tree = self.initTree("naali")
+        #self.project = self.initSWProject()
         
         self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
-        self.initSWIssues()
+        #self.initSWIssues()
         
         self.setUpTests()
         

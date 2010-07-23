@@ -17,46 +17,6 @@ import avatarfollower
 
 import rexprojectspacenotificationcenter
 
-BUGTEXTUREURI = "http://img716.imageshack.us/img716/518/bugired.jpg"
-ENHANCEMENTTEXTUREURI = "http://img38.imageshack.us/img38/1619/bugigreen.jpg"
-
-def enmaterial():
-        return """
-material Material.001/SOLID/TEX/bugi_unwrapped_n_w_bones_Sphere.jpg
-{
-	technique
-	{
-		pass
-		{
-			diffuse 0.800000 0.800000 0.800000
-			specular 0.500000 0.500000 0.500000 12.500000
-		}
-	}
-}
-
-            """
-            
-
-def bugmaterial(vImagePath):
-        return """
-material Material.001/SOLID/TEX/bugi_unwrapped_n_w_bones_Sphere.jpg
-{
-	technique
-	{
-		pass
-		{
-			diffuse 0.800000 0.800000 0.800000
-			specular 0.500000 0.500000 0.500000 12.500000
-			texture_unit
-			{
-				texture %s
-			}
-		}
-	}
-}
-
-            """ % (vImagePath)
-
 class IssueFactory():
     
     def __init__(self,vScene,vStart,vEnd,vSpawnPosition = V3(125,125,25)):
@@ -84,15 +44,18 @@ class IssueFactory():
     
     def CreateIssue(self,vIssueData):
         
-        print "Creating issue: ", vIssueData.id
+        
         if self.issues.keys().count(vIssueData.id) > 0:
             print "Found from factory: ", vIssueData.id
             return #don't create duplicatess
         
         issue = None
+        print "------the type of issue-------------:", vIssueData.type
         if vIssueData.type == "Defect":
+            print "Creating bug: ", vIssueData.id
             issue =  SWBug(self.scene,vIssueData,self.spawnpos)
         else:
+            print "Creating enhancement: ", vIssueData.id
             issue =  SWEnhancement(self.scene,vIssueData,self.spawnpos)
         
         self.issues[vIssueData.id] = issue
@@ -143,7 +106,7 @@ class SWIssue(object):
             sog = sop.ParentGroup
             rexObjects = self.scene.Modules["RexObjectsModule"]
             rop = rexObjects.GetObject(sog.RootPart.UUID)
-            #print "Issue: %s found from scene"%(self.issueinfo.id)
+            print "Issue: %s found from scene"%(self.issueinfo.id)
         else:
             
             sog,rop = rexprojectspaceutils.load_mesh(self.scene,vMeshPath,vMaterialPath,"test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),vPos,V3(0.1,0.1,0.1))
