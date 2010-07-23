@@ -38,22 +38,36 @@ class Tree:
         
         self.scene = vScene
         
+        self.treebase = None
         self.tiles = [] #from bottom to up
         self.branches = []
         self.treeTop = None
-        self.treebase = None
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
         self.UUID = OpenMetaverse.UUID("e0afbfb2-fbac-4bb2-b797-915d2eaa7730") #root of tree...
         
+        """
         if not self.scene.GetSceneObjectPart(self.UUID):
             #print "No tree..."
             return
-            
+        """
+
+        if not self.scene.GetSceneObjectPart("tree_base"):
+            #print "No tree..."
+            return
+        """
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
         self.rop = rexObjects.GetObject(self.UUID)
         self.sog.RootPart.UpdateRotation(rexprojectspaceutils.euler_to_quat(0,0,90))
         self.pos = self.sog.AbsolutePosition
+        """
+        
+        self.sog = self.scene.GetSceneObjectPart("tree_base").ParentGroup
+        self.UUID = self.sog.UUID
+        self.rop = rexObjects.GetObject(self.UUID)
+        self.sog.RootPart.UpdateRotation(rexprojectspaceutils.euler_to_quat(0,0,90))
+        self.pos = self.sog.AbsolutePosition
+        
         
         sop =  vScene.GetSceneObjectPart("rps_treebase_" + vName)
         
@@ -66,6 +80,8 @@ class Tree:
             self.treebasesog,self.treebaserop = rexprojectspaceutils.load_mesh(self.scene,"treebase.mesh","treebase.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
             self.treebasesog.RootPart.Name =  "rps_treebase_" + vName
             self.scene.AddNewSceneObject(self.treebasesog, False)
+            self.treebasesog.AbsolutePosition = V3(self.sog.AbsolutePosition)
+            self.treebasesog.SetText("master",V3(1.0,1.0,0.0),1.0)
         
         sop = None
         
@@ -104,10 +120,11 @@ class Tree:
             self.tiles.append(tile)
             #put top in to a place
             temp = tile.sog.AbsolutePosition
-            self.treetopsog.NonPhysicalGrabMovement(V3(temp.X,temp.Y,temp.Z+1))
+            self.treetopsog.NonPhysicalGrabMovement(V3(temp.X,temp.Y,temp.Z+self.tile_height))
         
         #create branch and locate it
         branch = Branch(self.scene, vBranchName,"",tile.locations[tile.currentIndex],V3(1.0,1.0,1.0),tile.rotations[tile.currentIndex])
+        
         self.branches.append(branch)
         
         tile.currentIndex += 1
@@ -122,7 +139,7 @@ class TreeTile:
         self.currentIndex = 0  #increment on add
         self.scene = vScene
         self.pos = vPos
-        self.w = 0.0
+        self.w = 0
         
         self.locations = []
         for i in range(4):
@@ -149,7 +166,7 @@ class TreeTile:
         
 class Branch:
     w = 1
-    def __init__(self,vScene,vName,vParentName,vPos,vScale,vRot):
+    def __init__(self,vScene,vBranchName,vParentName,vPos,vScale,vRot):
    
         self.scene = vScene
         self.parent = vParentName
@@ -159,7 +176,8 @@ class Branch:
 
         #upwards...
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos,V3(0,0,0))
-        
+
+        self.sog.SetText(vBranchName,V3(0.0,1.0,0.0),1.0)
         ##print "mesh id for branch: ", self.rop.RexMeshUUID
         
         self.scene.AddNewSceneObject(self.sog, False)
@@ -171,7 +189,7 @@ class SWSourceTree:
 
         self.scene = vScene
         self.projectName = vProjectName
-        self.branches = []
+        self.branches = {} #holds name branch pairs...
                
         self.bCurrentBuildFailed = False
         
@@ -187,10 +205,11 @@ class SWSourceTree:
                 
         #start from bottom
         for branch in vBranchInfos:
-            b = self.addNewBranch(branch.name)
+            b = self.addNewBranch(branch)
             #self.tree.branches.append(b)
             
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
+        
         nc.OnBuild += self.updateBuildResult
         nc.OnBranchesChanged += self.addNewBranch
         
@@ -242,15 +261,20 @@ class SWSourceTree:
         
         self.bCurrentBuildFailed = True
         
-    def addNewBranch(self,vBranchName,vParentName=""):
+    def addNewBranch(self,vBranchInfo,vParentName=""):
         """None means to add branch to main tree, otherwise add to
            other branch. Evaluate latest commit date and choose color/
            texture based on that (not done)"""
-        b = self.tree.addNewBranch(vBranchName,vParentName)
+        #print vBranchInfo
+        if self.branches.keys().count(vBranchInfo.name) > 0:
+            return
+            
+        b = self.tree.addNewBranch(vBranchInfo.name,vParentName)
         b.rop.RexClassName = "sourcetree.BranchScaler"        
+        self.branches[vBranchInfo.name] = b
         
 class SWSourceTreeBranch:
-    
+    """ Not needed... Perhaps later... """
     def __init__(self, vScene, vBranchName, vNumberOfCommits = 0, vLatestCommit = ""):
         self.scene = vScene
         self.projectName = vProjectName

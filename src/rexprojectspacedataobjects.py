@@ -77,13 +77,11 @@ class IssueInfo:
             return -1 
 
     #__cmp__ = compare
-    __str__ = toString
+    #__str__ = toString
 
 class CommitInfo:
     def __init__(self,vLogin,vCommit,vAuthor=""):
 
-        print "before folders"
-    
         self.login = vLogin
         self.name = vAuthor
         self.removed = []
@@ -99,15 +97,9 @@ class CommitInfo:
         self.message = vCommit["message"]
         self.files,self.directories = self.resolveFilesAndFolders(vCommit)
         
-        print "before time"
-        
-        
         datestring = vCommit["authored_date"]
         self.date = parseDate(datestring)
-        
-        print "after time"
-        #print self.login
-        
+
     def resolveFilesAndFolders(self,vCommit):
         #get mod,add,remove
         files,mod,removed,added = [],[],[],[]

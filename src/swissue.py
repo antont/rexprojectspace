@@ -73,18 +73,30 @@ class IssueFactory():
         
         self.issues = {} #issueid,issue object dictionary
         
-        #nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
-        
-        #nc.OnNewIssue +=  self.CreateIssue
-        #nc.OnIssueUpdated += self.UpdateIssue
+        nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
+        nc.OnNewIssue +=  self.CreateIssue
+        nc.OnIssueUpdated += self.UpdateIssue
+    
+    def __del__(self):
+        nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
+        nc.OnNewIssue -=  self.CreateIssue
+        nc.OnIssueUpdated -= self.UpdateIssue
     
     def CreateIssue(self,vIssueData):
+        
+        print "Creating issue: ", vIssueData.id
+        if self.issues.keys().count(vIssueData.id) > 0:
+            print "Found from factory: ", vIssueData.id
+            return #don't create duplicatess
+        
         issue = None
         if vIssueData.type == "Defect":
             issue =  SWBug(self.scene,vIssueData,self.spawnpos)
         else:
             issue =  SWEnhancement(self.scene,vIssueData,self.spawnpos)
-            
+        
+        self.issues[vIssueData.id] = issue
+        
         x = random.uniform(self.start.X,self.end.X)
         y = random.uniform(self.start.Y,self.end.Y)
         z = random.uniform(self.start.Z,self.end.Z)
@@ -96,13 +108,19 @@ class IssueFactory():
         
         self.issues[vIssueData.id] = issue
         
+        issue.start()
+        
         return issue
     
     def UpdateIssue(self,vIssueInfo):
-        issue = self.issues[vIssueInfo.id]
+        issue = 0
+        try:
+            issue = self.issues[vIssueInfo.id]
+        except:
+            return
+            
         if issue:
-            issue.issueinfo = vIssueInfo
-            issue.DataChanged()
+            issue.DataChanged(vIssueInfo)
             
 class SWIssue(object):
 
@@ -163,6 +181,7 @@ class SWIssue(object):
         self.follower.sog = self.sog
         
     def DataChanged(self,vNewIssueInfo):
+        print "base classes data changed"
         pass
     
     
@@ -176,19 +195,34 @@ class SWEnhancement(SWIssue):
         self.sog,self.rop = super(SWEnhancement,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_green.jp2"],vPos)
         skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"bug.skeleton")
         self.rop.RexAnimationPackageUUID = skeleton_anim_id
-       
+        self.issueinfo = vIssueInfo
         
     def start(self):
         super(SWEnhancement,self).start()
-        self.rop.RexAnimationName = "flying"    
-        #self.rop.RexAnimationName = "flying_no_movement"
-
+        self.rop.RexAnimationName = "flying"
+        self.selectAnimation()
+        
     def DataChanged(self,vNewIssueInfo):
-        pass
+        self.issueinfo = vNewIssueInfo
+        self.selectAnimation()
         
     def move(self, vTargetPos):
         super(SWEnhancement,self).move(vTargetPos)
         self.sog.AbsolutePosition = vTargetPos
+    
+    def selectAnimation(self):
+        if self.issueinfo.status == "new":
+            print "new bug"
+            self.rop.RexAnimationName = "flying"
+        
+        elif self.issueinfo.status == "started":
+            print "started bug"
+            self.rop.RexAnimationName = "flying_with_movement"
+            
+        else:
+            pass
+            #self.rop.RexAnimationName = "idle"
+    
     
 class SWBug(SWIssue):
     def __init__(self,vScene,vIssueInfo,vPos):
@@ -199,15 +233,34 @@ class SWBug(SWIssue):
         self.sog,self.rop = super(SWBug,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_red.jp2"],vPos)
         skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"bug.skeleton")
         self.rop.RexAnimationPackageUUID = skeleton_anim_id
-            
+        self.issueinfo = vIssueInfo
+        
     def start(self):
         super(SWBug,self).start()
-        self.rop.RexAnimationName = "flying"    
- 
+        #self.rop.RexAnimationName = "flying"    
+        self.selectAnimation()
+        
+        
     def DataChanged(self,vNewIssueInfo):
-        pass
+        self.issueinfo = vNewIssueInfo
+        self.selectAnimation()
         
     def move(self, vTargetPos):
         super(SWBug,self).move(vTargetPos)
         self.sog.AbsolutePosition = vTargetPos
+    
+    def selectAnimation(self):
+        print "hello: ", self.issueinfo.status
+        if self.issueinfo.status == "new":
+            print "new bug"
+            self.rop.RexAnimationName = "flying"
+        
+        elif self.issueinfo.status == "started":
+            print "bug started"
+            self.rop.RexAnimationName = "flying_with_movement"
+            
+        else:
+            pass
+            #self.rop.RexAnimationName = "idle"
+    
     

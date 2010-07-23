@@ -21,7 +21,6 @@ class RexProjectSpaceNotificationCenter:
         try:
             nc = cls.instances[vProjectName]
         except:
-            ##print "creating notification center for project: ", vProjectName
             nc = cls(vProjectName)
             cls.instances[vProjectName] = nc
             
@@ -50,7 +49,7 @@ class RexProjectSpaceNotificationCenter:
         #issue tracking system
         self.OnNewIssue = rxevent.RexPythonEvent()
         self.OnIssueUpdated = rxevent.RexPythonEvent()
-
+        
         #build bot
         self.OnBuild = rxevent.RexPythonEvent()
         
@@ -63,18 +62,19 @@ class RexProjectSpaceNotificationCenter:
         
     def NewBranch(self,branches):
         ##print "---new branch---"
-        self.OnBranchesChanged(branches)
+        #self.OnBranchesChanged(branches)
+        pass
         
     def NewBuild(self,vBuild):
         ##print "---build----"
         self.OnBuild(vBuild)
         
     def NewIssue(self,vIssue):
-        ##print "---new issue----"
+        #print "---new issue----, ", vIssue
         self.OnNewIssue(vIssue)
         
     def IssueUpdated(self,vIssue):
-        ##print "---issue updated----"
+        print "---issue updated----"
         self.OnIssueUpdated(vIssue)
         
     def NewIrcMessage(self,vMessage):
@@ -297,15 +297,14 @@ class IssueDispatcher:
         return cls.instance
 
     def updateIssues(self):
-        ##print "getting issues"
+        print "getting issues"
         issues = self.issuetracker.GetIssues()
-        
         
         for i in issues:
             issue = None
             try:
                 issue = self.issues[i.id]
-                
+                #print "issue found from dict: ", i.id
                 #check if data has changed
                 if issue.status == i.status and issue.owner == i.owner and issue.priority == i.priority: 
                     
@@ -316,12 +315,14 @@ class IssueDispatcher:
                         target(i)
             except:
                 self.issues[i.id] = i
-                
+                print "new issue with id: ", i.id 
                 #notify that there was a new issue
                 for target in self.newIssueTargets:
-                    target(i)
+                    #print target
+                    #something wrong here!!!
+                    print "new bug from dispatcher: ", self.issues[i.id]
+                    target(self.issues[i.id])
 
-        
         self.timer.cancel()
         self.timer = 0
         

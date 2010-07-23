@@ -36,6 +36,7 @@ sys.path.append(os.getcwd() + "/src")
 
 import swsourcetree
 import buildbot
+import issuetracker
 
 import swproject
 import swdeveloper
@@ -135,13 +136,15 @@ class RexProjectSpaceModule(IRegionModule):
         
         self.vcs = versioncontrolsystem.VersionControlSystem("naali")
         
-        #self.tree = self.initTree("naali")
-        self.project = self.initSWProject()
-
         projectpos = V3(131,130,25.2)
         issuespawnpos = V3(125,125,25.2)
+        
+        self.tree = self.initTree("naali")
+        self.project = self.initSWProject()
+        
         self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
-    
+        self.initSWIssues()
+        
         self.setUpTests()
         
     def PostInitialise(self):
@@ -165,6 +168,12 @@ class RexProjectSpaceModule(IRegionModule):
     IsSharedModule = property(isshared)
 
     
+    def initSWIssues(self):
+        self.issuetracker = issuetracker.IssueTracker()
+        issues = self.issuetracker.getIssues()
+        for i in issues:
+            issue = self.issuefactory.CreateIssue(i)
+            
     def initTree(self,vProjectName):
         
         branches = self.vcs.GetBranches()
@@ -279,28 +288,6 @@ class RexProjectSpaceModule(IRegionModule):
         
         return project
 
-    def mesh_follow_avatar(self, avatar_presence, mesh_part, pos=V3(1.5, 0, 1),
-        rot=OpenMetaverse.Quaternion(0, 0, 0, 1)):
-        #mesh_local_id = self.get_mesh_local_id(mesh_part)
-        
-        lid = 0
-        for ent in self.scene.GetEntities():
-            if self.bug.UUID == ent.UUID:
-                #print "found local id"
-                lid = ent.LocalId
-                
-        mesh_local_id = lid
-        pos_lsl = LSL_Types.Vector3(0, 0, 2)
-        rot_lsl = LSL_Types.Quaternion(0, 0, 0, 1)
-        ##print 'rot offset before attach', mesh_part.RotationOffset
-        self.rexif.rexAttachObjectToAvatar(mesh_local_id.ToString(),
-        avatar_presence.UUID.ToString(),
-        28, pos_lsl, rot_lsl, False)
-        mesh_part.ParentGroup.UpdateGroupPosition(pos)
-
-        mesh_part.ParentGroup.UpdateGroupRotationR(rot)
-        #print "attach done"   
-    
     def setUpTests(self):
         
         scene = self.scene
@@ -328,7 +315,9 @@ class RexProjectSpaceModule(IRegionModule):
         #testing issues
         scene.AddCommand(self, "bug","","",self.cmd_create_bug)
         scene.AddCommand(self, "enhan","","",self.cmd_create_en)
+        scene.AddCommand(self, "changebugdata","","",self.cmd_change_bug_data)
 
+        
         #testing developers
         scene.AddCommand(self, "developer","","",self.cmd_developer)
         
@@ -422,8 +411,11 @@ class RexProjectSpaceModule(IRegionModule):
         issueData = rexprojectspacedataobjects.IssueInfo(empty)
         issueData.type = "Defect"
         issueData.owner = "maukka user"
+        issueData.status = "new"
         issueData.id = str(random.randint(0,1000000))
         bug =  self.issuefactory.CreateIssue(issueData)
+        self.bugid = issueData.id
+        
         bug.start()
         
     def cmd_create_en(self, *args):
@@ -432,10 +424,24 @@ class RexProjectSpaceModule(IRegionModule):
         issueData = rexprojectspacedataobjects.IssueInfo(empty)
         issueData.type = "Enhancement"
         issueData.owner = "maukka user"
+        issueData.status = "new"
         issueData.id = str(random.randint(0,1000000))
         bug =  self.issuefactory.CreateIssue(issueData)
+        self.bugid = issueData.id
+        
         bug.start()
-        print bug
+        
+    def cmd_change_bug_data(self, *args):
+        #resolve latest bug/issue
+        empty = []
+        issueData = rexprojectspacedataobjects.IssueInfo(empty)
+        issueData.type = "Enhancement"
+        issueData.owner = "maukka user"
+        issueData.status = "started"
+        issueData.id = self.bugid
+        
+        self.issuefactory.UpdateIssue(issueData)
+        
     
     def cmd_developer(self, *args):
         dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka","maukka user")
