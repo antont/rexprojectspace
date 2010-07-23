@@ -140,9 +140,9 @@ class RexProjectSpaceModule(IRegionModule):
         issuespawnpos = V3(125,125,25.2)
         
         #self.tree = self.initTree("naali")
-        #self.project = self.initSWProject()
+        self.project = self.initSWProject()
         
-        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
+        #self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
         #self.initSWIssues()
         
         self.setUpTests()
@@ -307,6 +307,7 @@ class RexProjectSpaceModule(IRegionModule):
         
         #testing commits
         scene.AddCommand(self, "commit","","",self.cmd_commit)
+        scene.AddCommand(self, "commit2","","",self.cmd_commit2)
         scene.AddCommand(self, "blame","","",self.cmd_blame)#commit and fail build
     
         #testing branches
@@ -393,17 +394,36 @@ class RexProjectSpaceModule(IRegionModule):
         commit = {}
         commit["message"] = "test commit from region module"
         
-        commit["authored_date"] = "2010-07-01T09:54:40-07:00"
+        commit["authored_date"] = "2010-07-23T09:54:40-07:00"
         
-        commit["removed"] = []
-        commit["added"] = ["doc"]
-        commit["modified"] = ["bin"]
+        commit["Removed"] = ["doc","bin"]
+        commit["added"] = []
+        commit["modified"] = []
         
         ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
-        
-        commits = [commit]
+        print "hakemistot: ", ci.directories
+        commits = [ci]
         
         cd.dispatchCommits( commits )
+    
+    def cmd_commit2(self, *args):
+        
+        cd = rexprojectspacenotificationcenter.CommitDispatcher.dispatcherForProject("naali")
+        
+        commit = {}
+        commit["message"] = "test commit from region module"
+        
+        commit["authored_date"] = "2010-07-24T09:54:40-07:00"
+        
+        commit["Removed"] = ["Foundation"]
+        commit["added"] = []
+        commit["modified"] = []
+        
+        ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
+        print "hakemistot: ", ci.directories
+        commits = [ci]
+        self.project.updateDeveloperLocationWithNewCommitData(ci)
+        #cd.dispatchCommits( commits )
     
     def cmd_create_bug(self, *args):
 

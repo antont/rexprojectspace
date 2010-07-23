@@ -95,10 +95,7 @@ class SWDeveloper:
     
     def updateIsLatestCommitter(self,vIsLatestCommitter):
         if vIsLatestCommitter:
-            print "Latest committer is :", self.developerinfo.name
             self.skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"diamond.skeleton")
-            
-            print "developer animation package uuid:", self.skeleton_anim_id
             
             self.rop.RexAnimationPackageUUID = self.skeleton_anim_id
             self.rop.RexAnimationName = "jump"

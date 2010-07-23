@@ -174,7 +174,7 @@ class SWProject:
         
         if len(self.developers) > 0:
             self.latestcommitter = self.developers[0]
-            #self.latestcommitter = self.resolveLatestCommitter()
+            self.latestcommitter = self.resolveLatestCommitter()
             self.latestcommitter.updateIsLatestCommitter(True)
         
         #create first component representing self
@@ -251,6 +251,7 @@ class SWProject:
     
     def resolveLatestCommitter(self):
         
+        """
         for dev in self.developers:
             if dev.developerinfo.latestcommit:
                 if dev.developerinfo.latestcommit.date > self.latestcommitter.developerinfo.latestcommit.date:
@@ -258,6 +259,10 @@ class SWProject:
                     self.latestcommitter = dev
                     
         return self.latestcommitter
+        """
+        devs = self.sortDevelopers(self.developers)
+        latestcommmitter = devs[len(devs)-1]
+        return latestcommmitter
     
     def addComponent(self, vComponentName):
         self.components[vComponentName] = self.component.addChild(vComponentName)
@@ -283,7 +288,11 @@ class SWProject:
             committer = swdeveloper.SWDeveloper(0,self.scene,developerinfo,false)
             """
             return
-            
+        
+        #there is no way to know for sure if the commit has been set to dev
+        #before this, so set it...
+        committer.developerinfo.latestcommit = vCommit
+        
         #locate correct component 
         component = None
         
@@ -302,22 +311,23 @@ class SWProject:
                 print "No component found from project"
                 return
                 
-            devs = self.componentsAndDevelopersDict[component.name]
-            devs.append(committer)
+            #devs = self.componentsAndDevelopersDict[component.name]
+            #devs.append(committer)
             
             #remove developer from previous componenent, k is component name and c lists developers to
             #component named k, not done yet... 
-            """
+            
             for k,c in self.componentsAndDevelopersDict.iteritems():
                 if c.count(committer)>0:
                     c.remove(committer)
-                    
+                    #devs = c
                     previouscomponent = c
                     
                     #rearrange devs
                     h = 0
                     for j in range(len(previouscomponent)):
-                        dev = devs[j]
+                        print "removed dev"
+                        dev = previouscomponent[j]
                         h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
                         h += 0.2
                         
@@ -325,14 +335,19 @@ class SWProject:
                         
                         pos = comp.sog.AbsolutePosition
                         devPos = V3(pos.X,pos.Y,pos.Z + h)
+                        dev = previouscomponent[j]
+                        dev.move(devPos)
                         
-                        previouscomponent[j].move(devPos)
-                        
-            """
+                    print "developer: ", committer , "removed from ", self.components[k].name
+                    break #developer can be only in one component at the same time
         else:
             component = self.component #no directories, so put dev into "container component"
         
         devs = self.componentsAndDevelopersDict[component.name]
+        devs.append(committer)
+            
+        
+        #devs = self.componentsAndDevelopersDict[component.name]
         devs = self.sortDevelopers(devs)
         #for d in devs:
         #    print d.latestcommit.date
@@ -350,10 +365,12 @@ class SWProject:
         
         #finally set latest committer if wanted
         if vMakeCurrent == True:
-            print "developer %s is current committer"%(self.latestcommitter.developerinfo.login)
+            
             self.latestcommitter.updateIsLatestCommitter(False)
             
             self.latestcommitter = committer
+            
+            print "developer %s is current committer"%(self.latestcommitter.developerinfo.login)
             self.latestcommitter.updateIsLatestCommitter(True)
             
             self.visualizeLatestCommitModifications()
@@ -364,7 +381,10 @@ class SWProject:
         """ sort developers based on their commit date, so that newest is at the top
         """
         vDevelopers.sort(self.compareCommitDates)
-
+        
+        for d in vDevelopers:
+            print d.developerinfo.login ," committed on : ",d.developerinfo.latestcommit.date
+        
         return vDevelopers
     
     def compareCommitDates(self,x,y):
