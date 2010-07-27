@@ -139,8 +139,8 @@ class RexProjectSpaceModule(IRegionModule):
         projectpos = V3(131,130,25.2)
         issuespawnpos = V3(125,125,25.2)
         
-        #self.tree = self.initTree("naali")
-        self.project = self.initSWProject()
+        self.tree = self.initTree("naali")
+        #self.project = self.initSWProject()
         
         #self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
         #self.initSWIssues()
@@ -177,8 +177,9 @@ class RexProjectSpaceModule(IRegionModule):
     def initTree(self,vProjectName):
         
         branches = self.vcs.GetBranches()
-        self.tree = swsourcetree.SWSourceTree(self.scene,vProjectName,branches)
-
+        tree = swsourcetree.SWSourceTree(self.scene,vProjectName,branches)
+        return tree
+        
     def initSWProject(self):
           
         components = []
@@ -261,30 +262,9 @@ class RexProjectSpaceModule(IRegionModule):
             swdevs.append(swdeveloper.SWDeveloper(self,self.scene,dev,False))
            
         #get all the components...
-        """
-        components = ["Core","Foundation","Interfaces","RexCommon","SceneManager","OgreRenderingModule"
-                      "Application","RexLogicModule","SupportModules","AssetModule","UiModule","HttpUtilities"
-                      "RpcUtilities","ProtocolUtilities","EnvironmentModule","TextureDecoderModule","ProtocolModuleOpenSim",
-                      "ProtocolModuleTaiga","EntityComponents","bin","doc","QtInputModule"]
-        """
+        componentNames = self.getProjectRootFolders()
         
-        """
-        components = ["Application","RexLogicModule","SupportModules","AssetModule","UiModule","HttpUtilities"
-                      "RpcUtilities","ProtocolUtilities","EnvironmentModule"]
-        """
-        
-        """
-        components = ["Core","Foundation","RpcUtilities"]
-        """
-        
-        """
-        components = ["Core","Foundation","RpcUtilities","ProtocolUtilities","EnvironmentModule","TextureDecoderModule","ProtocolModuleOpenSim",
-                      "ProtocolModuleTaiga","EntityComponents","bin","doc","QtInputModule"]
-        """
-        
-        components = self.getProjectRootFolders()
-        
-        project = swproject.SWProject(self.scene,"naali",components,swdevs)
+        project = swproject.SWProject(self.scene,"naali",componentNames,swdevs)
         
         return project
 
@@ -309,6 +289,8 @@ class RexProjectSpaceModule(IRegionModule):
         scene.AddCommand(self, "commit","","",self.cmd_commit)
         scene.AddCommand(self, "commit2","","",self.cmd_commit2)
         scene.AddCommand(self, "blame","","",self.cmd_blame)#commit and fail build
+        scene.AddCommand(self, "commit_new_dev","","",self.cmd_commit_new_dev)#commit done by new dev
+        
     
         #testing branches
         scene.AddCommand(self, "cb","","",self.cmd_cb)
@@ -328,42 +310,7 @@ class RexProjectSpaceModule(IRegionModule):
     def cmd_hitMe(self, *args):
         pass
     
-    def cmd_blame(self, *args):
-        
-        t = time.time() #Epoch time, set the new commit after this moment of time
-        self.project.lastBuildTime = time.gmtime(t)
-        
-        commit = {}
-        commit["message"] = "test commit from region module"
-        
-        commit["authored_date"] = "2010-07-31T09:54:40-07:00"
-        
-        commit["removed"] = ["bin"]
-        commit["added"] = ["doc"]
-        commit["modified"] = []
-        
-        ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
-
-        #locate antont
-        dev =  None
-        
-        for d in self.project.developers:
-            if d.developerinfo.login == "antont":
-                dev = d
-                break
-                
-        if dev == None:
-            return
-        
-        
-        dev.developerinfo.latestcommit = ci
-        
-        t = time.time() #Epoch time
-        ti = time.gmtime(t)
-        
-        binfo = rexprojectspacedataobjects.BuildInfo("",False,ti)
-        
-        self.project.buildFinished([binfo])
+   
 
     def cmd_ac(self, *args):
         #self.testcomponent = self.project.components.values[0]
@@ -379,7 +326,8 @@ class RexProjectSpaceModule(IRegionModule):
         self.testcomponent.SetState("added")
         
     def cmd_cb(self, *args):
-        self.tree.addNewBranch(self,"new branch from region module")
+        binfo = rexprojectspacedataobjects.BranchInfo("test branch")
+        self.tree.addNewBranch(binfo)
         
     def cmd_bs(self, *args):
         self.tree.setBuildSuccesfull()
@@ -423,7 +371,62 @@ class RexProjectSpaceModule(IRegionModule):
         print "hakemistot: ", ci.directories
         commits = [ci]
         self.project.updateDeveloperLocationWithNewCommitData(ci)
-        #cd.dispatchCommits( commits )
+        
+     def cmd_blame(self, *args):
+        
+        t = time.time() #Epoch time, set the new commit after this moment of time
+        self.project.lastBuildTime = time.gmtime(t)
+        
+        commit = {}
+        commit["message"] = "test commit from region module"
+        
+        commit["authored_date"] = "2010-07-31T09:54:40-07:00"
+        
+        commit["removed"] = ["bin"]
+        commit["added"] = ["doc"]
+        commit["modified"] = []
+        
+        ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
+
+        #locate antont
+        dev =  None
+        
+        for d in self.project.developers:
+            if d.developerinfo.login == "antont":
+                dev = d
+                break
+                
+        if dev == None:
+            return
+        
+        
+        dev.developerinfo.latestcommit = ci
+        
+        t = time.time() #Epoch time
+        ti = time.gmtime(t)
+        
+        binfo = rexprojectspacedataobjects.BuildInfo("",False,ti)
+        
+        self.project.buildFinished([binfo])
+        
+     def cmd_commit_new_dev(self, *args):
+        
+        cd = rexprojectspacenotificationcenter.CommitDispatcher.dispatcherForProject("naali")
+        
+        commit = {}
+        commit["message"] = "test commit from region module"
+        
+        commit["authored_date"] = "2010-07-23T09:54:40-07:00"
+        
+        commit["Removed"] = ["doc","bin"]
+        commit["added"] = []
+        commit["modified"] = []
+        
+        generated_name = str(random.randint(0,1000000))
+        
+        ci = rexprojectspacedataobjects.CommitInfo(generated_name,commit,generated_name)
+        
+        cd.dispatchCommits( [ci] )
     
     def cmd_create_bug(self, *args):
 

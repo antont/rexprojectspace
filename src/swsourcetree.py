@@ -23,6 +23,8 @@ asm = clr.LoadAssemblyByName('OpenSim.Region.ScriptEngine.Shared')
 import OpenMetaverse
 from OpenMetaverse import Vector3 as V3
 
+import time
+
 import rexprojectspaceutils
 import rexprojectspacedataobjects
 
@@ -34,7 +36,8 @@ class Tree:
     def __init__(self,vScene,vName):
         """ "Base" of the tree """
         
-        self.tile_height = 1.5
+        self.tile_height = 2.5
+        self.tree_base_height = 1.0
         
         self.scene = vScene
         
@@ -100,13 +103,15 @@ class Tree:
         
         #print "mesh id for tree: ", self.rop.RexMeshUUID
 
-    def addNewBranch(self,vBranchName,vParentName=""):
+    def addNewBranch(self,vBranchInfo,vParentName=""):
         """None means to add branch to main tree, otherwise add to
            other branch """         
            
         nbr = len(self.tiles)
         if(nbr == 0):
-            self.tiles.append(TreeTile(self.scene,self.treebasesog.AbsolutePosition))
+            temp = self.pos
+            z = temp.Z + self.tree_base_height
+            self.tiles.append(TreeTile(self.scene,V3(temp.X,temp.Y,z),self.tile_height))
             nbr = 1
         
         tile = self.tiles[nbr-1]
@@ -114,16 +119,23 @@ class Tree:
         
         if currentPlace >= len(tile.locations):
             temp = self.pos
-            z = self.pos.Z + nbr*self.tile_height
+            z = self.pos.Z + nbr*self.tile_height + self.tree_base_height
             newLoc = V3(self.pos.X,self.pos.Y,z)
-            tile = TreeTile(self.scene,newLoc)
+            tile = TreeTile(self.scene,newLoc,self.tile_height)
             self.tiles.append(tile)
             #put top in to a place
             temp = tile.sog.AbsolutePosition
             self.treetopsog.NonPhysicalGrabMovement(V3(temp.X,temp.Y,temp.Z+self.tile_height))
         
-        #create branch and locate it
-        branch = Branch(self.scene, vBranchName,"",tile.locations[tile.currentIndex],V3(1.0,1.0,1.0),tile.rotations[tile.currentIndex])
+        #Evaluate latest commit data and create branch
+        today = time.gmtime(time.time())
+        tday = time.time()
+        texpath = "rpstextures/treebranch_green.jp2"
+        
+        if tday - 60*60*24*60 > time.mktime(vBranchInfo.latestcommitdate):
+            texpath = "rpstextures/treebranch_rust.jp2"
+        
+        branch = Branch(self.scene, vBranchInfo.name,texpath,tile.locations[tile.currentIndex],V3(1.0,1.0,1.0),tile.rotations[tile.currentIndex])
         
         self.branches.append(branch)
         
@@ -134,22 +146,24 @@ class Tree:
             
 class TreeTile:
     
-    def __init__(self,vScene,vPos):
+    def __init__(self,vScene,vPos,vHeight):
         
         self.currentIndex = 0  #increment on add
         self.scene = vScene
         self.pos = vPos
         self.w = 0
+        self.height = vHeight
+        print "_______Tile height:_______",self.height
         
         self.locations = []
         for i in range(4):
             tempPos = None
             if i%2 == 0:
-                tempPos = V3(self.pos.X, self.pos.Y + self.w/2,self.pos.Z + 0.3*(i+0.15))
+                tempPos = V3(self.pos.X, self.pos.Y + self.w/2,self.pos.Z + (i*self.height/4 + 0.15))
             else:
-                tempPos = V3(self.pos.X, self.pos.Y - self.w/2,self.pos.Z + 0.3*(i+0.15))
+                tempPos = V3(self.pos.X, self.pos.Y - self.w/2,self.pos.Z + (i*self.height/4 + 0.15))
             self.locations.append(tempPos)
-        
+            
         self.rotations = [rexprojectspaceutils.euler_to_quat(20,0,0),
                           rexprojectspaceutils.euler_to_quat(-20,180,0),
                           rexprojectspaceutils.euler_to_quat(20,0,0)
@@ -166,17 +180,18 @@ class TreeTile:
         
 class Branch:
     w = 1
-    def __init__(self,vScene,vBranchName,vParentName,vPos,vScale,vRot):
+    def __init__(self,vScene,vBranchName,vTexturePath,vPos,vScale,vRot):
    
         self.scene = vScene
-        self.parent = vParentName
+        self.texturepath = vTexturePath
         self.pos = vPos
         self.scale = vScale
         self.rot = vRot
 
         #upwards...
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos,V3(0,0,0))
-
+        tex = rexprojectspaceutils.load_texture(self.scene,vTexturePath)
+        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         self.sog.SetText(vBranchName,V3(0.0,1.0,0.0),1.0)
         ##print "mesh id for branch: ", self.rop.RexMeshUUID
         
@@ -269,7 +284,7 @@ class SWSourceTree:
         if self.branches.keys().count(vBranchInfo.name) > 0:
             return
             
-        b = self.tree.addNewBranch(vBranchInfo.name,vParentName)
+        b = self.tree.addNewBranch(vBranchInfo,vParentName)
         b.rop.RexClassName = "sourcetree.BranchScaler"        
         self.branches[vBranchInfo.name] = b
         

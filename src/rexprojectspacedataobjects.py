@@ -27,7 +27,9 @@ class BranchInfo:
         self.latestcommitdate = 0
         if vLatestCommitDate != 0:
             self.latestcommitdate = parseDate(vLatestCommitDate)
-
+        else:
+            self.latestcommitdate = time.gmtime(time.time())
+            
 class DeveloperInfo:
     def __init__(self,vLogin,vName=""):
         self.login = vLogin

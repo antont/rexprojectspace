@@ -282,13 +282,11 @@ class SWProject:
         #we know nothing about this developer
         if committer == None:
             print "no committer with login:%s and name:%s, must be a new developer.(message:%s) "%(vCommit.login,vCommit.name,vCommit.message)
-            """
+            
             developerinfo = rexprojectspacedataobjects.DeveloperInfo(vCommit.login,vCommit.name)
             developerinfo.latestcommit = vCommit
             committer = swdeveloper.SWDeveloper(0,self.scene,developerinfo,false)
-            """
-            return
-        
+            
         #there is no way to know for sure if the commit has been set to dev
         #before this, so set it...
         committer.developerinfo.latestcommit = vCommit
