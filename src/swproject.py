@@ -204,14 +204,8 @@ class SWProject:
         self.componentsAndDevelopersDict["naali_root_component"] = []
         
         for component in vComponents:
-            self.componentsAndDevelopersDict[component.name] = []
-            c = self.addComponent(component.name)
-            #visualize components "size" and modified date
-            tempscale = c.sog.RootPart.Scale
-            scale = max(0.4,component.numberofsubfiles/25)
-            scale = min(scale,1)
-            c.sog.RootPart.Scale = V3(scale,scale,tempscale.Z)
-        
+            self.addComponent(component)
+            
         #place developers to their initial positions...
         for dev in self.developers:
             latestcommit = dev.developerinfo.latestcommit
@@ -264,10 +258,19 @@ class SWProject:
         latestcommmitter = devs[len(devs)-1]
         return latestcommmitter
     
-    def addComponent(self, vComponentName):
-        self.components[vComponentName] = self.component.addChild(vComponentName)
-        #self.components[vComponentName].sog.RootPart.Name =  vComponentName
-        return self.components[vComponentName]
+    def addComponent(self, vComponent):
+    
+        self.componentsAndDevelopersDict[vComponent.name] = []
+        c = self.component.addChild(vComponent.name)
+        
+        self.components[vComponent.name] = c
+        #visualize components "size" and modified date
+        tempscale = c.sog.RootPart.Scale
+        scale = max(0.4,vComponent.numberofsubfiles/25)
+        scale = min(scale,1)
+        c.sog.RootPart.Scale = V3(scale,scale,tempscale.Z)
+    
+        return c
         
     
     def updateDeveloperLocationWithNewCommitData(self, vCommit, vMakeCurrent = True):
@@ -285,7 +288,7 @@ class SWProject:
             
             developerinfo = rexprojectspacedataobjects.DeveloperInfo(vCommit.login,vCommit.name)
             developerinfo.latestcommit = vCommit
-            committer = swdeveloper.SWDeveloper(0,self.scene,developerinfo,false)
+            committer = swdeveloper.SWDeveloper(0,self.scene,developerinfo,False)
             
         #there is no way to know for sure if the commit has been set to dev
         #before this, so set it...
@@ -302,8 +305,8 @@ class SWProject:
                 component = self.components[vCommit.directories[0]]
             except:
                 print "No component named:%s  , must be a new component"%(vCommit.directories[0])
-                #component = self.addComponent(vCommit.directories[0])
-                pass
+                folder = rexprojectspacedataobjects.FolderInfo(vCommit.directories[0],0)#new directory
+                component = self.addComponent(folder)
                 
             if not component:
                 print "No component found from project"

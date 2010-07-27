@@ -139,8 +139,8 @@ class RexProjectSpaceModule(IRegionModule):
         projectpos = V3(131,130,25.2)
         issuespawnpos = V3(125,125,25.2)
         
-        self.tree = self.initTree("naali")
-        #self.project = self.initSWProject()
+        #self.tree = self.initTree("naali")
+        self.project = self.initSWProject()
         
         #self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
         #self.initSWIssues()
@@ -290,6 +290,7 @@ class RexProjectSpaceModule(IRegionModule):
         scene.AddCommand(self, "commit2","","",self.cmd_commit2)
         scene.AddCommand(self, "blame","","",self.cmd_blame)#commit and fail build
         scene.AddCommand(self, "commit_new_dev","","",self.cmd_commit_new_dev)#commit done by new dev
+        scene.AddCommand(self, "commit_new_comp","","",self.cmd_commit_new_comp)#commit done by new dev
         
     
         #testing branches
@@ -372,7 +373,7 @@ class RexProjectSpaceModule(IRegionModule):
         commits = [ci]
         self.project.updateDeveloperLocationWithNewCommitData(ci)
         
-     def cmd_blame(self, *args):
+    def cmd_blame(self, *args):
         
         t = time.time() #Epoch time, set the new commit after this moment of time
         self.project.lastBuildTime = time.gmtime(t)
@@ -409,7 +410,7 @@ class RexProjectSpaceModule(IRegionModule):
         
         self.project.buildFinished([binfo])
         
-     def cmd_commit_new_dev(self, *args):
+    def cmd_commit_new_dev(self, *args):
         
         cd = rexprojectspacenotificationcenter.CommitDispatcher.dispatcherForProject("naali")
         
@@ -419,6 +420,27 @@ class RexProjectSpaceModule(IRegionModule):
         commit["authored_date"] = "2010-07-23T09:54:40-07:00"
         
         commit["Removed"] = ["doc","bin"]
+        commit["added"] = []
+        commit["modified"] = []
+        
+        generated_name = str(random.randint(0,1000000))
+        
+        ci = rexprojectspacedataobjects.CommitInfo(generated_name,commit,generated_name)
+        
+        cd.dispatchCommits( [ci] )
+    
+    def cmd_commit_new_comp(self, *args):
+        
+        cd = rexprojectspacenotificationcenter.CommitDispatcher.dispatcherForProject("naali")
+        
+        commit = {}
+        commit["message"] = "test commit from region module"
+        
+        commit["authored_date"] = "2010-07-23T09:54:40-07:00"
+        
+        generated_name = str(random.randint(0,1000000))
+        
+        commit["Removed"] = [generated_name]
         commit["added"] = []
         commit["modified"] = []
         
