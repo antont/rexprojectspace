@@ -26,7 +26,7 @@ class BranchInfo:
         self.numberofcommits = vNumberOfCommits
         self.latestcommitdate = 0
         if vLatestCommitDate != 0:
-            parseDate(vLatestCommitDate)
+            self.latestcommitdate = parseDate(vLatestCommitDate)
 
 class DeveloperInfo:
     def __init__(self,vLogin,vName=""):

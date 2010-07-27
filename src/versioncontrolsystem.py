@@ -31,7 +31,8 @@ class VersionControlSystem:
         self.commitsForBranch = {}
 
     def GetBranches(self):
-        """Returns all branches as a list without duplicate entries"""
+        """Returns all branches as a list of BranchInfo objects.
+           BranchInfo objects have names and latest commit dates set"""
 
         branches = []
         url = "http://github.com/api/v2/json/repos/show/realXtend/%s/branches"%(self.projectName)
@@ -41,14 +42,17 @@ class VersionControlSystem:
         br = json.loads(s)
         for k,v in br.iteritems():
             for keys,values in v.iteritems():    
-                b = rexprojectspacedataobjects.BranchInfo(keys,0)
+                commits = self.GetCommitsForBranch(keys)
+                latestcommit,date = 0,0
+                if len(commits) > 0:
+                    latestcommit = commits[0]
+                    date = latestcommit["authored_date"]
+
+                b = rexprojectspacedataobjects.BranchInfo(keys,date)
                 branches.append(b)  
-                           
+                print b.latestcommitdate
         return branches    
     
-    def GetBranchInfo(self,vBranchName):
-        pass
-            
     def GetBlobs(self):
         url = "http://github.com/api/v2/json/blob/all/realxtend/naali/develop"
         f = urllib.urlopen(url)
@@ -105,17 +109,8 @@ class VersionControlSystem:
         #make it a commit info
         
         return commit
-    
-    ###### NOT USED
-
-    def GetCommitsForFile(self,vFileName):
-        url = "http://github.com/api/v2/json/commits/list/realxtend/naali/develop/%s"%(vFileName)  
-        f = urllib.urlopen(url)
-        s = f.read()
-        commits = json.loads(s)
-
-        return commits
-    
+   
+   
     def GetCommitsForBranch(self,branch="develop"):
         """Returns latest commits as a dictionary holding all the data that
            GitHub provides"""
@@ -128,7 +123,18 @@ class VersionControlSystem:
         
         commits = allCommits["commits"]
         return commits       
+   
     
+    ###### NOT USED
+
+    def GetCommitsForFile(self,vFileName):
+        url = "http://github.com/api/v2/json/commits/list/realxtend/naali/develop/%s"%(vFileName)  
+        f = urllib.urlopen(url)
+        s = f.read()
+        commits = json.loads(s)
+
+        return commits
+       
     def GetLatestCommitForBranch(self,branch="develop"):
         """Returns latest commit as a dictionary holding all the data that
             GitHub provides"""
