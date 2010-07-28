@@ -371,6 +371,13 @@ class SWProject:
             
             self.latestcommitter = committer
             
+            #so, these commits are processed at runtime, not at initializing phase
+            #so update also the developervisualization
+            self.latestcommitter.developerinfo.commitcount += 1
+            self.latestcommitter.developerinfo.latestcommit = vCommit
+            
+            self.latestcommitter.updateVisualization()
+            
             print "developer %s is current committer"%(self.latestcommitter.developerinfo.login)
             self.latestcommitter.updateIsLatestCommitter(True)
             

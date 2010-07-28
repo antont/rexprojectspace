@@ -46,30 +46,27 @@ class SWDeveloper:
             self.rexif = rexpy.mCSharp
         
         sop =  vScene.GetSceneObjectPart("rps_dev_" + self.developerinfo.login)
-        sog = 0
-        rop = 0
+
         if sop:
-            sog = sop.ParentGroup
+            self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
-            rop = rexObjects.GetObject(sog.RootPart.UUID)
+            self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
             print "Developer: %s found from scene"%(self.developerinfo.login)
         else:    
-            sog,rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
-        
+            self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+            self.initVisualization(sog)
+            
         if SWDeveloper.greentextureid == 0:
             SWDeveloper.greentextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devgreen.jp2")
             SWDeveloper.redtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devred.jp2")
         
         self.currenttexid = SWDeveloper.greentextureid
-        self.sog = sog
-        self.rop = rop
-            
-        self.initVisualization(sog)
-        self.newposition = sog.AbsolutePosition
-        rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
-        rop.RexAnimationName = ""
+
+        self.newposition = self.sog.AbsolutePosition
+        self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
+        self.rop.RexAnimationName = ""
         
-        self.follower = avatarfollower.AvatarFollower(vScene,sog,[vDeveloperInfo.login,vDeveloperInfo.name])
+        self.follower = avatarfollower.AvatarFollower(vScene,self.sog,[vDeveloperInfo.login,vDeveloperInfo.name])
 
         self.follower.OnAvatarEntered += self.AvatarEntered
         self.follower.OnAvatarExited += self.AvatarExited
@@ -80,17 +77,19 @@ class SWDeveloper:
     
     def initVisualization(self,sog):
         sog.RootPart.Name =  "rps_dev_" + self.developerinfo.login
-        
-        scalefactor = self.developerinfo.commitcount
-        sog.RootPart.Scale = V3(scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2, scalefactor*0.01 + 0.2)
-
+        sog.RootPart.Scale = V3(0.2, 0.2,  0.2)
+        self.updateVisualization()
         self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
         
         sog.SetText(self.developerinfo.login,V3(0.0,1.0,0.5),1.0)
         
-    def updateCommitData(self, vCommitData):
-        pass
-        ##print "updating developer vis. with: ", vNewCommit
+    def updateVisualization(self):
+        scale = self.sog.RootPart.Scale
+        scalefactor = self.developerinfo.commitcount
+        self.sog.RootPart.Scale = V3(scale.X + scalefactor*0.02,scale.Y + scalefactor*0.02,scale.Z + scalefactor*0.02)
+
+        
+        print "updating developer vis. with: ", str(scalefactor)
         #update visualization also...
     
     def updateIsLatestCommitter(self,vIsLatestCommitter):

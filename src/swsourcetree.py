@@ -103,7 +103,7 @@ class Tree:
         
         #print "mesh id for tree: ", self.rop.RexMeshUUID
 
-    def addNewBranch(self,vBranchInfo,vParentName=""):
+    def addNewBranch(self,vBranchInfo,vTexturePath,vParentName=""):
         """None means to add branch to main tree, otherwise add to
            other branch """         
            
@@ -127,15 +127,8 @@ class Tree:
             temp = tile.sog.AbsolutePosition
             self.treetopsog.NonPhysicalGrabMovement(V3(temp.X,temp.Y,temp.Z+self.tile_height))
         
-        #Evaluate latest commit data and create branch
-        today = time.gmtime(time.time())
-        tday = time.time()
-        texpath = "rpstextures/treebranch_green.jp2"
         
-        if tday - 60*60*24*60 > time.mktime(vBranchInfo.latestcommitdate):
-            texpath = "rpstextures/treebranch_rust.jp2"
-        
-        branch = Branch(self.scene, vBranchInfo.name,texpath,tile.locations[tile.currentIndex],V3(1.0,1.0,1.0),tile.rotations[tile.currentIndex])
+        branch = Branch(self.scene, vBranchInfo.name,vTexturePath,tile.locations[tile.currentIndex],V3(1.0,1.0,1.0),tile.rotations[tile.currentIndex])
         
         self.branches.append(branch)
         
@@ -190,14 +183,19 @@ class Branch:
 
         #upwards...
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos,V3(0,0,0))
-        tex = rexprojectspaceutils.load_texture(self.scene,vTexturePath)
-        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+        self.SetTexture(vTexturePath)
         self.sog.SetText(vBranchName,V3(0.0,1.0,0.0),1.0)
         ##print "mesh id for branch: ", self.rop.RexMeshUUID
         
         self.scene.AddNewSceneObject(self.sog, False)
 
+    def SetTexture(self,vTexturePath):
+        tex = rexprojectspaceutils.load_texture(self.scene,vTexturePath)
+        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+        
+        
 #data
+import threading
 class SWSourceTree:
     
     def __init__(self, vScene, vProjectName, vBranchInfos):
@@ -205,8 +203,13 @@ class SWSourceTree:
         self.scene = vScene
         self.projectName = vProjectName
         self.branches = {} #holds name branch pairs...
+        self.branchinfos = {} #holds name branchinfo pairs...
                
         self.bCurrentBuildFailed = False
+
+        self.commitsThreshold = 60*60*24*30 # about 1 month
+        
+        self.timer = threading.Timer(120,self.onCommitTimer)
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
         
@@ -217,16 +220,17 @@ class SWSourceTree:
         
         self.rainPlaceHolderSog = self.createRainPlaceHolder(V3(tempPos.X,tempPos.Y,tempPos.Z + 45))
         self.rainPlaceHolderRop = rexObjects.GetObject(self.rainPlaceHolderSog.UUID)
-                
-        #start from bottom
-        for branch in vBranchInfos:
-            b = self.addNewBranch(branch)
-            #self.tree.branches.append(b)
+        
+        self.addNewBranches(vBranchInfos)
             
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         
         nc.OnBuild += self.updateBuildResult
-        nc.OnBranchesChanged += self.addNewBranch
+        
+        nc.OnBranchesUpdated += self.updateBranches
+        nc.OnNewBranches += self.addNewBranches
+        
+        self.timer.start()
         
     def __del__(self):
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
@@ -276,22 +280,61 @@ class SWSourceTree:
         
         self.bCurrentBuildFailed = True
         
-    def addNewBranch(self,vBranchInfo,vParentName=""):
+    def addNewBranches(self,vBranchInfos,vParentName=""):
         """None means to add branch to main tree, otherwise add to
            other branch. Evaluate latest commit date and choose color/
            texture based on that (not done)"""
-        #print vBranchInfo
-        if self.branches.keys().count(vBranchInfo.name) > 0:
-            return
+        today = time.gmtime(time.time())
+        tday = time.time()
             
-        b = self.tree.addNewBranch(vBranchInfo,vParentName)
-        b.rop.RexClassName = "sourcetree.BranchScaler"        
-        self.branches[vBranchInfo.name] = b
+        for branch in vBranchInfos:
+            if self.branches.keys().count(branch.name) > 0:
+                continue
+            
+            #Evaluate latest commit data and create branch
+            texpath = "rpstextures/treebranch_green.jp2"
+            
+            if tday - self.commitsThreshold > time.mktime(branch.latestcommitdate):
+                texpath = "rpstextures/treebranch_rust.jp2"            
+            
+            
+            b = self.tree.addNewBranch(branch,texpath,vParentName)
+            b.rop.RexClassName = "sourcetree.BranchScaler"
+
+            self.branches[branch.name] = b
+            self.branchinfos[branch.name] = branch
+            
+    def updateBranches(self,branches):
         
-class SWSourceTreeBranch:
-    """ Not needed... Perhaps later... """
-    def __init__(self, vScene, vBranchName, vNumberOfCommits = 0, vLatestCommit = ""):
-        self.scene = vScene
-        self.projectName = vProjectName
-        self.numberOfCommits = vNumberOfCommits
-        self.latestCommit = vLatestCommit
+        for branch in branches:
+            try:
+                b = self.branches[branch.name]
+                texpath = "rpstextures/treebranch_green.jp2"
+                b.SetTexture(texpath)
+                
+                bi = self.branchinfos[branch.name]
+                bi.latestcommitdate = branch.latestcommitdate
+                
+            except:
+                continue
+    
+    def onCommitTimer(self):
+        today = time.gmtime(time.time())
+        tday = time.time()
+        
+        texpath = "rpstextures/treebranch_rust.jp2"            
+        
+        for branch in self.branchinfos.values():
+            
+            if tday - self.commitsThreshold > time.mktime(branch.latestcommitdate):
+                try:
+                    b = self.branches[branch.name]
+                    b.SetTexture(texpath)
+                except:
+                    pass
+                    
+        self.timer.cancel()
+        self.timer = 0
+        
+        self.timer = threading.Timer(120,self.onCommitTimer)
+        self.timer.start()

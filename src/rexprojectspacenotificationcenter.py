@@ -31,7 +31,9 @@ class RexProjectSpaceNotificationCenter:
             a project."""
         
         CommitDispatcher.registerAsCommitListener(self.NewCommit,vProjectName)
-        CommitDispatcher.registerAsBranchListener(self.NewBranch,vProjectName)
+        CommitDispatcher.registerAsNewBranchesListener(self.NewBranches,vProjectName)
+        CommitDispatcher.registerAsBranchesUpdatedListener(self.BranchesUpdated,vProjectName)
+        
         
         BuildResultDispatcher.register(self.NewBuild)
 
@@ -42,8 +44,10 @@ class RexProjectSpaceNotificationCenter:
         
         #vcs
         self.OnNewCommit = rxevent.RexPythonEvent()
-        self.OnBranchesChanged = rxevent.RexPythonEvent()
         self.OnNewCommitter = rxevent.RexPythonEvent()
+        
+        self.OnBranchesUpdated = rxevent.RexPythonEvent()
+        self.OnNewBranches = rxevent.RexPythonEvent()
         
         
         #issue tracking system
@@ -60,11 +64,16 @@ class RexProjectSpaceNotificationCenter:
         ##print "---commit----"
         self.OnNewCommit(vCommit)
         
-    def NewBranch(self,branches):
+    def BranchesUpdated(self,branches):
         ##print "---new branch---"
-        #self.OnBranchesChanged(branches)
-        pass
+        self.OnBranchesUpdated(branches)
+    
+    def NewBranches(self,branches):
+        ##print "---new branch---"
+        self.OnNewBranches(branches)
         
+            
+    
     def NewBuild(self,vBuild):
         ##print "---build----"
         self.OnBuild(vBuild)
@@ -95,8 +104,10 @@ class CommitDispatcher:
         self.targets = {}
         self.latestcommit = 0
         
-        self.branches = []
-        self.branchlisteners = []
+        self.branches = {}
+        self.newbranchlisteners = []
+        self.branchupdatedlisteners = []
+        
         
         self.timer = None
         self.latestcommit = "" #id of latest commit
@@ -104,10 +115,16 @@ class CommitDispatcher:
         self.timer.start()
     
     @classmethod
-    def registerAsBranchListener(cls, vTarget, vProject):
+    def registerAsNewBranchesListener(cls, vTarget, vProject):
         """ Registers observer to observe changes in the branch count """
   
-        cls.dispatcherForProject(vProject).branchlisteners.append(vTarget)
+        cls.dispatcherForProject(vProject).newbranchlisteners.append(vTarget)
+    
+    @classmethod
+    def registerAsBranchesUpdatedListener(cls, vTarget, vProject):
+        """ Registers observer to observe changes in the branch count """
+  
+        cls.dispatcherForProject(vProject).branchupdatedlisteners.append(vTarget)
     
     
     @classmethod
@@ -184,21 +201,49 @@ class CommitDispatcher:
         self.dispatchCommits(newCommits)
         
         branches = self.vcs.GetBranches()
+        newBranches = []
         
-        if len(branches) != len(self.branches):
-            self.branches = branches
-            self.dispatchBranches(self.branches)
+        if len(branches) != len(self.branches.keys()):
+            #we have (a) new branch(es), locate it and dispatch that as a new branch
+            for b in branches:
+                try:
+                    br = self.branches[b.name]
+                except:
+                    #must be new
+                    self.branches[b.name] = b
+                    newBranches.append(b)
             
-        ###print newCommits
+        self.dispatchNewBranches(newBranches)
+        
+        updatedBranches = []
+        
+        for b in branches:
+            try:
+                br = self.branches[b.name]
+                if br.latestcommitdate != b.latestcommitdate:
+                    #there has to be a new commit...
+                    updatedBranches.append(b)
+            
+            except:
+                #must be something wrong here, just updated branches...
+                pass
+    
+        self.dispatchNewBranches(updatedBranches)
+        
         self.timer.cancel()
         self.timer = 0
         
         self.timer = threading.Timer(60.0,self.update)#once a minute
         self.timer.start()
     
-    def dispatchBranches(self,branches):
-        for listener in self.branchlisteners:
+    def dispatchNewBranches(self,branches):
+        for listener in self.newbranchlisteners:
             listener(branches)
+    
+    def dispatchUpdatedBranches(self,branches):
+        for listener in self.branchupdatedlisteners:
+            listener(branches)
+    
     
     def dispatchCommits(self,vCommits):
         for commit in vCommits:
