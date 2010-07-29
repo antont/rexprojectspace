@@ -46,11 +46,6 @@ import versioncontrolsystem
 
 import rexprojectspaceutils
 
-import RexProjectSpaceScripts.follower
-from RexProjectSpaceScripts.rexprojectspace import *
- 
-import RexProjectSpaceScripts.rexprojectspace 
-
 import rexprojectspacedataobjects
 import rexprojectspacenotificationcenter 
  
@@ -59,28 +54,12 @@ import datetime
  
 class RexProjectSpaceModule(IRegionModule):
     autoload = True
-    rexworld = ""
 
-    def createBall(self):
-        sphereRadius = 0.025
-        sphereHeigth = 0.05
-        
-        pbs = OpenSim.Framework.PrimitiveBaseShape.CreateSphere()
-        pbs.SetRadius(sphereRadius)
-        pbs.SetHeigth(sphereHeigth)        
-        sog = OpenSim.Region.Framework.Scenes.SceneObjectGroup(
-        OpenMetaverse.UUID.Random(),V3(127,130,26),pbs)
-
-        texcolor = OpenMetaverse.Color4(1, 0, 0, 1)
-        tex = sog.RootPart.Shape.Textures
-        tex.DefaultTexture.RGBA = texcolor
-        sog.RootPart.UpdateTexture(tex)
-        self.scene.AddNewSceneObject(sog, False)
-        sog.SetText("pallo",V3(1.0,1.0,0.0),1.0)
-        return sog    
-    
-    
-    def getProjectRootFolders(self):  
+    def getProjectRootFolders(self):
+        """ Gets all the blobs from version control and
+            parses the data so that the root folders
+            of the projects repository can be listed withot
+            duplicate entries and returns it. """
         j = self.vcs.GetBlobs()
         
         allFilesAndFolders = j.values()
@@ -111,28 +90,13 @@ class RexProjectSpaceModule(IRegionModule):
     
     
     def Initialise(self, scene, configsource):
+        """ Create IssueFactory, SWTree and SWProject """
         
-        RexProjectSpaceModule.rexworld = ""
         self.removed = False
         self.scene = scene
         self.config = configsource
-        self.world = None
-        self.developers = []
-        self.spawner = None
-        
-        try:
-            rexpy = scene.Modules["RexPythonScriptModule"]
-        except KeyError:
-            self.rexif = None
-            #print "Couldn't get a ref to RexSCriptInterface"
-        else:
-            self.rexif = rexpy.mCSharp
-        
-        ball = self.createBall()
 
-        rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.rop = rexObjects.GetObject(ball.UUID)
-        self.rop.RexClassName = "rexprojectspace.RexProjectSpace"
+        self.developers = []
         
         self.vcs = versioncontrolsystem.VersionControlSystem("naali")
         
@@ -140,7 +104,7 @@ class RexProjectSpaceModule(IRegionModule):
         issuespawnpos = V3(125,125,25.2)
         
         #self.tree = self.initTree("naali")
-        self.project = self.initSWProject()
+        #self.project = self.initSWProject()
         
         #self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
         #self.initSWIssues()
@@ -153,7 +117,6 @@ class RexProjectSpaceModule(IRegionModule):
     
     
     def Close(self):
-        print "Closing projectspace"
         #print self, 'close'
         pass
     
@@ -166,22 +129,31 @@ class RexProjectSpaceModule(IRegionModule):
         return False
 
     IsSharedModule = property(isshared)
-
+    
+    def onFrameUpdate(self):
+        pass
     
     def initSWIssues(self):
+        """ Create issue objects by using issuefactory. """
         self.issuetracker = issuetracker.IssueTracker()
         issues = self.issuetracker.getIssues()
         for i in issues:
             issue = self.issuefactory.CreateIssue(i)
             
     def initTree(self,vProjectName):
-        
+        """ Get branches and create tree """
         branches = self.vcs.GetBranches()
         tree = swsourcetree.SWSourceTree(self.scene,vProjectName,branches)
         return tree
         
     def initSWProject(self):
-          
+        """ 1. Get all the contributors to a github project
+            2. Resolve latest commit to as many contributors
+               as possible
+            3. Resolve github projects repository's root folder's
+               directories
+            4. Create SWProject with the help of previous informations
+        """
         components = []
         
         #get all committers
@@ -202,7 +174,7 @@ class RexProjectSpaceModule(IRegionModule):
             dinfo.name = name
             devs.append(dinfo)
             
-            print "%s has %s commits and name is:%s"%(dev["login"],dev["contributions"],name)
+            #print "%s has %s commits and name is:%s"%(dev["login"],dev["contributions"],name)
         
         commits_for_devs = {}
         
@@ -218,19 +190,6 @@ class RexProjectSpaceModule(IRegionModule):
             try:
                 commits_for_devs[author]
             except:
-                ##print author
-                ##print commit["committer"]
-                commits_for_devs[author] = commit
-                """
-                #print commit["author"]
-                #print commit["login"]
-                #print commit["message"]
-                #print commit["id"]
-                #print commit["date"]
-                """
-                #print "_______________"
-                
-                
                 
                 #match committer to some dinfo
                 for dev in devs:
@@ -259,7 +218,7 @@ class RexProjectSpaceModule(IRegionModule):
             dev.latestcommit = devCommit
             
             #init every developer so that each has latest commits, commit count and names in place
-            swdevs.append(swdeveloper.SWDeveloper(self,self.scene,dev,False))
+            swdevs.append(swdeveloper.SWDeveloper(self.scene,dev,False))
            
         #get all the components...
         componentNames = self.getProjectRootFolders()
@@ -311,8 +270,6 @@ class RexProjectSpaceModule(IRegionModule):
     def cmd_hitMe(self, *args):
         pass
     
-   
-
     def cmd_ac(self, *args):
         #self.testcomponent = self.project.components.values[0]
         self.testcomponent = swproject.Component(self.scene, "test_component_11" , V3(126,126,25.5), None, 2,2,V3(1,1,1))
@@ -489,57 +446,12 @@ class RexProjectSpaceModule(IRegionModule):
         
     
     def cmd_developer(self, *args):
-        dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka","maukka user")
-        self.dev = swdeveloper.SWDeveloper(self,self.scene,dinfo,False)
+        dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka_tester","maukka user")
+        self.dev = swdeveloper.SWDeveloper(self.scene,dinfo,False)
         
         
     def cmd_project(self, *args):
         dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka","maukka user")
-        self.dev = swdeveloper.SWDeveloper(self,self.scene,dinfo,False)
+        self.dev = swdeveloper.SWDeveloper(self.scene,dinfo,False)
     
         self.testproject = swproject.SWProject(self.scene,"test_project",[],[self.dev])
-    
-    def onFrameUpdate(self):
-        pass
-     
-    #to scripting bridge ---------------------
-    
-    def SpawnDeveloper(self,vDevLoc):
-        """Returs the actual script instance!!! """
-        pos = LSL_Types.Vector3(120, 120, 26)
-        localId = self.spawner.SpawnActor(pos,0,False,"developer.Developer")
-        developer = self.world.GetActorByLocalID(localId)
-        #print "script instance: ",developer
-        return developer
-    
-    def SetRexWorld(self,vWorld):
-        #print "it's alive"
-        self.world = vWorld
-    
-    def GetActor(self, vId):
-        if not self.world:
-            #print "no world set!!!!!______"
-            return None
-        
-        actor = self.spawner.MyWorld.GetActorByLocalID(vId)
-            
-        #actor = self.world.GetActorByLocalID(vId)
-        #print actor
-        
-        return actor
-    
-    def SetSpawner(self,vRexProjectSpace):
-        #print "spawner set-------"
-        self.spawner = vRexProjectSpace
-        
-        
-        def Spawner(self):
-            return spawner
-            
-        def SpawnScriptInstance(self,vPyClass):
-            id = 0
-            return id
-    
-    ####
-        
-        

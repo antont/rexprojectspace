@@ -2,6 +2,7 @@ import rexprojectspaceutils
 import rexprojectspacedataobjects
 import rexprojectspacemodule
 import avatarfollower
+import rexprojectspacenotificationcenter
 
 import clr
 
@@ -20,15 +21,18 @@ clr.AddReference('OpenSim.Region.ScriptEngine.Shared')
 from OpenSim.Region.ScriptEngine.Shared import LSL_Types
 
 class SWDeveloper:
-    
+    """ Class representing a software developer
+    """
     greentextureid = 0
     redtextureid = 0
     
     HEIGHT = 1.0
 
-    def __init__(self, vMod,vScene,vDeveloperInfo, vIsAtProjectSpace ,vAvatar = None):
+    def __init__(self,vScene,vDeveloperInfo, vIsAtProjectSpace ,vAvatar = None):
+        """ Load mesh and animation package. Create avatar follower that registers
+            to listen to state changes related to opensim avatar enter/exit events
+        """
 
-        self.mod = vMod
         self.scene = vScene
         self.developerinfo = vDeveloperInfo
         self.isAtProjectSpace = vIsAtProjectSpace
@@ -46,7 +50,8 @@ class SWDeveloper:
             self.rexif = rexpy.mCSharp
         
         sop =  vScene.GetSceneObjectPart("rps_dev_" + self.developerinfo.login)
-
+        self.currenttexid = SWDeveloper.greentextureid
+        
         if sop:
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
@@ -54,14 +59,12 @@ class SWDeveloper:
             print "Developer: %s found from scene"%(self.developerinfo.login)
         else:    
             self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
-            self.initVisualization(sog)
+            self.initVisualization(self.sog)
             
         if SWDeveloper.greentextureid == 0:
             SWDeveloper.greentextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devgreen.jp2")
             SWDeveloper.redtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devred.jp2")
         
-        self.currenttexid = SWDeveloper.greentextureid
-
         self.newposition = self.sog.AbsolutePosition
         self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
         self.rop.RexAnimationName = ""
@@ -70,31 +73,34 @@ class SWDeveloper:
 
         self.follower.OnAvatarEntered += self.AvatarEntered
         self.follower.OnAvatarExited += self.AvatarExited
-    
-    def __del__(self):
-        self.scene.EventManager.OnNewPresence -= self.OnNewPresenceEntered
-        self.scene.EventManager.OnRemovePresence -= self.OnPresenceLeaved
+        
+        nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
+        #nc.OnNewCommit += self.updateCommitText
+        nc.OnNewIrcMessage += self.OnNewIRCMessage
     
     def initVisualization(self,sog):
+        """ Choose scale based on commit count and set opensim sceneobjectgroups
+            text to be developers login...
+        """
         sog.RootPart.Name =  "rps_dev_" + self.developerinfo.login
         sog.RootPart.Scale = V3(0.2, 0.2,  0.2)
         self.updateVisualization()
         self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
         
-        sog.SetText(self.developerinfo.login,V3(0.0,1.0,0.5),1.0)
+        self.SetText(self.developerinfo.login)
         
     def updateVisualization(self):
+        """ Updates scale based on commit count 
+        """
         scale = self.sog.RootPart.Scale
         scalefactor = self.developerinfo.commitcount
         self.sog.RootPart.Scale = V3(scale.X + scalefactor*0.02,scale.Y + scalefactor*0.02,scale.Z + scalefactor*0.02)
-
-        
-        print "updating developer vis. with: ", str(scalefactor)
-        #update visualization also...
     
     def updateIsLatestCommitter(self,vIsLatestCommitter):
+        """ Change animation
+        """
         if vIsLatestCommitter:
-            self.skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"diamond.skeleton")
+            self.skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"diamond.skeleton")
             
             self.rop.RexAnimationPackageUUID = self.skeleton_anim_id
             self.rop.RexAnimationName = "jump"
@@ -102,6 +108,8 @@ class SWDeveloper:
             self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
     
     def updateDidBrakeBuild(self,vDidBrakeBuild):
+        """ Change texture if you brake the build 
+        """
         if vDidBrakeBuild and self.currenttexid == SWDeveloper.redtextureid:
             return
         elif vDidBrakeBuild == False and self.currenttexid == SWDeveloper.greentextureid:
@@ -118,17 +126,29 @@ class SWDeveloper:
         
     
     def AvatarEntered(self):
+        """ Store current position, so that we remember where to
+            go when avatar exits """
         self.newposition = self.sog.AbsolutePosition
     
     def AvatarExited(self):
-        
-        self.follower.sog = self.sog 
-        
-        # self.initVisualization(self.sog)
+        """ Move developer to a place where it was before avatar entered
+            or if position was updated (because of new commit, for example)
+            move to a new location
+        """
         self.move(self.newposition)
         
     def move(self, vTargetPos):
         self.newposition = vTargetPos
         if self.follower.bFollowing == False:
             self.sog.NonPhysicalGrabMovement(vTargetPos)
-            
+    
+    def OnNewIRCMessage(self,vMessage):
+        """ Display new IRC message
+        """
+        text = vMessage
+        self.SetText(text)
+    
+    def SetText(self,text):
+        """ Sets sceneobjectgroups text to be text... """
+        self.sog.SetText(text,V3(0.0,1.0,0.5),1.0)
+    

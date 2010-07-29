@@ -11,25 +11,12 @@ class VersionControlSystem:
     """Represent a version control system for a single GitHub project.
     Data is gathered with GitHub JSON -api.
     Tries to cache data, so every function call does not 
-    necessarily cause network traffic"""    
+    necessarily cause network traffic""" 
+    
     def __init__(self,projectName):
         self.projectName = projectName
     
-        self.committersFetchedTime = 0
-        self.authors = []
         
-        self.contributorsFetchedTime = 0
-        self.contributors = []
-
-        self.branchesFetchedTime = 0
-        self.branches = []
-        
-        self.latestCommitForBranchFetchedTime = {};
-        self.latestCommitForBranch = {}
-        
-        self.commitsForBranchFetchedTime = {};
-        self.commitsForBranch = {}
-
     def GetBranches(self):
         """Returns all branches as a list of BranchInfo objects.
            BranchInfo objects have names and latest commit dates set"""
@@ -53,8 +40,10 @@ class VersionControlSystem:
                 print b.latestcommitdate
         return branches    
     
-    def GetBlobs(self):
-        url = "http://github.com/api/v2/json/blob/all/realxtend/naali/develop"
+    def GetBlobs(self,vPath = "http://github.com/api/v2/json/blob/all/realxtend/naali/develop"):
+        """ Gets blobs from github
+        """
+        url = vPath
         f = urllib.urlopen(url)
         s = f.read()
         
@@ -64,7 +53,8 @@ class VersionControlSystem:
         
     
     def GetCommitsFromNetworkData(self, vNbrOfCommits):
-        """ Gets a huge amount of commits from the github network data. """
+        """ Gets a vNbrOfCommits amount of commits from the github network data. 
+            Returns commits as list of dicts, contents directly from github"""
         url = "http://github.com/realxtend/%s/network_meta"%(self.projectName)
         f = urllib.urlopen(url)
         s = f.read()
@@ -100,7 +90,7 @@ class VersionControlSystem:
         return contributors
     
     def GetCommitInformation(self,vId):
-        """ Returns information about specific github commit as a dictionary """
+        """ Returns information about specific github commit as a dictionary. """
         url = "http://github.com/api/v2/json/commits/show/realxtend/naali/%s"%(vId)  
         f = urllib.urlopen(url)
         s = f.read()
@@ -168,37 +158,5 @@ class VersionControlSystem:
     
         return self.authors
     
-    def getUserInfo(self,vLogin):
-        url = "http://github.com/api/v2/json/user/show/%s"%(vLogin)
-        f = urllib.urlopen(url)
-        s = f.read()
-        
-        jsonstring = json.loads(s)
-        
-        user = jsonstring["user"]
-        user = user["user"]
-        
-        return user
 
-    def getUserInfo(self,vLogin):
-        """ Returns information about specific github user """
-        url = "http://github.com/api/v2/json/user/show/%s"%(vLogin)  
-        f = urllib.urlopen(url)
-        s = f.read()
-        user = json.loads(s)
-
-        return user
-    
-    def getNumberOfCommitsForDay(self,day):
-        pass    
-        
-    def getLatestCommitForCommitter(self,committer):
-        pass    
-                
-    def getCommitsAfterTimeStamp(self,time):
-        pass
-        
-    def getNumberOfCommitsInBranch(self):
-        pass
-    
     

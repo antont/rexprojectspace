@@ -18,6 +18,9 @@ import avatarfollower
 import rexprojectspacenotificationcenter
 
 class IssueFactory():
+    """ IssueFactory can create issues and locate place them correctly (random)
+        to the scene
+    """
     
     def __init__(self,vScene,vStart,vEnd,vSpawnPosition = V3(125,125,25)):
         """ vStart and vEnd defines a cube by start and end point. vSpawnPosition defines 
@@ -43,7 +46,8 @@ class IssueFactory():
         nc.OnIssueUpdated -= self.UpdateIssue
     
     def CreateIssue(self,vIssueData):
-        
+        """ Returns object inherited from SWIssue
+        """
         
         if self.issues.keys().count(vIssueData.id) > 0:
             print "Found from factory: ", vIssueData.id
@@ -76,6 +80,8 @@ class IssueFactory():
         return issue
     
     def UpdateIssue(self,vIssueInfo):
+        """ Locate correct issue and update it's data 
+        """
         issue = 0
         try:
             issue = self.issues[vIssueInfo.id]
@@ -86,19 +92,25 @@ class IssueFactory():
             issue.DataChanged(vIssueInfo)
             
 class SWIssue(object):
-
+    """ Base class for issues
+    """
+    
     def __init__(self,vScene,vIssueInfo,vPos):
         self.scene = vScene
         self.issueinfo = vIssueInfo
         self.isResponsibleAvatartAtProjectSpace = False
         self.avatar = None #rxavatar
         
-        self.follower = avatarfollower.AvatarFollower(vScene,0,[vIssueInfo.owner,vIssueInfo.owner])
+        #feature works correctly, but does it make any sense?
+        #self.follower = avatarfollower.AvatarFollower(vScene,0,[vIssueInfo.owner,vIssueInfo.owner])
         
-        self.follower.OnAvatarEntered += self.AvatarEntered
-        self.follower.OnAvatarExited += self.AvatarExited 
+        #self.follower.OnAvatarEntered += self.AvatarEntered
+        #self.follower.OnAvatarExited += self.AvatarExited 
 
     def LoadMeshWithMaterialAndTextures(self,vMeshPath,vMaterialPath,vTexturePaths,vPos):
+        """ Checks if scene allready has mesh with issues id... If not 
+            create it. Return sceneobjectgroup and rexobjectproperties
+        """
         sop =  self.scene.GetSceneObjectPart("rps_issue_" + self.issueinfo.id)
         sog = 0
         rop = 0  
@@ -129,19 +141,15 @@ class SWIssue(object):
     def AvatarExited(self):
         """ Override if needed """
         self.sog.AbsolutePosition = self.newposition
-        #create visualization again, since follower destroys sog...
-        #self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
-        #self.follower.sog = self.sog 
-        
-        #self.initVisualization(self.sog)
-        #self.move(self.newposition)
         
     def move(self, vTargetPos):
+        """ update position """
         self.newposition = vTargetPos
 
     def start(self):
         #override this
-        self.follower.sog = self.sog
+        #self.follower.sog = self.sog
+        pass
         
     def DataChanged(self,vNewIssueInfo):
         print "base classes data changed"
@@ -150,30 +158,41 @@ class SWIssue(object):
     
 
 class SWEnhancement(SWIssue):
+    """ SWIssue subclass representing a software enhancement proposal
+    """
     def __init__(self,vScene,vIssueInfo,vPos):
+        """ Load mesh and animation package
+        """
         super(SWEnhancement,self).__init__(vScene,vIssueInfo,vPos)
         
         vMaterialPath = "enhgenerated.material"
         
         self.sog,self.rop = super(SWEnhancement,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_green.jp2"],vPos)
-        skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"bug.skeleton")
+        skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"bug.skeleton")
         self.rop.RexAnimationPackageUUID = skeleton_anim_id
         self.issueinfo = vIssueInfo
         
     def start(self):
+        """ Choose animation
+        """
         super(SWEnhancement,self).start()
-        self.rop.RexAnimationName = "flying"
         self.selectAnimation()
         
     def DataChanged(self,vNewIssueInfo):
+        """ Choose animation
+        """
         self.issueinfo = vNewIssueInfo
         self.selectAnimation()
         
     def move(self, vTargetPos):
+        """ update location
+        """
         super(SWEnhancement,self).move(vTargetPos)
         self.sog.AbsolutePosition = vTargetPos
     
     def selectAnimation(self):
+        """ Choose animation by evaluating status of the enhancement
+        """
         if self.issueinfo.status == "new":
             print "new bug"
             self.rop.RexAnimationName = "flying"
@@ -185,35 +204,42 @@ class SWEnhancement(SWIssue):
         else:
             pass
             #self.rop.RexAnimationName = "idle"
-    
-    
+
 class SWBug(SWIssue):
+    """ SWIssue subclass representing a software bug
+    """
     def __init__(self,vScene,vIssueInfo,vPos):
         super(SWBug,self).__init__(vScene,vIssueInfo,vPos)
         
         vMaterialPath = "enhgenerated.material"
         
         self.sog,self.rop = super(SWBug,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_red.jp2"],vPos)
-        skeleton_anim_id = rexprojectspaceutils.load_skeletonanimation(self.scene,"bug.skeleton")
+        skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"bug.skeleton")
         self.rop.RexAnimationPackageUUID = skeleton_anim_id
         self.issueinfo = vIssueInfo
         
-    def start(self):
-        super(SWBug,self).start()
-        #self.rop.RexAnimationName = "flying"    
+    def start(self):        
+        """ Choose animation
+        """
+        super(SWBug,self).start()  
         self.selectAnimation()
         
-        
-    def DataChanged(self,vNewIssueInfo):
+    def DataChanged(self,vNewIssueInfo):        
+        """ Choose animation
+        """
         self.issueinfo = vNewIssueInfo
         self.selectAnimation()
         
     def move(self, vTargetPos):
+        """ Update location
+        """
+        
         super(SWBug,self).move(vTargetPos)
         self.sog.AbsolutePosition = vTargetPos
     
     def selectAnimation(self):
-        print "hello: ", self.issueinfo.status
+        """ Choose animation by evaluating status of the enhancement
+        """
         if self.issueinfo.status == "new":
             print "new bug"
             self.rop.RexAnimationName = "flying"
@@ -225,5 +251,4 @@ class SWBug(SWIssue):
         else:
             pass
             #self.rop.RexAnimationName = "idle"
-    
     

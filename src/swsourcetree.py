@@ -30,11 +30,13 @@ import rexprojectspacedataobjects
 
 import rexprojectspacenotificationcenter
 
-#UI stuff
-class Tree:
 
+class Tree:
+    """ View object that is able to create tree tiles
+        when needed."""
+    
     def __init__(self,vScene,vName):
-        """ "Base" of the tree """
+        """ Load tree base and top meshes """
         
         self.tile_height = 2.5
         self.tree_base_height = 1.0
@@ -104,8 +106,7 @@ class Tree:
         #print "mesh id for tree: ", self.rop.RexMeshUUID
 
     def addNewBranch(self,vBranchInfo,vTexturePath,vParentName=""):
-        """None means to add branch to main tree, otherwise add to
-           other branch """         
+        """ Creates a new branch and a tile if needed """         
            
         nbr = len(self.tiles)
         if(nbr == 0):
@@ -138,9 +139,13 @@ class Tree:
         
             
 class TreeTile:
-    
+    """ View class for single treetile. Knows positions and rotations/euler angles to
+        branches
+    """
     def __init__(self,vScene,vPos,vHeight):
-        
+        """ Load mesh and calculate positions and rotations to branches 
+            (that may or may not be created later on).
+        """
         self.currentIndex = 0  #increment on add
         self.scene = vScene
         self.pos = vPos
@@ -172,9 +177,13 @@ class TreeTile:
         self.scene.AddNewSceneObject(self.sog, False)
         
 class Branch:
+    """ View class for a single branch """
+    
     w = 1
+    
     def __init__(self,vScene,vBranchName,vTexturePath,vPos,vScale,vRot):
-   
+        """ Load mesh and set the texture.
+        """
         self.scene = vScene
         self.texturepath = vTexturePath
         self.pos = vPos
@@ -190,16 +199,18 @@ class Branch:
         self.scene.AddNewSceneObject(self.sog, False)
 
     def SetTexture(self,vTexturePath):
+        """ Loads and sets the given texture to a branch (uv-mapped) """
         tex = rexprojectspaceutils.load_texture(self.scene,vTexturePath)
         self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         
-        
-#data
 import threading
 class SWSourceTree:
+    """ Controller part of the tree """
     
     def __init__(self, vScene, vProjectName, vBranchInfos):
-
+        """ Create view objects by using vBranchInfos list and register to
+            branch and build related notifications"""
+            
         self.scene = vScene
         self.projectName = vProjectName
         self.branches = {} #holds name branch pairs...
@@ -233,11 +244,13 @@ class SWSourceTree:
         self.timer.start()
         
     def __del__(self):
+        """ unregister """
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         nc.OnBuild -= self.updateBuildResult
-        
-    
+
     def createRainPlaceHolder(self,vPos):
+        """ Creates box that will be used as a rains starting 
+            point, sort of."""
         
         pbs = OpenSim.Framework.PrimitiveBaseShape.CreateBox()
         pbs.SetHeigth(1)
@@ -253,6 +266,7 @@ class SWSourceTree:
         return sog    
         
     def updateBuildResult(self,vBuilds):
+        """ Handle build notifications """
         res = True
         for build in vBuilds:
             if build.result != "success":
@@ -266,24 +280,27 @@ class SWSourceTree:
         
     
     def setBuildSuccesfull(self):
+        """ If build was broken, make it rain """
         if self.bCurrentBuildFailed == True:
-            #make it rain
             self.rainPlaceHolderRop.RexClassName = "sourcetree.Rain"
-            #add timer so that tree burns...
             
         self.bCurrentBuildFailed = False
     
     def setBuildFailed(self):
+        """ If this was the first failing build in a row,
+            set the tree on fire. """
         if self.bCurrentBuildFailed == False:
-            #make it burn
             self.treerop.RexClassName = "sourcetree.BurningTree"
         
         self.bCurrentBuildFailed = True
         
     def addNewBranches(self,vBranchInfos,vParentName=""):
-        """None means to add branch to main tree, otherwise add to
-           other branch. Evaluate latest commit date and choose color/
-           texture based on that (not done)"""
+        """vParentName == None means to add branch to main tree, otherwise add to
+           other branch. Call tree views addNewBranch to add new branch view.
+           Evaluate latest commit date and choose color/
+           texture based on that
+           """
+           
         today = time.gmtime(time.time())
         tday = time.time()
             
@@ -305,7 +322,8 @@ class SWSourceTree:
             self.branchinfos[branch.name] = branch
             
     def updateBranches(self,branches):
-        
+        """ Handle branch update notification by changing texture if needed
+        """
         for branch in branches:
             try:
                 b = self.branches[branch.name]
@@ -319,6 +337,8 @@ class SWSourceTree:
                 continue
     
     def onCommitTimer(self):
+        """ Check if some branch has been too long without commits
+            so that the texture has to be changed"""
         today = time.gmtime(time.time())
         tday = time.time()
         

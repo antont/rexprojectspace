@@ -27,35 +27,37 @@ import swdeveloper
 
 import rexprojectspacemodule
 
-#MESHUUID = OpenMetaverse.UUID.Zero
-#MODIFIEDMESHUUID = OpenMetaverse.UUID.Zero
-
-#MATERIALUUID = OpenMetaverse.UUID.Zero
-#MODIFIEDMATERIALUUID = OpenMetaverse.UUID.Zero
-
 class ComponentBase(object):
+    """ Base class for composite objects """
     def __init__(self):
         pass
     
     def SetState(self,vState):
+        """ Override this """
         pass
     
     def AddChild(self,vComponentBase):
+        """ Composites has to implement this """
         pass
     
     def RemoveChild(self,vComponentBase):
+        """ Composites has to implement this """
         pass
         
 
         
 class File(ComponentBase):
+    """ Representing a single file, can't have children. Not implemented yet..."""
     def __init__(self):
         pass
     
     def SetState(self,vState):
+        """ Not implemented """
         pass
     
-class Component:
+class Component(ComponentBase):
+    """ Representing a single directory, can have children."""
+        
     offset = 1.0
     
     modifiedtextureid = None
@@ -63,6 +65,9 @@ class Component:
     addedtextureid = None
     
     def __init__(self,vScene,vName,vPos,vParent,vX=1,vY=1,vScale = V3(0,0,0)):
+        """ Load mesh and texture and set state as added
+        """
+        super(Component,self).__init__()
         
         self.name = vName
         
@@ -81,8 +86,8 @@ class Component:
         
         if not Component.modifiedtextureid:
             print "loading  textures"
-            Component.modifiedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/bugi_red.jp2")
-            Component.removedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/bugi_green.jp2")
+            Component.modifiedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/modifiedcomponent.jp2")
+            Component.removedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/removedcomponent.jp2")
             Component.addedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/addedcomponent.jp2")
         
         sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
@@ -92,7 +97,7 @@ class Component:
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
             self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
-            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(Component.addedtextureid))
+            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
              #print "Component: %s found from scene"%("rps_component_" + self.name)
         else:
             self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
@@ -103,22 +108,13 @@ class Component:
             self.sog.RootPart.Name =  "rps_component_" + self.name
             
             self.scene.AddNewSceneObject(self.sog, False)
-        
-       
-        
-        self.MESHUUID = self.rop.RexMeshUUID
-        
-        #MATERIALUUID = self.rop.RexMaterials[self.rop.RexMaterials.Keys[0]]
-        
-        self.MODIFIEDMESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"componentmod.mesh")
-        self.MODIFIEDMATERIALUUID = rexprojectspaceutils.load_material(self.scene,"componentmod.material")
-        
+
         #print "mesh id for component: ", self.rop.RexMeshUUID
         self.sog.SetText(self.name,V3(1.0,1.0,0.0),1.0)
         
         self.modified = False
         
-    def addChild(self,vComponentName):
+    def AddChild(self,vComponentName):
 
         temp = self.sog.AbsolutePosition
         p = V3(self.curColumn + temp.X + self.curColumn*Component.offset,
@@ -138,6 +134,7 @@ class Component:
         return child
             
     def SetState(self,vState):
+        """ Changes texture if needed. vState can be modified,removed or added """
         print "component: ",self.name, "is at state: ",vState
         tex = self.currenttexid
         if vState == "modified":
@@ -151,8 +148,14 @@ class Component:
         self.currenttexid = tex
 
 class SWProject:
-
+    """ Controller class for software projects that knows of it's developers,
+        components and compilation results of the source code. """
+        
     def __init__(self, vScene,vProjectName, vComponents, vDevelopers):
+        """ Create projects components and resolve latest developer
+            and update components and developers visualizations respectively
+        """
+        
         self.scene = vScene
         self.projectName = vProjectName
         
@@ -222,10 +225,12 @@ class SWProject:
         nc.OnBuild += self.buildFinished
         
     def __del__(self):
+        """ """
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         nc.OnNewCommit -= self.updateDeveloperLocationWithNewCommitData
     
     def visualizeLatestCommitModifications(self):
+        """ Update components that are modified by latest commit """
         if self.latestcommitter:
             
             #unset previous modified
@@ -244,24 +249,15 @@ class SWProject:
                 component.SetState("modified")
     
     def resolveLatestCommitter(self):
-        
-        """
-        for dev in self.developers:
-            if dev.developerinfo.latestcommit:
-                if dev.developerinfo.latestcommit.date > self.latestcommitter.developerinfo.latestcommit.date:
-                    print dev.developerinfo.latestcommit.date
-                    self.latestcommitter = dev
-                    
-        return self.latestcommitter
-        """
+        """ """
         devs = self.sortDevelopers(self.developers)
         latestcommmitter = devs[len(devs)-1]
         return latestcommmitter
     
     def addComponent(self, vComponent):
-    
+        """ Adds component to the project root folder """
         self.componentsAndDevelopersDict[vComponent.name] = []
-        c = self.component.addChild(vComponent.name)
+        c = self.component.AddChild(vComponent.name)
         
         self.components[vComponent.name] = c
         #visualize components "size" and modified date
@@ -271,10 +267,10 @@ class SWProject:
         c.sog.RootPart.Scale = V3(scale,scale,tempscale.Z)
     
         return c
-        
-    
+
     def updateDeveloperLocationWithNewCommitData(self, vCommit, vMakeCurrent = True):
-        
+        """ Position developer on top of component that was modified by the 
+            developer. If component was new, then create a new component."""
         #locate developer
         committer = None
         for dev in self.developers:
@@ -308,27 +304,19 @@ class SWProject:
                 folder = rexprojectspacedataobjects.FolderInfo(vCommit.directories[0],0)#new directory
                 component = self.addComponent(folder)
                 
-            if not component:
-                print "No component found from project"
-                return
-                
-            #devs = self.componentsAndDevelopersDict[component.name]
-            #devs.append(committer)
-            
             #remove developer from previous componenent, k is component name and c lists developers to
-            #component named k, not done yet... 
-            
+            #component named k... 
             for k,c in self.componentsAndDevelopersDict.iteritems():
                 if c.count(committer)>0:
                     c.remove(committer)
                     #devs = c
-                    previouscomponent = c
+                    previouscomponentsdevs = c
                     
                     #rearrange devs
                     h = 0
-                    for j in range(len(previouscomponent)):
+                    for j in range(len(previouscomponentsdevs)):
                         print "removed dev"
-                        dev = previouscomponent[j]
+                        dev = previouscomponentsdevs[j]
                         h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
                         h += 0.2
                         
@@ -336,10 +324,10 @@ class SWProject:
                         
                         pos = comp.sog.AbsolutePosition
                         devPos = V3(pos.X,pos.Y,pos.Z + h)
-                        dev = previouscomponent[j]
+                        dev = previouscomponentsdevs[j]
                         dev.move(devPos)
                         
-                    print "developer: ", committer , "removed from ", self.components[k].name
+                    #print "developer: ", committer , "removed from ", self.components[k].name
                     break #developer can be only in one component at the same time
         else:
             component = self.component #no directories, so put dev into "container component"
@@ -347,8 +335,6 @@ class SWProject:
         devs = self.componentsAndDevelopersDict[component.name]
         devs.append(committer)
             
-        
-        #devs = self.componentsAndDevelopersDict[component.name]
         devs = self.sortDevelopers(devs)
         #for d in devs:
         #    print d.latestcommit.date
@@ -372,37 +358,33 @@ class SWProject:
             self.latestcommitter = committer
             
             #so, these commits are processed at runtime, not at initializing phase
-            #so update also the developervisualization
+            #update also the developervisualization
             self.latestcommitter.developerinfo.commitcount += 1
             self.latestcommitter.developerinfo.latestcommit = vCommit
+            self.latestcommitter.developerinfo.latestcommitid = vCommit["id"]
             
             self.latestcommitter.updateVisualization()
             
-            print "developer %s is current committer"%(self.latestcommitter.developerinfo.login)
+            #print "developer %s is current committer"%(self.latestcommitter.developerinfo.login)
             self.latestcommitter.updateIsLatestCommitter(True)
             
             self.visualizeLatestCommitModifications()
             
-        
     from operator import itemgetter,attrgetter
     def sortDevelopers(self,vDevelopers):
         """ sort developers based on their commit date, so that newest is at the top
         """
         vDevelopers.sort(self.compareCommitDates)
-        
-        for d in vDevelopers:
-            print d.developerinfo.login ," committed on : ",d.developerinfo.latestcommit.date
-        
+        #for d in vDevelopers:
+        #    print d.developerinfo.login ," committed on : ",d.developerinfo.latestcommit.date
         return vDevelopers
     
     def compareCommitDates(self,x,y):
         return cmp(x.developerinfo.latestcommit.date,y.developerinfo.latestcommit.date)
  
-        
-    def addDeveloper(self,vDeveloper):
-        pass
- 
     def buildFinished(self,vBuilds):
+        """ Handle build notifications by creating a blame list containing
+            developers that might have broken the build. """
         bResult = True
         
         if len(vBuilds) < 1:
@@ -436,10 +418,12 @@ class SWProject:
         self.lastBuildTime = build.time
        
     def visualizeBlameListMembers(self):
+        """ Tell developers that they might have broken the build """
         for d in self.blameList:
             d.updateDidBrakeBuild(True)
     
     def unsetBlameListMemberVisualizations(self):
+        """ Tell developers that the build is ok. """
         for d in self.blameList:
             d.updateDidBrakeBuild(False)
  

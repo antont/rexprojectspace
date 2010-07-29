@@ -6,14 +6,16 @@ import xmlrpclib
 import rexprojectspacedataobjects
         
 class BuildBot:
-    """ Data fetcher for build bot type of service.
-        Gets data from build bot running on remote server
+    """ Data fetcher for build bot service.
+        Gets data from build bot running on remote server 
+        by using XMLRPC
     """
     def __init__(self):
+        """ Create server proxy """
         self.proxy = xmlrpclib.ServerProxy("http://www.playsign.fi:8010/xmlrpc/")
 
     def GetLatestBuilds(self):
-        """Returns list of BuildInfo objects"""
+        """Returns list of BuildInfo objects containing results and a timestamp"""
         
         buildPlatforms = []
         results = []

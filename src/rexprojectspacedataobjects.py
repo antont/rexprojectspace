@@ -1,11 +1,17 @@
 
 import time
 def parseDate(vDateString):
+    """ Parse time from string of type 2010-07-23T09:54:40-07:00
+        GitHub formats time with this format...
+        Return python time object
+    """
     datestring = vDateString[0:len(vDateString)-6]#quite dirty, remove -xx:xx from the end
     ti = time.strptime(datestring,"%Y-%m-%dT%H:%M:%S")
     return ti    
 
 class BuildInfo:
+    """ Data class for build related information
+    """
     def __init__(self,vPlatformName,vResult,vTime = None):
         self.platformname = vPlatformName
         self.result = vResult
@@ -14,6 +20,8 @@ class BuildInfo:
         
 
 class FolderInfo:
+    """ Data class for folder (related to software project) information
+    """
     def __init__(self,vName,vNumberOfSubFiles,vLatestCommitDate = 0 ,vNumberOfCommits=0):
         self.name = vName
         #self.latestcommitdate = parseDate(vLatestCommitDate)
@@ -21,6 +29,8 @@ class FolderInfo:
         self.numberofsubfiles = vNumberOfSubFiles
     
 class BranchInfo:
+    """ Data class for version control branch related information
+    """
     def __init__(self,vName,vLatestCommitDate = 0,vNumberOfCommits=0):
         self.name = vName
         self.numberofcommits = vNumberOfCommits
@@ -31,6 +41,8 @@ class BranchInfo:
             self.latestcommitdate = time.gmtime(time.time())
             
 class DeveloperInfo:
+    """ Data class for github developer related information
+    """
     def __init__(self,vLogin,vName=""):
         self.login = vLogin
         self.name = ""
@@ -39,7 +51,8 @@ class DeveloperInfo:
         self.latescommit = None 
         
 class IssueInfo:
-    """ Model class for issue"""    
+    """ Data class for issue related information
+    """    
     def __init__(self,issueData):
 
         self.id = ""
@@ -67,23 +80,12 @@ class IssueInfo:
     def toString(self):
         print ("Issue object: ID:%s TYPE:%s SUMMARY:%s")%(self.id,self.type,self.summary)
 
-
-    def compare(self,other):
-        #print "vertailu--"
-        #print "vertailu-----%s"%(other)
-        #print self
-
-        if self.id == vOther.id and self.type == vOther.type and self.status == vOther.status and self.priority == vOther.priority and self.milestone == vOther.milestone and self.owner == vOther.owner and self.summary == vOther.summary and self.allLabels == vOther.allLabels:
-            return 1
-        else:
-            return -1 
-
-    #__cmp__ = compare
-    #__str__ = toString
-
 class CommitInfo:
+    """ Data class for commit (github) related information
+    """
     def __init__(self,vLogin,vCommit,vAuthor=""):
-
+        """ Parses data out from vCommit string received from github
+        """
         self.login = vLogin
         self.name = vAuthor
         self.removed = []
@@ -121,6 +123,7 @@ class CommitInfo:
         for m in mod:
             files.append(m["filename"]) 
             self.modified.append(m["filename"])
+            
         for a in added:
             files.append(a)
             self.added.append(a)
@@ -128,10 +131,8 @@ class CommitInfo:
         for r in removed:
             files.append(r)
             self.removed.append(r)
-                    
-
-        #files.sort()       
-        
+                   
+        #leave no duplicates
         modifiedfiles = list(set(files))
         
         files = []
@@ -146,7 +147,6 @@ class CommitInfo:
             else:
                 folders.append("/")
 
-        ##print folders
         return files,folders
 
         

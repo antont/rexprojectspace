@@ -7,7 +7,7 @@ import rexprojectspacedataobjects
 
 class RexProjectSpaceNotificationCenter:
     """ Clusters all the dispatcher classes in to a single
-        easily usable class. Users can subscribe in to events
+        easily usable class (Facade class). Users can subscribe in to events
         that they are interested in and provide their callback/delegate
         functions.
     """    
@@ -30,13 +30,12 @@ class RexProjectSpaceNotificationCenter:
         """ start listening to all coming events that are related to 
             a project."""
         
-        CommitDispatcher.registerAsCommitListener(self.NewCommit,vProjectName)
-        CommitDispatcher.registerAsNewBranchesListener(self.NewBranches,vProjectName)
-        CommitDispatcher.registerAsBranchesUpdatedListener(self.BranchesUpdated,vProjectName)
-        
+        VersionControlDataDispatcher.registerAsCommitListener(self.NewCommit,vProjectName)
+        VersionControlDataDispatcher.registerAsNewBranchesListener(self.NewBranches,vProjectName)
+        VersionControlDataDispatcher.registerAsBranchesUpdatedListener(self.BranchesUpdated,vProjectName)
         
         BuildResultDispatcher.register(self.NewBuild)
-
+        
         IssueDispatcher.registerOnNewIssues(self.NewIssue)
         IssueDispatcher.registerOnIssueUpdated(self.IssueUpdated)
         
@@ -45,7 +44,6 @@ class RexProjectSpaceNotificationCenter:
         #vcs
         self.OnNewCommit = rxevent.RexPythonEvent()
         self.OnNewCommitter = rxevent.RexPythonEvent()
-        
         self.OnBranchesUpdated = rxevent.RexPythonEvent()
         self.OnNewBranches = rxevent.RexPythonEvent()
         
@@ -71,9 +69,7 @@ class RexProjectSpaceNotificationCenter:
     def NewBranches(self,branches):
         ##print "---new branch---"
         self.OnNewBranches(branches)
-        
-            
-    
+
     def NewBuild(self,vBuild):
         ##print "---build----"
         self.OnBuild(vBuild)
@@ -83,7 +79,7 @@ class RexProjectSpaceNotificationCenter:
         self.OnNewIssue(vIssue)
         
     def IssueUpdated(self,vIssue):
-        print "---issue updated----"
+        #print "---issue updated----"
         self.OnIssueUpdated(vIssue)
         
     def NewIrcMessage(self,vMessage):
@@ -94,12 +90,15 @@ class RexProjectSpaceNotificationCenter:
 
 import versioncontrolsystem
 
-class CommitDispatcher:
+class VersionControlDataDispatcher:
+    """fetches commits and passes them to listeners.
+    """
+    
     dispatchers = {}
 
-    """fetches commits and passes them to developers. Can be used as a datasource
-       to update ui objects..."""
     def __init__(self,vVCS):
+        """ Set up timer and start it
+        """
         self.vcs = vVCS
         self.targets = {}
         self.latestcommit = 0
@@ -116,26 +115,28 @@ class CommitDispatcher:
     
     @classmethod
     def registerAsNewBranchesListener(cls, vTarget, vProject):
-        """ Registers observer to observe changes in the branch count """
+        """ Registers observer to observe new branches """
   
         cls.dispatcherForProject(vProject).newbranchlisteners.append(vTarget)
     
     @classmethod
     def registerAsBranchesUpdatedListener(cls, vTarget, vProject):
-        """ Registers observer to observe changes in the branch count """
+        """ Registers observer to observe changes in branches, used
+            to notify about new commits"""
   
         cls.dispatcherForProject(vProject).branchupdatedlisteners.append(vTarget)
     
-    
     @classmethod
     def registerAsCommitListener(cls, vTarget, vProject ,vDeveloper = ""):
-        """ Registers observer to commits. If no developer name is given
-            all new commits are dispatched to target """
+        """ Registers observer to commits. Note: all commits are dispatched to all
+            listeners, developer specific listener not implemented yet."""
   
         cls.dispatcherForProject(vProject).targets[vDeveloper] = vTarget
         
     @classmethod
     def dispatcherForProject(cls,vProject):
+        """ Returns dispatcher for given project, singeleton instance
+        """
         dispatcher = None
         try:
             dispatcher = cls.dispatchers[vProject]
@@ -150,56 +151,48 @@ class CommitDispatcher:
     def update(self):
         """ Get single commit for every developer and
         store latest commit and if commit is the same
-        do not update anything. Get also branch information"""
+        do not update anything. Get also branch related informations, such as
+        latest commits to the branches and check if there is new branches """
+        
         commits = self.vcs.GetCommitsFromNetworkData(20)
         commits.reverse()
         
-        #commits = self.vcs.GetLatestCommitForBranch()
-        
-        print "previous id: ", self.latestcommit
-        print "newest id: ", commits[0]["id"]
-        
         if( len(commits) < 1 or commits[0]["id"] == self.latestcommit):
-            self.timer.cancel()
-            self.timer = 0
-            
-            self.timer = threading.Timer(60.0,self.update)#once a minute
-            self.timer.start()
+            pass
     
-            return
+        else:   
+            self.latestcommit = commits[0]["id"]
             
-        self.latestcommit = commits[0]["id"]
-        
-        newCommits = []
-        
-        for c in commits:
-            if c["id"] == self.latestcommit:
-                ##print "________id matched!!!______"
-                break
+            newCommits = []
             
-            login = c["login"]
-            print "login: ", login
-            
-            author = ""
-            
-            try:
-                author = c["author"]
-            except:
-                pass
+            for c in commits:
+                if c["id"] == self.latestcommit:
+                    ##print "________id matched!!!______"
+                    break
                 
-            print "author: ", author
+                login = c["login"]
+                print "login: ", login
+                
+                author = ""
+                
+                try:
+                    author = c["author"]
+                except:
+                    pass
+                    
+                print "author: ", author
+                
+                #get detailed info also...
+                ci = self.vcs.GetCommitInformation(c["id"])
+                
+                commit = ci["commit"]
+                
+                
+                devCommit = rexprojectspacedataobjects.CommitInfo(login,commit,author)
+                newCommits.append(devCommit)
+                
+            self.dispatchCommits(newCommits)
             
-            #get detailed info also...
-            ci = self.vcs.GetCommitInformation(c["id"])
-            
-            commit = ci["commit"]
-            
-            
-            devCommit = rexprojectspacedataobjects.CommitInfo(login,commit,author)
-            newCommits.append(devCommit)
-            
-        self.dispatchCommits(newCommits)
-        
         branches = self.vcs.GetBranches()
         newBranches = []
         
@@ -237,15 +230,20 @@ class CommitDispatcher:
         self.timer.start()
     
     def dispatchNewBranches(self,branches):
+        """ Notify listeners about new branches """
         for listener in self.newbranchlisteners:
             listener(branches)
     
     def dispatchUpdatedBranches(self,branches):
+        """ Notify listeners about branch updates """
         for listener in self.branchupdatedlisteners:
             listener(branches)
     
     
     def dispatchCommits(self,vCommits):
+        """ Notify listeners about new commits. Dispatch only to listeners
+            that wants to receive all commits or only commits related to 
+            a single developer """
         for commit in vCommits:
             for k,v in self.targets.iteritems():
                 if k == "" or k == commit.login:
@@ -255,9 +253,14 @@ class CommitDispatcher:
 import buildbot
 
 class BuildResultDispatcher:
+    """ Fetches build related information from the build bot
+    """
+    
     dispatcherinstance = None
     
     def __init__(self):
+        """ Create buildbot and update timer
+        """
         self.targets = []
         self.buildbot = buildbot.BuildBot()
         
@@ -266,8 +269,9 @@ class BuildResultDispatcher:
     
     @classmethod
     def register(cls, vTarget):
-        """ Registers observer to commits. If no developer name is given
-            all new commits are dispatched to target """
+        """ Registers observer to build. Start timer if first listener
+            registers
+        """
   
         cls.dispatcher().targets.append(vTarget)
         
@@ -276,6 +280,8 @@ class BuildResultDispatcher:
     
     @classmethod
     def dispatcher(cls):
+        """ Return singleton dispatcher instance
+        """
         d = None
         if not cls.dispatcherinstance:
             ##print "creating dispatcher for build results: "
@@ -284,7 +290,8 @@ class BuildResultDispatcher:
         return cls.dispatcherinstance
 
     def updateBuildResults(self):
-        ##print "building"
+        """ Get build information from build bot and dispatch results
+        """
         builds = self.buildbot.GetLatestBuilds()
         self.dispatchBuildResults(builds)
         
@@ -296,6 +303,8 @@ class BuildResultDispatcher:
         
         
     def dispatchBuildResults(self,vBuilds):
+        """ Dispatch results to listeners
+        """
         for target in self.targets:
             target(vBuilds)
             
@@ -304,27 +313,34 @@ class BuildResultDispatcher:
 import issuetracker
 
 class IssueDispatcher:
+    """ Fetches issues from issuetracker and dispatches them to the listeners
+    """
     instance = None
     
     def __init__(self):
+        """ Create issuetracker and update timer
+        """
         self.issuetracker = issuetracker.IssueTracker()
         self.newIssueTargets = []
         self.issueUpdatedTargets = []
         
-        self.timer = threading.Timer(10,self.updateIssues)
+        self.timer = threading.Timer(30,self.updateIssues)
         self.issues = {}
     
     @classmethod
     def registerOnNewIssues(cls, vTarget):
-
+        """ Register listener to new issues and start update 
+            timer if first listener
+        """
         cls.dispatcher().newIssueTargets.append(vTarget)
         
         if len(cls.dispatcher().issueUpdatedTargets) == 0 and len(cls.dispatcher().newIssueTargets) == 1:
             cls.dispatcher().timer.start()#first one, so start
+            
     @classmethod
     def registerOnIssueUpdated(cls, vTarget):
-        """ Registers observer to commits. If no developer name is given
-            all new commits are dispatched to target """
+        """ Registers listener to issue updates and start update 
+            timer if first listener"""
   
         cls.dispatcher().issueUpdatedTargets.append(vTarget)
         
@@ -334,6 +350,8 @@ class IssueDispatcher:
     
     @classmethod
     def dispatcher(cls):
+        """ Return singleton class instance
+        """
         d = None
         if not cls.instance:
             ##print "creating dispatcher for issues: "
@@ -342,17 +360,18 @@ class IssueDispatcher:
         return cls.instance
 
     def updateIssues(self):
-        print "getting issues"
+        """ Update issues related information by getting new issues and
+            checking if existing issues have been updated
+        """
         issues = self.issuetracker.GetIssues()
         
         for i in issues:
             issue = None
             try:
                 issue = self.issues[i.id]
-                #print "issue found from dict: ", i.id
+                
                 #check if data has changed
                 if issue.status == i.status and issue.owner == i.owner and issue.priority == i.priority: 
-                    
                     pass
                 else:
                     #notify that data has changed
@@ -371,7 +390,7 @@ class IssueDispatcher:
         self.timer.cancel()
         self.timer = 0
         
-        self.timer = threading.Timer(10,self.updateIssues)
+        self.timer = threading.Timer(60,self.updateIssues)
         self.timer.start()
         
         
@@ -380,11 +399,14 @@ class IssueDispatcher:
 import ircbot
 
 class IrcMessageDispatcher:
+    """ Not used
+    """
     dispatcherinstance = None
     
     def __init__(self):
         self.targets = []
         self.ircbot = ircbot.IrcBot(self.OnMessage)
+        print "created irc bot"
         
     @classmethod
     def registerOnNewMessage(cls, vTarget):
@@ -396,6 +418,7 @@ class IrcMessageDispatcher:
         d = None
         if not cls.dispatcherinstance:
             cls.dispatcherinstance = cls()
+            cls.dispatcherinstance.ircbot.start()
         
         return cls.dispatcherinstance
 
