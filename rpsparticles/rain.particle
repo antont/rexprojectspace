@@ -1,0 +1,54 @@
+
+v
+{
+	quota	2000
+	material	Flare
+	particle_width	4
+	particle_height	4
+	cull_each	true
+	renderer	billboard
+	sorted	true
+	local_space	false
+	iteration_interval	0
+	nonvisible_update_timeout	0
+	billboard_type	point
+	billboard_origin	center
+	billboard_rotation_type	texcoord
+	common_up_vector	0 1 0
+	point_rendering	false
+	accurate_facing	false
+
+	emitter Box
+	{
+		angle	27
+		colour	0 0 1 1
+		colour_range_start	0 0 1 1
+		colour_range_end	0 0 0.627451 1
+		direction	0 -1 0
+		emission_rate	400
+		position	0 100 0
+		velocity	300
+		velocity_min	200
+		velocity_max	300
+		time_to_live	2
+		time_to_live_min	2
+		time_to_live_max	3
+		duration	0
+		duration_min	0
+		duration_max	0
+		repeat_delay	0
+		repeat_delay_min	0
+		repeat_delay_max	0
+		width	200
+		height	200
+		depth	1
+	}
+
+	affector DeflectorPlane
+	{
+		plane_point	0 0 0
+		plane_normal	0 1 0
+		bounce	0
+	}
+}
+

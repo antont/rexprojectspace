@@ -1,8 +1,10 @@
 import rexprojectspaceutils
 import rexprojectspacedataobjects
 import rexprojectspacemodule
+import scriptbridgemodule
 import avatarfollower
 import rexprojectspacenotificationcenter
+import clickhandler
 
 import clr
 
@@ -20,6 +22,9 @@ from OpenMetaverse import Vector3 as V3
 clr.AddReference('OpenSim.Region.ScriptEngine.Shared')
 from OpenSim.Region.ScriptEngine.Shared import LSL_Types
 
+
+    
+            
 class SWDeveloper:
     """ Class representing a software developer
     """
@@ -40,14 +45,6 @@ class SWDeveloper:
         self.script = None
         self.skeleton_anim_id = OpenMetaverse.UUID.Zero
         
-        try:
-            rexpy = self.scene.Modules["RexPythonScriptModule"]
-        except KeyError:
-            self.rexif = None
-            #print "Couldn't get a ref to RexSCriptInterface"
-        
-        if rexpy:    
-            self.rexif = rexpy.mCSharp
         
         sop =  vScene.GetSceneObjectPart("rps_dev_" + self.developerinfo.login)
         self.currenttexid = SWDeveloper.greentextureid
@@ -74,10 +71,15 @@ class SWDeveloper:
         self.follower.OnAvatarEntered += self.AvatarEntered
         self.follower.OnAvatarExited += self.AvatarExited
         
+        #uncomment this!
+        """
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
         #nc.OnNewCommit += self.updateCommitText
         nc.OnNewIrcMessage += self.OnNewIRCMessage
-    
+        """
+        
+        self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.developerinfo.url)
+        
     def initVisualization(self,sog):
         """ Choose scale based on commit count and set opensim sceneobjectgroups
             text to be developers login...
@@ -87,7 +89,7 @@ class SWDeveloper:
         self.updateVisualization()
         self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
         
-        self.SetText(self.developerinfo.login)
+        self.SetText(self.developerinfo.login + " : "  + self.developerinfo.latestcommit.message)
         
     def updateVisualization(self):
         """ Updates scale based on commit count 

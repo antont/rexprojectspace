@@ -29,7 +29,7 @@ import rexprojectspaceutils
 import rexprojectspacedataobjects
 
 import rexprojectspacenotificationcenter
-
+import clickhandler
 
 class Tree:
     """ View object that is able to create tree tiles
@@ -58,7 +58,7 @@ class Tree:
         """
 
         if not self.scene.GetSceneObjectPart("tree_base"):
-            #print "No tree..."
+            print "No tree..."
             return
         """
         self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
@@ -87,6 +87,9 @@ class Tree:
             self.scene.AddNewSceneObject(self.treebasesog, False)
             self.treebasesog.AbsolutePosition = V3(self.sog.AbsolutePosition)
             self.treebasesog.SetText("master",V3(1.0,1.0,0.0),1.0)
+            print "setting texture to treebase"
+            tex = rexprojectspaceutils.load_texture(self.scene,"rpstextures/treebranch_green.jp2")
+            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         
         sop = None
         
@@ -102,6 +105,7 @@ class Tree:
             self.treetopsog,self.treebaserop = rexprojectspaceutils.load_mesh(self.scene,"treetop.mesh","treetop.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),V3(temp.X,temp.Y,temp.Z+1))
             self.treetopsog.RootPart.Name =  "rps_treetop_" + vName
             self.scene.AddNewSceneObject(self.treetopsog, False)
+            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         
         #print "mesh id for tree: ", self.rop.RexMeshUUID
 
@@ -215,7 +219,8 @@ class SWSourceTree:
         self.projectName = vProjectName
         self.branches = {} #holds name branch pairs...
         self.branchinfos = {} #holds name branchinfo pairs...
-               
+        self.clickhandlers = [] # to hold reference to the created click handlers
+        
         self.bCurrentBuildFailed = False
 
         self.commitsThreshold = 60*60*24*30 # about 1 month
@@ -232,17 +237,23 @@ class SWSourceTree:
         self.rainPlaceHolderSog = self.createRainPlaceHolder(V3(tempPos.X,tempPos.Y,tempPos.Z + 45))
         self.rainPlaceHolderRop = rexObjects.GetObject(self.rainPlaceHolderSog.UUID)
         
+        self.rainparticleid = rexprojectspaceutils.load_particle_script(self.scene,"rpsparticles/rain.particle","")
+        self.fireparticleid = rexprojectspaceutils.load_particle_script(self.scene,"rpsparticles/fire.particle","")
+
         self.addNewBranches(vBranchInfos)
-            
+        
+        #uncomment this
+        """
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         
         nc.OnBuild += self.updateBuildResult
         
         nc.OnBranchesUpdated += self.updateBranches
         nc.OnNewBranches += self.addNewBranches
+        """
         
         self.timer.start()
-        
+
     def __del__(self):
         """ unregister """
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
@@ -282,7 +293,9 @@ class SWSourceTree:
     def setBuildSuccesfull(self):
         """ If build was broken, make it rain """
         if self.bCurrentBuildFailed == True:
-            self.rainPlaceHolderRop.RexClassName = "sourcetree.Rain"
+            self.rainPlaceHolderRop.RexParticleScriptUUID = self.rainparticleid
+            self.buildresultparticletimer = threading.Timer(30,self.onBuildResultParticleTimer)
+            self.buildresultparticletimer.start()
             
         self.bCurrentBuildFailed = False
     
@@ -290,8 +303,7 @@ class SWSourceTree:
         """ If this was the first failing build in a row,
             set the tree on fire. """
         if self.bCurrentBuildFailed == False:
-            self.treerop.RexClassName = "sourcetree.BurningTree"
-        
+            self.treerop.RexParticleScriptUUID = self.fireparticleid
         self.bCurrentBuildFailed = True
         
     def addNewBranches(self,vBranchInfos,vParentName=""):
@@ -317,9 +329,13 @@ class SWSourceTree:
             
             b = self.tree.addNewBranch(branch,texpath,vParentName)
             b.rop.RexClassName = "sourcetree.BranchScaler"
-
+            
+            self.clickhandlers.append(clickhandler.URLOpener(self.scene,b.sog,b.rop,branch.url))
+            
             self.branches[branch.name] = b
             self.branchinfos[branch.name] = branch
+            
+            #self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.issueinfo.url)
             
     def updateBranches(self,branches):
         """ Handle branch update notification by changing texture if needed
@@ -358,3 +374,14 @@ class SWSourceTree:
         
         self.timer = threading.Timer(120,self.onCommitTimer)
         self.timer.start()
+        
+        
+    def onBuildResultParticleTimer(self):
+        """ called after succesfull build, stops the rain and fire """
+        print "---timer...---"
+        
+        self.treerop.RexParticleScriptUUID = OpenMetaverse.UUID.Zero
+        self.rainPlaceHolderRop.RexParticleScriptUUID = OpenMetaverse.UUID.Zero
+        
+        self.buildresultparticletimer = 0
+     

@@ -27,6 +27,7 @@ class FolderInfo:
         #self.latestcommitdate = parseDate(vLatestCommitDate)
         self.numberofcommits = vNumberOfCommits
         self.numberofsubfiles = vNumberOfSubFiles
+        self.url = "http://github.com/realxtend/naali/tree/%s"%(self.name)
     
 class BranchInfo:
     """ Data class for version control branch related information
@@ -40,6 +41,8 @@ class BranchInfo:
         else:
             self.latestcommitdate = time.gmtime(time.time())
             
+        self.url = "http://github.com/realxtend/naali/tree/%s"%(self.name)
+            
 class DeveloperInfo:
     """ Data class for github developer related information
     """
@@ -48,7 +51,8 @@ class DeveloperInfo:
         self.name = ""
         self.commitcount = 0
         self.latestcommitid = 0
-        self.latescommit = None 
+        self.latescommit = None
+        self.url = "http://github.com/%s/naali"%(self.login)
         
 class IssueInfo:
     """ Data class for issue related information
@@ -76,6 +80,8 @@ class IssueInfo:
         self.owner = issueData[5].strip('"')
         self.summary = issueData[6].strip('"')
         self.allLabels = issueData[7].strip('"')
+        
+        self.url = "http://code.google.com/p/realxtend-naali/issues/detail?=%s"%(self.id)
 
     def toString(self):
         print ("Issue object: ID:%s TYPE:%s SUMMARY:%s")%(self.id,self.type,self.summary)

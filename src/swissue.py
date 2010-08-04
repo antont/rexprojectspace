@@ -16,6 +16,7 @@ import rexprojectspacedataobjects
 import avatarfollower
 
 import rexprojectspacenotificationcenter
+import clickhandler
 
 class IssueFactory():
     """ IssueFactory can create issues and locate place them correctly (random)
@@ -34,11 +35,15 @@ class IssueFactory():
         
         self.spawnpos = vSpawnPosition
         
-        self.issues = {} #issueid,issue object dictionary
+        self.bugs = {} #issueid,issue object dictionary
+        self.enhancements = {} #issueid,issue object dictionary
         
+        #uncomment this
+        """
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
         nc.OnNewIssue +=  self.CreateIssue
         nc.OnIssueUpdated += self.UpdateIssue
+        """
     
     def __del__(self):
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
@@ -49,32 +54,39 @@ class IssueFactory():
         """ Returns object inherited from SWIssue
         """
         
-        if self.issues.keys().count(vIssueData.id) > 0:
+        if self.bugs.keys().count(vIssueData.id) > 0 or self.enhancements.keys().count(vIssueData.id) > 0:
             print "Found from factory: ", vIssueData.id
             return #don't create duplicatess
         
         issue = None
-        print "------the type of issue-------------:", vIssueData.type
-        if vIssueData.type == "Defect":
-            print "Creating bug: ", vIssueData.id
-            issue =  SWBug(self.scene,vIssueData,self.spawnpos)
-        else:
-            print "Creating enhancement: ", vIssueData.id
-            issue =  SWEnhancement(self.scene,vIssueData,self.spawnpos)
-        
-        self.issues[vIssueData.id] = issue
+        #print "------the type of issue-------------:", vIssueData.type
         
         x = random.uniform(self.start.X,self.end.X)
         y = random.uniform(self.start.Y,self.end.Y)
-        z = random.uniform(self.start.Z,self.end.Z)
+        z = 0
+        
+        if vIssueData.type == "Defect":
+            print "Creating bug: ", vIssueData.id
+            issue =  SWBug(self.scene,vIssueData,self.spawnpos)
+            
+            z = random.uniform(self.start.Z,self.start.Z + (self.end.Z - self.start.Z)*0.45)
+            
+            self.bugs[vIssueData.id] = issue
+        else:
+            print "Creating enhancement: ", vIssueData.id
+            issue =  SWEnhancement(self.scene,vIssueData,self.spawnpos)
+            
+            z = random.uniform(self.start.Z + (self.end.Z - self.start.Z)*0.55, self.end.Z)
+
+            self.enhancements[vIssueData.id] = issue
+            
+        print z
         
         pos = V3(x,y,z)
         
         #should set the end position after setting the start, so that one could see the bug flying...
         issue.move(pos)
-        
-        self.issues[vIssueData.id] = issue
-        
+
         issue.start()
         
         return issue
@@ -84,9 +96,12 @@ class IssueFactory():
         """
         issue = 0
         try:
-            issue = self.issues[vIssueInfo.id]
+            issue = self.bugs[vIssueInfo.id]
         except:
-            return
+            try:
+                issue = self.enhancements[vIssueInfo.id]
+            except:
+                return
             
         if issue:
             issue.DataChanged(vIssueInfo)
@@ -164,18 +179,24 @@ class SWEnhancement(SWIssue):
         """ Load mesh and animation package
         """
         super(SWEnhancement,self).__init__(vScene,vIssueInfo,vPos)
+        self.issueinfo = vIssueInfo
         
         vMaterialPath = "enhgenerated.material"
         
         self.sog,self.rop = super(SWEnhancement,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_green.jp2"],vPos)
         skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"bug.skeleton")
         self.rop.RexAnimationPackageUUID = skeleton_anim_id
-        self.issueinfo = vIssueInfo
+        
+        
+        self.rop.RexParticleScriptUUID = rexprojectspaceutils.load_particle_script(vScene,"rpsparticles/spark_green.particle","")
+        self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.issueinfo.url)
+        
         
     def start(self):
         """ Choose animation
         """
         super(SWEnhancement,self).start()
+        
         self.selectAnimation()
         
     def DataChanged(self,vNewIssueInfo):
@@ -194,7 +215,6 @@ class SWEnhancement(SWIssue):
         """ Choose animation by evaluating status of the enhancement
         """
         if self.issueinfo.status == "new":
-            print "new bug"
             self.rop.RexAnimationName = "flying"
         
         elif self.issueinfo.status == "started":
@@ -210,13 +230,17 @@ class SWBug(SWIssue):
     """
     def __init__(self,vScene,vIssueInfo,vPos):
         super(SWBug,self).__init__(vScene,vIssueInfo,vPos)
+        self.issueinfo = vIssueInfo
+        print self.issueinfo
         
         vMaterialPath = "enhgenerated.material"
         
         self.sog,self.rop = super(SWBug,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_red.jp2"],vPos)
         skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"bug.skeleton")
         self.rop.RexAnimationPackageUUID = skeleton_anim_id
-        self.issueinfo = vIssueInfo
+        self.rop.RexParticleScriptUUID = rexprojectspaceutils.load_particle_script(vScene,"rpsparticles/spark_red.particle","")
+
+        self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.issueinfo.url)
         
     def start(self):        
         """ Choose animation
@@ -241,7 +265,6 @@ class SWBug(SWIssue):
         """ Choose animation by evaluating status of the enhancement
         """
         if self.issueinfo.status == "new":
-            print "new bug"
             self.rop.RexAnimationName = "flying"
         
         elif self.issueinfo.status == "started":

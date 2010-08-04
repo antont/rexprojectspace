@@ -27,6 +27,8 @@ import swdeveloper
 
 import rexprojectspacemodule
 
+import clickhandler
+
 class ComponentBase(object):
     """ Base class for composite objects """
     def __init__(self):
@@ -64,12 +66,13 @@ class Component(ComponentBase):
     removedtextureid = None
     addedtextureid = None
     
-    def __init__(self,vScene,vName,vPos,vParent,vX=1,vY=1,vScale = V3(0,0,0)):
+    def __init__(self,vScene,vFolderInfo,vPos,vParent,vX=1,vY=1,vScale = V3(0,0,0)):
         """ Load mesh and texture and set state as added
         """
         super(Component,self).__init__()
         
-        self.name = vName
+        self.name = vFolderInfo.name
+        self.folderinfo = vFolderInfo
         
         self.__x = vX
         self.__y = vY
@@ -111,17 +114,19 @@ class Component(ComponentBase):
 
         #print "mesh id for component: ", self.rop.RexMeshUUID
         self.sog.SetText(self.name,V3(1.0,1.0,0.0),1.0)
+
+        self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.folderinfo.url)
         
         self.modified = False
         
-    def AddChild(self,vComponentName):
+    def AddChild(self,vFolderInfo):
 
         temp = self.sog.AbsolutePosition
         p = V3(self.curColumn + temp.X + self.curColumn*Component.offset,
                self.curRow + temp.Y + self.curRow*Component.offset,
                temp.Z + 0.5)
                
-        child =  Component(self.scene, vComponentName, p, self, 1,1,V3(0.85,0.85,0.85))
+        child =  Component(self.scene, vFolderInfo, p, self, 1,1,V3(0.85,0.85,0.85))
         
         #child.sog.RootPart.Scale = V3(0.85,0.85,1)
         
@@ -257,7 +262,7 @@ class SWProject:
     def addComponent(self, vComponent):
         """ Adds component to the project root folder """
         self.componentsAndDevelopersDict[vComponent.name] = []
-        c = self.component.AddChild(vComponent.name)
+        c = self.component.AddChild(vComponent)
         
         self.components[vComponent.name] = c
         #visualize components "size" and modified date

@@ -98,7 +98,7 @@ def load_particle_script(vScene, particlescriptpath, description):
     
     asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(particlescriptpath))
      
-    val = scene.AssetService.Store(asset)
+    val = vScene.AssetService.Store(asset)
     return asset.ID
     
   
