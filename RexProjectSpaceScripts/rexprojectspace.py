@@ -13,8 +13,9 @@ Vector3 = asm.OpenSim.Region.ScriptEngine.Shared.LSL_Types.Vector3
 import rexprojectspacemodule
 import rexprojectspaceutils
 
+from System.Collections.Generic import List as GenericList
+
 class RexProjectSpace(RXCore.rxactor.Actor):
-    world2 = None
     
     @staticmethod
     def GetScriptClassName():
@@ -22,16 +23,12 @@ class RexProjectSpace(RXCore.rxactor.Actor):
     
     def EventCreated(self):
         super(self.__class__,self).EventCreated()
-        
-        try:
-            module = self.MyWorld.CS.World.Modules["RexProjectSpaceModule"]
-        except:
-            print "did not get RexProjectSpaceModule"
-            return
+        self.timer = self.CreateRexTimer(2,1)
+        self.timer.onTimer += self.SetSpawnerInstance
             
-        #print "________Module",module
-        module.SetRexWorld(self.MyWorld)
-        module.SetSpawner(self)
+        self.SetSpawnerInstance()
+        
+        
         
     def EventDestroyed(self):
         #print "rexprojectspace.RexProjectSpace EventDestroyed"
@@ -40,4 +37,19 @@ class RexProjectSpace(RXCore.rxactor.Actor):
 
     def EventTouch(self,vAvatar):
         pass
-       
+    
+    def SetSpawnerInstance(self):
+        try:
+            module = self.MyWorld.CS.World.Modules["ScriptBridgeModule"]
+            module.SetWorld(self.MyWorld)
+            print "spawner set!"
+            self.timer = 0
+            
+        except:
+            print "did not get RexProjectSpaceModule"
+            self.timer = 0
+            self.timer.Start()
+            return
+        
+
+    
