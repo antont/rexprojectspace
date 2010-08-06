@@ -22,9 +22,28 @@ from OpenMetaverse import Vector3 as V3
 clr.AddReference('OpenSim.Region.ScriptEngine.Shared')
 from OpenSim.Region.ScriptEngine.Shared import LSL_Types
 
-
-    
-            
+def material(vTextureId):
+    return """
+material Template/TransparentTexture
+ {
+   technique
+   {
+     pass
+     {
+       lighting off
+       scene_blend alpha_blend
+       depth_write off
+ 
+       texture_unit
+       {
+         %s
+         alpha_op_ex source1 src_manual src_texture 0.8      
+       }
+     }
+   }
+ }
+"""%(vTextureId)  
+  
 class SWDeveloper:
     """ Class representing a software developer
     """
@@ -32,6 +51,8 @@ class SWDeveloper:
     redtextureid = 0
     
     HEIGHT = 1.0
+    MESHUUID = OpenMetaverse.UUID.Zero
+    SKELETON_ANIM_ID = OpenMetaverse.UUID.Zero
 
     def __init__(self,vScene,vDeveloperInfo, vIsAtProjectSpace ,vAvatar = None):
         """ Load mesh and animation package. Create avatar follower that registers
@@ -46,21 +67,42 @@ class SWDeveloper:
         self.skeleton_anim_id = OpenMetaverse.UUID.Zero
         
         
-        sop =  vScene.GetSceneObjectPart("rps_dev_" + self.developerinfo.login)
+        if SWDeveloper.greentextureid == 0:
+            SWDeveloper.greentextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devgreen.jp2")
+            SWDeveloper.redtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devred.jp2")
+        
         self.currenttexid = SWDeveloper.greentextureid
+        
+        sop =  vScene.GetSceneObjectPart("rps_dev_" + self.developerinfo.login)
         
         if sop:
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
             self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
             print "Developer: %s found from scene"%(self.developerinfo.login)
-        else:    
-            self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+            SWDeveloper.MESHUUID = self.rop.RexMeshUUID.ToString()
+            
+        else:
+            if SWDeveloper.MESHUUID == OpenMetaverse.UUID.Zero:
+                print "loading dev mesh"
+                SWDeveloper.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"diamond.mesh","developer mesh")
+                
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWDeveloper.MESHUUID,"diamond.material")
+            
+            """
+            mat = material(SWDeveloper.greentextureid)
+            FILE = open("matgen.material","w")
+            FILE.write(mat)
+            FILE.close()
+            
+            uuid  = rexprojectspaceutils.load_material_from_string(self.scene,"matgen.material","devmat")
+            print "uidi", uuid
+            self.rop.RexMaterials.AddMaterial(1,OpenMetaverse.UUID(SWDeveloper.greentextureid))
+            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(uuid))
+            """
+            
             self.initVisualization(self.sog)
             
-        if SWDeveloper.greentextureid == 0:
-            SWDeveloper.greentextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devgreen.jp2")
-            SWDeveloper.redtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devred.jp2")
         
         self.newposition = self.sog.AbsolutePosition
         self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
@@ -87,6 +129,7 @@ class SWDeveloper:
         sog.RootPart.Name =  "rps_dev_" + self.developerinfo.login
         sog.RootPart.Scale = V3(0.2, 0.2,  0.2)
         self.updateVisualization()
+        print "Current texture id_____",self.currenttexid
         self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
         
         self.SetText(self.developerinfo.login + " : "  + self.developerinfo.latestcommit.message)

@@ -162,6 +162,79 @@ def load_mesh(scene, meshpath, materialpath, description, rot=OpenMetaverse.Quat
         
     return sceneobjgroup, robject        
 
+def load_material_from_string(scene,materialpath,description):
+    """ Loads mesh and gets related RexObjectProperties instance and sets material to it (ie. to the mesh)
+        return SceneObjectGroup and RexObjectProperties
+    """
+    print "hello"
+    uid = OpenMetaverse.UUID.Random()
+    asset = OpenSim.Framework.AssetBase()
+    asset.Name = description
+    asset.FullID = uid
+    asset.Type = 0 # ?? texture??
+    asset.Description = description
+    asset.Data = System.IO.File.ReadAllBytes(os.path.abspath(materialpath))
+    val = scene.AssetService.Store(asset)
+    print "hello...", val
+    return val
+
+def load_mesh_new(scene, meshpath, description):
+    mesh_uuid = OpenMetaverse.UUID.Random()
+    asset = OpenSim.Framework.AssetBase(mesh_uuid, description, 43)
+    asset.Description = description
+    asset.Data = System.IO.File.ReadAllBytes(meshpath)
+    val = scene.AssetService.Store(asset)
+    #return asset.FullID.ToString()
+    return val
+    
+#from oukautils
+def bind_mesh(scene, mesh_assetidstr, materialpath,
+                              rot=OpenMetaverse.Quaternion(0, 0, 0, 1), pos=V3(128, 128, 30),
+                              scale=V3(1, 1, 1)):
+    
+        #print "binding mesh ", mesh_assetidstr, "of type ", type(mesh_assetidstr)
+        print mesh_assetidstr
+        asset = scene.AssetService.Get(mesh_assetidstr)
+        #asset = mesh_assetidstr
+        root_avatar_uuid = scene.RegionInfo.MasterAvatarAssignedUUID
+        
+        print "binding..."
+        sceneobjgroup = scene.AddNewPrim(
+                root_avatar_uuid, root_avatar_uuid,
+                pos, rot, OpenSim.Framework.PrimitiveBaseShape.CreateBox())
+            
+        sceneobjgroup.RootPart.Scale = scale
+        
+        
+        print "scaled..."
+        rexObjects = scene.Modules["RexObjectsModule"]
+        robject = rexObjects.GetObject(sceneobjgroup.RootPart.UUID)
+        
+        #print "root uuid", sceneobjgroup.RootPart.UUID
+        robject.RexMeshUUID = asset.FullID
+        robject.RexDrawDistance = 256
+        robject.RexCastShadows = True
+        robject.RexDrawType = 1;
+        robject.RexCollisionMeshUUID = asset.FullID;
+
+        matdata = open(materialpath).read()
+        matparser = OgreSceneImporter.OgreMaterialParser(scene)
+        rc, mat2uuid, mat2texture = matparser.ParseAndSaveMaterial(
+                matdata)
+        mat2uuid = dict(mat2uuid)
+        #print "mat-uuid dict:", mat2uuid
+        if not rc:
+            raise MaterialParsingError("material parsing failed")
+    
+        matnames, errors = DotMeshLoader.ReadDotMeshMaterialNames(asset.Data)
+        for i, mname in enumerate(matnames):
+            robject.RexMaterials.AddMaterial(i, mat2uuid[mname])
+            #print "material added:", mname
+    
+        return sceneobjgroup, robject
+    
+    
+    
 #not used    
 def load_and_send_urltexture(vScene,vSog,vRop,vUrl):
     if vSog and vRop and vScene:

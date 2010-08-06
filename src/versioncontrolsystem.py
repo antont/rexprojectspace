@@ -77,8 +77,6 @@ class VersionControlSystem:
         """Returns all contributors as a dictionary without duplicate entries.
            Dictionary holds names as keys and number of contributions as values"""
         
-        if(time.localtime().tm_min > self.contributorsFetchedTime):
-            self.contributorsFetchedTime = time.localtime().tm_min
         url = "http://github.com/api/v2/json/repos/show/realXtend/%s/contributors"%(self.projectName)
         f = urllib.urlopen(url)
         s = f.read()

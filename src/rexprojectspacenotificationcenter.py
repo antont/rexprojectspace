@@ -56,7 +56,7 @@ class RexProjectSpaceNotificationCenter:
         self.OnBuild = rxevent.RexPythonEvent()
         
         #irc bot
-        #self.OnNewIrcMessage = rxevent.RexPythonEvent()
+        self.OnNewIrcMessage = rxevent.RexPythonEvent()
         
     def NewCommit(self,vCommit):
         ##print "---commit----"
@@ -423,6 +423,7 @@ class IrcMessageDispatcher:
         return cls.dispatcherinstance
 
     def OnMessage(self,vMessage):
+        print "irc message: ", vMessage
         for target in self.targets:
             target(vMessage)            
 #####        

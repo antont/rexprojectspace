@@ -46,10 +46,14 @@ class IssueFactory():
         """
     
     def __del__(self):
+        #uncomment this
+        """
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
         nc.OnNewIssue -=  self.CreateIssue
         nc.OnIssueUpdated -= self.UpdateIssue
-    
+        """
+        pass
+        
     def CreateIssue(self,vIssueData):
         """ Returns object inherited from SWIssue
         """

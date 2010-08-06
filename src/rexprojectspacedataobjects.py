@@ -27,7 +27,7 @@ class FolderInfo:
         #self.latestcommitdate = parseDate(vLatestCommitDate)
         self.numberofcommits = vNumberOfCommits
         self.numberofsubfiles = vNumberOfSubFiles
-        self.url = "http://github.com/realxtend/naali/tree/%s"%(self.name)
+        self.url = "http://github.com/realxtend/naali/tree/develop/%s/"%(self.name)
     
 class BranchInfo:
     """ Data class for version control branch related information
@@ -41,7 +41,7 @@ class BranchInfo:
         else:
             self.latestcommitdate = time.gmtime(time.time())
             
-        self.url = "http://github.com/realxtend/naali/tree/%s"%(self.name)
+        self.url = "http://github.com/realxtend/naali/tree/%s/"%(self.name)
             
 class DeveloperInfo:
     """ Data class for github developer related information
@@ -52,7 +52,7 @@ class DeveloperInfo:
         self.commitcount = 0
         self.latestcommitid = 0
         self.latescommit = None
-        self.url = "http://github.com/%s/naali"%(self.login)
+        self.url = "http://github.com/%s/naali/"%(self.login)
         
 class IssueInfo:
     """ Data class for issue related information
@@ -94,6 +94,7 @@ class CommitInfo:
         """
         self.login = vLogin
         self.name = vAuthor
+        self.files,self.directories = [],[]
         self.removed = []
         self.added = []
         self.modified = []
@@ -104,12 +105,17 @@ class CommitInfo:
             except:
                 pass
 
-        self.message = vCommit["message"]
-        self.files,self.directories = self.resolveFilesAndFolders(vCommit)
+        self.message = ""
+        self.date = ""
         
-        datestring = vCommit["authored_date"]
-        self.date = parseDate(datestring)
-
+        try:
+            datestring = vCommit["authored_date"]
+            self.message = vCommit["message"]
+            self.files,self.directories = self.resolveFilesAndFolders(vCommit)
+            self.date = parseDate(datestring)
+        except:
+            pass
+        
     def resolveFilesAndFolders(self,vCommit):
         #get mod,add,remove
         files,mod,removed,added = [],[],[],[]

@@ -48,8 +48,16 @@ class IrcBot(Thread):
                         #now join
                         self.s.send("JOIN #%s\r\n"%(IRCROOM))
                     elif line[1] == "PRIVMSG" and line[2] == "#"+IRCROOM:
-                        print "message to room:%s"%(line[3])
-                        self.OnMessage(line)
+                        
+                        #combine list items to a string
+                        mes = ""
+                        temp = line[3:]
+                        
+                        for word in temp:
+                            mes = mes + " " +word
+                        
+                        print "message to room:%s"%(mes)
+                        self.OnMessage(mes)
 
 
 

@@ -206,7 +206,9 @@ class SWProject:
         #self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
         #self.rop = rexObjects.GetObject(self.UUID)
         
-        self.component = Component(vScene, "naali_root_component" , self.sog.AbsolutePosition, None, 6,6,V3(0,0,0))
+        rootfolder = rexprojectspacedataobjects.FolderInfo("naali_root_component",0)
+        
+        self.component = Component(vScene, rootfolder, self.sog.AbsolutePosition, None, 6,6,V3(0,0,0))
         self.component.sog.RootPart.Scale = V3(0,0,0)
         
         self.componentsAndDevelopersDict["naali_root_component"] = []
