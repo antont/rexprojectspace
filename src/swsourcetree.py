@@ -89,7 +89,7 @@ class Tree:
             self.treebasesog.SetText("master",V3(1.0,1.0,0.0),1.0)
             print "setting texture to treebase"
             tex = rexprojectspaceutils.load_texture(self.scene,"rpstextures/treebranch_green.jp2")
-            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+            self.treebaserop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         
         sop = None
         
@@ -102,10 +102,10 @@ class Tree:
             #print "Tree: %s found from scene"%(vName)
         else:
             temp = self.treebasesog.AbsolutePosition
-            self.treetopsog,self.treebaserop = rexprojectspaceutils.load_mesh(self.scene,"treetop.mesh","treetop.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),V3(temp.X,temp.Y,temp.Z+1))
+            self.treetopsog,self.treetoprop = rexprojectspaceutils.load_mesh(self.scene,"treetop.mesh","treetop.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),V3(temp.X,temp.Y,temp.Z+1))
             self.treetopsog.RootPart.Name =  "rps_treetop_" + vName
             self.scene.AddNewSceneObject(self.treetopsog, False)
-            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+            self.treetoprop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         
         #print "mesh id for tree: ", self.rop.RexMeshUUID
 
@@ -130,7 +130,9 @@ class Tree:
             self.tiles.append(tile)
             #put top in to a place
             temp = tile.sog.AbsolutePosition
-            self.treetopsog.NonPhysicalGrabMovement(V3(temp.X,temp.Y,temp.Z+self.tile_height))
+            newpos = V3(temp.X,temp.Y,temp.Z+self.tile_height)
+            self.treetopsog.NonPhysicalGrabMovement(newpos)
+            print "paikka: ", newpos
         
         
         branch = Branch(self.scene, vBranchInfo.name,vTexturePath,tile.locations[tile.currentIndex],V3(1.0,1.0,1.0),tile.rotations[tile.currentIndex])
@@ -175,14 +177,15 @@ class TreeTile:
         rexObjects = self.scene.Modules["RexObjectsModule"]
         
         self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treetile.mesh","treetile.material","tile…",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
-            
+        tex = rexprojectspaceutils.load_texture(self.scene,"rpstextures/treebranch_green.jp2")
+        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         ##print "mesh id for tile: ", self.rop.RexMeshUUID
         
         self.scene.AddNewSceneObject(self.sog, False)
         
 class Branch:
     """ View class for a single branch """
-    
+    MESHUUID = OpenMetaverse.UUID.Zero
     w = 1
     
     def __init__(self,vScene,vBranchName,vTexturePath,vPos,vScale,vRot):
@@ -195,7 +198,25 @@ class Branch:
         self.rot = vRot
 
         #upwards...
-        self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos,V3(0,0,0))
+        #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos,V3(0,0,0))
+        
+        if Branch.MESHUUID == OpenMetaverse.UUID.Zero:
+            print "loading branch mesh"
+            Branch.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"treebranch.mesh","treebranch mesh")
+        
+        sop =  vScene.GetSceneObjectPart("rps_branch_" + vBranchName)
+        
+        if sop:
+            self.sog = sop.ParentGroup
+            rexObjects = vScene.Modules["RexObjectsModule"]
+            self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
+            print "branch: %s found from scene"%(vBranchName)
+            Branch.MESHUUID = self.rop.RexMeshUUID.ToString()
+        else:
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,Branch.MESHUUID,"treebranch.material",vRot,vPos,vScale)
+            self.sog.RootPart.Name =  "rps_branch_" + vBranchName
+        
+        
         self.SetTexture(vTexturePath)
         self.sog.SetText(vBranchName,V3(0.0,1.0,0.0),1.0)
         ##print "mesh id for branch: ", self.rop.RexMeshUUID

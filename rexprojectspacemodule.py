@@ -51,7 +51,51 @@ import rexprojectspacenotificationcenter
  
 import time
 import datetime 
- 
+import random
+
+class RexProjectSpaceInformationShouter:
+    def __init__(self, vScene):
+        self.scene = vScene
+        self.scriptingbridge = None
+        
+        nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
+        nc.OnNewIrcMessage += self.OnNewIRCMessage
+        nc.OnNewCommit += self.OnNewCommit
+        
+        try:
+            self.scriptingbridge = self.scene.Modules["ScriptBridgeModule"]
+            print "Got bridge"
+        except:
+            #get it later
+            self.timer = threading.Timer(5.0,self.GetBridge)
+            self.timer.start()
+    
+    def __del__(self):
+        
+        nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
+        nc.OnNewIrcMessage += self.OnNewIRCMessage
+        nc.OnNewCommit += self.OnNewCommit
+        
+        
+    def OnNewCommit(self,vCommit):
+        self.GetBridge()
+        self.scriptingbridge.Actor().llShout(0,vCommit.message)
+        
+    def OnNewIRCMessage(self,vMessage):
+        self.GetBridge()
+        self.scriptingbridge.Actor().llShout(0,vMessage)
+        
+    
+    def GetBridge(self):
+        try:
+            self.scriptingbridge = self.scene.Modules["ScriptBridgeModule"]
+            print "Got bridge"
+            self.timer = 0
+        except:
+            #get it later
+            self.timer = threading.Timer(5.0,self.GetBridge)
+    
+    
 class RexProjectSpaceModule(IRegionModule):
     autoload = True
 
@@ -104,10 +148,13 @@ class RexProjectSpaceModule(IRegionModule):
         issuespawnpos = V3(125,125,25.2)
         
         #self.tree = self.initTree("naali")
-        #self.project = self.initSWProject()
+        self.project = self.initSWProject()
         
-        #self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
+        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
         #self.initSWIssues()
+        #self.scene.EventManager.OnObjectGrab += self.clicked;
+        
+        self.shouter = RexProjectSpaceInformationShouter(self.scene)
         
         self.setUpTests()
         
@@ -118,6 +165,7 @@ class RexProjectSpaceModule(IRegionModule):
     
     def Close(self):
         #print self, 'close'
+        #self.scene.EventManager.OnObjectGrab -= self.clicked;
         pass
     
     def getname(self):
@@ -143,6 +191,7 @@ class RexProjectSpaceModule(IRegionModule):
     def initTree(self,vProjectName):
         """ Get branches and create tree """
         branches = self.vcs.GetBranches()
+        #branches = []
         tree = swsourcetree.SWSourceTree(self.scene,vProjectName,branches)
         return tree
         
@@ -159,6 +208,7 @@ class RexProjectSpaceModule(IRegionModule):
         #get all committers
         committers = self.vcs.GetAllContributors()
         count = len(committers)
+        print "number of devs",count
         temp = count
         
         #create developerinfo for every dev..
@@ -178,8 +228,8 @@ class RexProjectSpaceModule(IRegionModule):
         
         commits_for_devs = {}
         
-        #get previous 500 commits 
-        coms = self.vcs.GetCommitsFromNetworkData(500)
+        #get previous 1500 commits 
+        coms = self.vcs.GetCommitsFromNetworkData(1000)
         
         coms.reverse()#oldest first, so reverse!
         
@@ -194,10 +244,11 @@ class RexProjectSpaceModule(IRegionModule):
                 #match committer to some dinfo
                 for dev in devs:
                     if dev.name == author or dev.login == commit["login"]  or dev.login == author:
-                        dev.latestcommitid = commit["id"]
-                        print "commit found for: ",dev.login
-                        count -= 1
-                        
+                        if dev.latestcommitid == 0:
+                            dev.latestcommitid = commit["id"]
+                            print "commit found for: ",dev.login
+                            count -= 1
+                            break
             if count < 1:
                 #print "everyone has commits"
                 break
@@ -207,19 +258,23 @@ class RexProjectSpaceModule(IRegionModule):
         swdevs = []
         for dev in devs:
             if dev.latestcommitid == 0:
-                continue #no commit
-            
-            ci = self.vcs.GetCommitInformation(dev.latestcommitid)
-            #print "commit id %s for dev:%s "%(dev.latestcommitid,dev.login)
-            
-            c = ci["commit"]
-           
-            devCommit = rexprojectspacedataobjects.CommitInfo(dev.login,c)
-            dev.latestcommit = devCommit
+                #no commit
+                empty = []
+                dev.latestcommit = rexprojectspacedataobjects.CommitInfo(dev.login,empty)
+                pass
+            else:
+                ci = self.vcs.GetCommitInformation(dev.latestcommitid)
+                #print "commit id %s for dev:%s "%(dev.latestcommitid,dev.login)
+                
+                c = ci["commit"]
+               
+                devCommit = rexprojectspacedataobjects.CommitInfo(dev.login,c)
+                dev.latestcommit = devCommit
             
             #init every developer so that each has latest commits, commit count and names in place
             swdevs.append(swdeveloper.SWDeveloper(self.scene,dev,False))
-           
+            print "Developer-----", dev.name
+            
         #get all the components...
         componentNames = self.getProjectRootFolders()
         
@@ -232,6 +287,7 @@ class RexProjectSpaceModule(IRegionModule):
         scene = self.scene
         
         scene.AddCommand(self, "hitMe","","",self.cmd_hitMe)
+        scene.AddCommand(self, "organize","","",self.cmd_organize)
         
         #testing component grid
         scene.AddCommand(self, "ac","","",self.cmd_ac)
@@ -268,12 +324,49 @@ class RexProjectSpaceModule(IRegionModule):
         scene.AddCommand(self, "project","","",self.cmd_project)
     
     def cmd_hitMe(self, *args):
-        pass
+        self.shouter.OnNewCommit("")
+        """
+        self.bugs = []
+        
+        for i in range(0,5):
+            empty = []
+            issueData = rexprojectspacedataobjects.IssueInfo(empty)
+            
+            issueData.type = "Enhancement"
+            issueData.owner = "maukka user"
+            issueData.status = "new"
+            issueData.summary = "enhancement made by test user..."
+            issueData.id = str(random.randint(0,1000000))
+            bug =  self.issuefactory.CreateIssue(issueData)
+            self.bugid = issueData.id
+            self.bugs.append(bug)
+            bug.start()
+        """
+    def cmd_organize(self, *args):
+        
+        newpositions = []
+        pos = V3(131,130,25.2)
+        
+        count = 0
+        
+        for bug in self.bugs:
+            newposition = V3(pos.X,pos.Y,pos.Z + count*0.3)
+            bug.sog.NonPhysicalGrabMovement(newposition)
+            count += 1
+    
+    def clicked(self,vLocalID,vOriginalID, vOffsetPos, vRemoteClient, vSurfaceArgs):
+        if vLocalID == self.testcomponent.sog.RootPart.LocalId:
+            #actor = 
+            print "hello"
     
     def cmd_ac(self, *args):
         #self.testcomponent = self.project.components.values[0]
-        self.testcomponent = swproject.Component(self.scene, "test_component_11" , V3(126,126,25.5), None, 2,2,V3(1,1,1))
-    
+        
+        folderinfo = rexprojectspacedataobjects.FolderInfo("bin",10)
+        
+        self.testcomponent = swproject.Component(self.scene,folderinfo, V3(126,126,25.5), None, 2,2,V3(1,1,1))
+        
+        
     def cmd_remove(self, *args):
         self.testcomponent.SetState("removed") 
 
@@ -284,8 +377,10 @@ class RexProjectSpaceModule(IRegionModule):
         self.testcomponent.SetState("added")
         
     def cmd_cb(self, *args):
-        binfo = rexprojectspacedataobjects.BranchInfo("test branch")
-        self.tree.addNewBranch(binfo)
+        name = "test branch" + str(random.randint(0,1000000))
+        binfo = rexprojectspacedataobjects.BranchInfo(name)
+        binfo.url = "http://github.com/realxtend/naali/tree/master"
+        self.tree.addNewBranches([binfo])
         
     def cmd_bs(self, *args):
         self.tree.setBuildSuccesfull()
@@ -298,7 +393,7 @@ class RexProjectSpaceModule(IRegionModule):
         cd = rexprojectspacenotificationcenter.CommitDispatcher.dispatcherForProject("naali")
         
         commit = {}
-        commit["message"] = "test commit from region module"
+        commit["message"] = "test commit from region module with very long description, or is this long enough???"
         
         commit["authored_date"] = "2010-07-23T09:54:40-07:00"
         
@@ -415,6 +510,7 @@ class RexProjectSpaceModule(IRegionModule):
         issueData.owner = "maukka user"
         issueData.status = "new"
         issueData.id = str(random.randint(0,1000000))
+        issueData.url = "http://code.google.com/p/realxtend-naali/issues/detail?=9"
         bug =  self.issuefactory.CreateIssue(issueData)
         self.bugid = issueData.id
         
@@ -428,6 +524,7 @@ class RexProjectSpaceModule(IRegionModule):
         issueData.owner = "maukka user"
         issueData.status = "new"
         issueData.id = str(random.randint(0,1000000))
+        issueData.url = "http://code.google.com/p/realxtend-naali/issues/detail?=24"
         bug =  self.issuefactory.CreateIssue(issueData)
         self.bugid = issueData.id
         
@@ -446,7 +543,20 @@ class RexProjectSpaceModule(IRegionModule):
         
     
     def cmd_developer(self, *args):
-        dinfo = rexprojectspacedataobjects.DeveloperInfo("maukka_tester","maukka user")
+        dinfo = rexprojectspacedataobjects.DeveloperInfo("ma2sfddass2","maukka user")
+        
+        commit = {}
+        commit["message"] = "test commit from region \n module with very long description \n, or is this long enough???"
+        
+        commit["authored_date"] = "2010-07-23T09:54:40-07:00"
+        
+        commit["Removed"] = ["doc","bin"]
+        commit["added"] = []
+        commit["modified"] = []
+        
+        ci = rexprojectspacedataobjects.CommitInfo("maukka_tester",commit,"maukka_tester")
+        dinfo.latestcommit = ci
+        
         self.dev = swdeveloper.SWDeveloper(self.scene,dinfo,False)
         
         

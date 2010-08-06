@@ -60,11 +60,12 @@ class File(ComponentBase):
 class Component(ComponentBase):
     """ Representing a single directory, can have children."""
         
-    offset = 1.0
+    offset = 0.5
     
     modifiedtextureid = None
     removedtextureid = None
     addedtextureid = None
+    MESHUUID = OpenMetaverse.UUID.Zero 
     
     def __init__(self,vScene,vFolderInfo,vPos,vParent,vX=1,vY=1,vScale = V3(0,0,0)):
         """ Load mesh and texture and set state as added
@@ -100,10 +101,16 @@ class Component(ComponentBase):
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
             self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
-            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
+            #self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
              #print "Component: %s found from scene"%("rps_component_" + self.name)
         else:
-            self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
+            #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
+            if Component.MESHUUID == OpenMetaverse.UUID.Zero:
+                print "loading component mesh"
+                Component.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"component.mesh","component mesh")
+                
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,Component.MESHUUID,"component.material",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
+            
             self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
             #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
             
@@ -268,11 +275,12 @@ class SWProject:
         
         self.components[vComponent.name] = c
         #visualize components "size" and modified date
+        """
         tempscale = c.sog.RootPart.Scale
         scale = max(0.4,vComponent.numberofsubfiles/25)
         scale = min(scale,1)
         c.sog.RootPart.Scale = V3(scale,scale,tempscale.Z)
-    
+        """
         return c
 
     def updateDeveloperLocationWithNewCommitData(self, vCommit, vMakeCurrent = True):

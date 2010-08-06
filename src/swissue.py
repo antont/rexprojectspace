@@ -179,6 +179,8 @@ class SWIssue(object):
 class SWEnhancement(SWIssue):
     """ SWIssue subclass representing a software enhancement proposal
     """
+    TEXTUREUUID = OpenMetaverse.UUID.Zero 
+    MESHUUID = OpenMetaverse.UUID.Zero 
     def __init__(self,vScene,vIssueInfo,vPos):
         """ Load mesh and animation package
         """
@@ -187,10 +189,31 @@ class SWEnhancement(SWIssue):
         
         vMaterialPath = "enhgenerated.material"
         
-        self.sog,self.rop = super(SWEnhancement,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_green.jp2"],vPos)
+        #self.sog,self.rop = super(SWEnhancement,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_green.jp2"],vPos)
+        
+        if SWEnhancement.MESHUUID == OpenMetaverse.UUID.Zero:
+            print "loading enhancement mesh"
+            SWEnhancement.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"bugi.mesh","issue mesh")
+        
+        sop =  vScene.GetSceneObjectPart("rps_issue_" + self.issueinfo.id)
+        
+        if sop:
+            self.sog = sop.ParentGroup
+            rexObjects = vScene.Modules["RexObjectsModule"]
+            self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
+            print "enhancement: %s found from scene"%(self.issueinfo.id)
+            SWEnhancement.MESHUUID = self.rop.RexMeshUUID.ToString()
+        else:
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWEnhancement.MESHUUID,"enhgenerated.material",rexprojectspaceutils.euler_to_quat(0,0,0),vPos,V3(0.1,0.1,0.1))
+            self.sog.RootPart.Name =  "rps_issue_" + self.issueinfo.id
+        
+        if SWEnhancement.TEXTUREUUID == OpenMetaverse.UUID.Zero:
+            SWEnhancement.TEXTUREUUID = rexprojectspaceutils.load_texture(self.scene,"rpstextures/bugi_green.jp2")
+        
+        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(SWEnhancement.TEXTUREUUID))
+        
         skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"bug.skeleton")
         self.rop.RexAnimationPackageUUID = skeleton_anim_id
-        
         
         self.rop.RexParticleScriptUUID = rexprojectspaceutils.load_particle_script(vScene,"rpsparticles/spark_green.particle","")
         self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.issueinfo.url)
@@ -232,18 +255,43 @@ class SWEnhancement(SWIssue):
 class SWBug(SWIssue):
     """ SWIssue subclass representing a software bug
     """
+    MESHUUID = OpenMetaverse.UUID.Zero
+    TEXTUREUUID = OpenMetaverse.UUID.Zero
     def __init__(self,vScene,vIssueInfo,vPos):
+        """ Load mesh and animation package
+        """
         super(SWBug,self).__init__(vScene,vIssueInfo,vPos)
         self.issueinfo = vIssueInfo
-        print self.issueinfo
         
         vMaterialPath = "enhgenerated.material"
         
-        self.sog,self.rop = super(SWBug,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_red.jp2"],vPos)
+        #self.sog,self.rop = super(SWBug,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_green.jp2"],vPos)
+        
+        if SWBug.MESHUUID == OpenMetaverse.UUID.Zero:
+            print "loading enhancement mesh"
+            SWBug.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"bugi.mesh","issue mesh")
+        
+        sop =  vScene.GetSceneObjectPart("rps_issue_" + self.issueinfo.id)
+        
+        if sop:
+            self.sog = sop.ParentGroup
+            rexObjects = vScene.Modules["RexObjectsModule"]
+            self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
+            print "bug: %s found from scene"%(self.issueinfo.id)
+            SWBug.MESHUUID = self.rop.RexMeshUUID.ToString()
+        else:
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWBug.MESHUUID,"enhgenerated.material",rexprojectspaceutils.euler_to_quat(0,0,0),vPos,V3(0.1,0.1,0.1))
+            self.sog.RootPart.Name =  "rps_issue_" + self.issueinfo.id
+        
+        if SWBug.TEXTUREUUID == OpenMetaverse.UUID.Zero:
+            SWBug.TEXTUREUUID = rexprojectspaceutils.load_texture(self.scene,"rpstextures/bugi_red.jp2")
+
+        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(SWBug.TEXTUREUUID))
+        
         skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"bug.skeleton")
         self.rop.RexAnimationPackageUUID = skeleton_anim_id
+        
         self.rop.RexParticleScriptUUID = rexprojectspaceutils.load_particle_script(vScene,"rpsparticles/spark_red.particle","")
-
         self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.issueinfo.url)
         
     def start(self):        

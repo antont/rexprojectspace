@@ -52,7 +52,7 @@ class DeveloperInfo:
         self.commitcount = 0
         self.latestcommitid = 0
         self.latescommit = None
-        self.url = "http://github.com/%s/naali/"%(self.login)
+        self.url = "http://github.com/%s/"%(self.login)
         
 class IssueInfo:
     """ Data class for issue related information
@@ -81,7 +81,7 @@ class IssueInfo:
         self.summary = issueData[6].strip('"')
         self.allLabels = issueData[7].strip('"')
         
-        self.url = "http://code.google.com/p/realxtend-naali/issues/detail?=%s"%(self.id)
+        self.url = "http://code.google.com/p/realxtend-naali/issues/detail?id=%s"%(self.id)
 
     def toString(self):
         print ("Issue object: ID:%s TYPE:%s SUMMARY:%s")%(self.id,self.type,self.summary)

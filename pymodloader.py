@@ -8,11 +8,12 @@ sys.path.append('ScriptEngines/Lib') # stdlib seems to live here
 from OpenSim.Region.Framework.Interfaces import IRegionModule
 #import kek
 import rexprojectspacemodule
+import scriptbridgemodule
 
 class PyReloader(IRegionModule):
     upgradable = False
     #regpymods = [kek]
-    regpymods = [rexprojectspacemodule]
+    regpymods = [rexprojectspacemodule,scriptbridgemodule]
     reginstances = []
 
     def Initialise(self, scene, configsource):
