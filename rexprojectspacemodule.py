@@ -54,13 +54,18 @@ import datetime
 import random
 
 class RexProjectSpaceInformationShouter:
+    """
+    Shouts information to the region so that all avatars can see it.
+    Currently only IRC messages are shouted...
+    """
     def __init__(self, vScene):
+        """ Register to listen to new IRC messages """
         self.scene = vScene
         self.scriptingbridge = None
         
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
         nc.OnNewIrcMessage += self.OnNewIRCMessage
-        nc.OnNewCommit += self.OnNewCommit
+        #nc.OnNewCommit += self.OnNewCommit
         
         try:
             self.scriptingbridge = self.scene.Modules["ScriptBridgeModule"]
@@ -73,8 +78,8 @@ class RexProjectSpaceInformationShouter:
     def __del__(self):
         
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
-        nc.OnNewIrcMessage += self.OnNewIRCMessage
-        nc.OnNewCommit += self.OnNewCommit
+        nc.OnNewIrcMessage -= self.OnNewIRCMessage
+        #nc.OnNewCommit -= self.OnNewCommit
         
         
     def OnNewCommit(self,vCommit):
@@ -82,6 +87,7 @@ class RexProjectSpaceInformationShouter:
         self.scriptingbridge.Actor().llShout(0,vCommit.message)
         
     def OnNewIRCMessage(self,vMessage):
+        """ Shout message """
         self.GetBridge()
         self.scriptingbridge.Actor().llShout(0,vMessage)
         
@@ -269,6 +275,7 @@ class RexProjectSpaceModule(IRegionModule):
                
                 devCommit = rexprojectspacedataobjects.CommitInfo(dev.login,c)
                 dev.latestcommit = devCommit
+                print "---hakemistot commitissa: ", devCommit.directories
             
             #init every developer so that each has latest commits, commit count and names in place
             swdevs.append(swdeveloper.SWDeveloper(self.scene,dev,False))
@@ -476,7 +483,7 @@ class RexProjectSpaceModule(IRegionModule):
         commit["authored_date"] = "2010-07-23T09:54:40-07:00"
         
         commit["Removed"] = ["doc","bin"]
-        commit["added"] = []
+        commit["added"] = ["doc"]
         commit["modified"] = []
         commit["id"] = random.randint(0,1000000)
         
@@ -484,6 +491,8 @@ class RexProjectSpaceModule(IRegionModule):
         generated_name = str(random.randint(0,1000000))
         
         ci = rexprojectspacedataobjects.CommitInfo(generated_name,commit,generated_name)
+        
+        print "hakemistot: ", ci.directories
         
         cd.dispatchCommits( [ci] )
     
