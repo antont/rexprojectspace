@@ -116,7 +116,7 @@ class SWDeveloper:
         self.follower.OnAvatarExited += self.AvatarExited
         
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
-        nc.OnNewCommit += self.OnNewCommit
+        #nc.OnNewCommit += self.OnNewCommit
         
         self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.developerinfo.url)
         
@@ -200,11 +200,11 @@ class SWDeveloper:
         
         temp = text
         if len(temp) > line_length:
-            print "splitting lines"
+            #print "splitting lines"
             linecount = int(len(temp)/line_length) 
             charcount = len(temp)
-            print "line count: ", linecount
-            print "with char count: ", charcount
+            #print "line count: ", linecount
+            #print "with char count: ", charcount
             
             
             splitted = temp.split(" ")
@@ -218,7 +218,7 @@ class SWDeveloper:
                 l = temp.find(" ",cur,len(temp))
                 temp = temp[:l] + "\n" + temp[l:]
             
-            print temp
+            #print temp
         
         self.sog.SetText(temp,V3(0.0,1.0,0.5),1.0)
     

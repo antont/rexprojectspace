@@ -146,7 +146,7 @@ class CommitInfo:
             files.append(r)
             self.removed.append(r)
                    
-        #leave no duplicates
+
         modifiedfiles = list(set(files))
         
         files = []
@@ -160,7 +160,9 @@ class CommitInfo:
                 folders.append(temp[0])
             else:
                 folders.append("/")
-
+        #leave no duplicates
+        folders = list(set(folders))
+        
         return files,folders
 
         

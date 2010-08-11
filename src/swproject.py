@@ -299,7 +299,7 @@ class SWProject:
             
             developerinfo = rexprojectspacedataobjects.DeveloperInfo(vCommit.login,vCommit.name)
             developerinfo.latestcommit = vCommit
-            committer = swdeveloper.SWDeveloper(0,self.scene,developerinfo,False)
+            committer = swdeveloper.SWDeveloper(self.scene,developerinfo,False)
             
         #there is no way to know for sure if the commit has been set to dev
         #before this, so set it...
