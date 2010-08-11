@@ -50,7 +50,7 @@ class SWDeveloper:
     greentextureid = 0
     redtextureid = 0
     
-    HEIGHT = 1.0
+    HEIGHT = 0.85
     MESHUUID = OpenMetaverse.UUID.Zero
     SKELETON_ANIM_ID = OpenMetaverse.UUID.Zero
 
@@ -87,7 +87,8 @@ class SWDeveloper:
                 print "loading dev mesh"
                 SWDeveloper.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"diamond.mesh","developer mesh")
                 
-            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWDeveloper.MESHUUID,"diamond.material")
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWDeveloper.MESHUUID,"diamond.material",OpenMetaverse.Quaternion(0, 0, 0, 1), V3(128, 128, 30),
+                                                                V3(0.5, 0.5, 0.5))
             
             """
             mat = material(SWDeveloper.greentextureid)
@@ -102,7 +103,8 @@ class SWDeveloper:
             """
             
             self.initVisualization(self.sog)
-            
+        
+        self.SetText(self.developerinfo.login + " : "  + self.developerinfo.latestcommit.message)        
         
         self.newposition = self.sog.AbsolutePosition
         self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
@@ -113,12 +115,8 @@ class SWDeveloper:
         self.follower.OnAvatarEntered += self.AvatarEntered
         self.follower.OnAvatarExited += self.AvatarExited
         
-        #uncomment this!
-        """
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
-        #nc.OnNewCommit += self.updateCommitText
-        nc.OnNewIrcMessage += self.OnNewIRCMessage
-        """
+        nc.OnNewCommit += self.OnNewCommit
         
         self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.developerinfo.url)
         
@@ -131,15 +129,17 @@ class SWDeveloper:
         self.updateVisualization()
         print "Current texture id_____",self.currenttexid
         self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
-        
-        self.SetText(self.developerinfo.login + " : "  + self.developerinfo.latestcommit.message)
-        
+
     def updateVisualization(self):
         """ Updates scale based on commit count 
         """
         scale = self.sog.RootPart.Scale
         scalefactor = self.developerinfo.commitcount
-        self.sog.RootPart.Scale = V3(scale.X + scalefactor*0.02,scale.Y + scalefactor*0.02,scale.Z + scalefactor*0.02)
+        
+        if scalefactor > 100:
+            scalefactor = 100
+            
+        self.sog.RootPart.Scale = V3(scale.X + scalefactor*0.01,scale.Y + scalefactor*0.01,scale.Z + scalefactor*0.01)
     
     def updateIsLatestCommitter(self,vIsLatestCommitter):
         """ Change animation
@@ -187,13 +187,38 @@ class SWDeveloper:
         if self.follower.bFollowing == False:
             self.sog.NonPhysicalGrabMovement(vTargetPos)
     
-    def OnNewIRCMessage(self,vMessage):
-        """ Display new IRC message
-        """
-        text = vMessage
-        self.SetText(text)
+    def OnNewCommit(self,vCommit):
+        print "Login: ", vCommit.login
+        if vCommit.login == self.developerinfo.login:
+            self.SetText(vCommit.message)
     
     def SetText(self,text):
-        """ Sets sceneobjectgroups text to be text... """
-        self.sog.SetText(text,V3(0.0,1.0,0.5),1.0)
+        """ Sets sceneobjectgroups text to be the text. In case of
+            long string add some line breaks"""
+        
+        line_length = 25
+        
+        temp = text
+        if len(temp) > line_length:
+            print "splitting lines"
+            linecount = int(len(temp)/line_length) 
+            charcount = len(temp)
+            print "line count: ", linecount
+            print "with char count: ", charcount
+            
+            
+            splitted = temp.split(" ")
+            index = 0
+            count = 0
+ 
+            for i in range(1,linecount):
+                cur = i*line_length
+                #must not split words!
+                #locate nearest space char
+                l = temp.find(" ",cur,len(temp))
+                temp = temp[:l] + "\n" + temp[l:]
+            
+            print temp
+        
+        self.sog.SetText(temp,V3(0.0,1.0,0.5),1.0)
     

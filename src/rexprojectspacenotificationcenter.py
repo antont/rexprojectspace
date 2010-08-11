@@ -379,12 +379,10 @@ class IssueDispatcher:
                         target(i)
             except:
                 self.issues[i.id] = i
-                print "new issue with id: ", i.id 
+                #print "new issue with id: ", i.id 
                 #notify that there was a new issue
                 for target in self.newIssueTargets:
-                    #print target
-                    #something wrong here!!!
-                    print "new bug from dispatcher: ", self.issues[i.id]
+                    #print "new bug from dispatcher: ", self.issues[i.id]
                     target(self.issues[i.id])
 
         self.timer.cancel()

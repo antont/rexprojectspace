@@ -98,6 +98,7 @@ class CommitInfo:
         self.removed = []
         self.added = []
         self.modified = []
+        self.id = -1
         
         if self.name == "":
             try:
@@ -109,6 +110,7 @@ class CommitInfo:
         self.date = ""
         
         try:
+            self.id = vCommit["id"]
             datestring = vCommit["authored_date"]
             self.message = vCommit["message"]
             self.files,self.directories = self.resolveFilesAndFolders(vCommit)

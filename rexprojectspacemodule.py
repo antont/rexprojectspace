@@ -129,7 +129,7 @@ class RexProjectSpaceModule(IRegionModule):
         for folder in folders:
             count = temp.count(folder)
             folderinfos.append(rexprojectspacedataobjects.FolderInfo(folder,count))
-        
+            
         return folderinfos
     
     
@@ -147,12 +147,11 @@ class RexProjectSpaceModule(IRegionModule):
         projectpos = V3(131,130,25.2)
         issuespawnpos = V3(125,125,25.2)
         
-        #self.tree = self.initTree("naali")
+        self.tree = self.initTree("naali")
         self.project = self.initSWProject()
         
         self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
         #self.initSWIssues()
-        #self.scene.EventManager.OnObjectGrab += self.clicked;
         
         self.shouter = RexProjectSpaceInformationShouter(self.scene)
         
@@ -390,12 +389,13 @@ class RexProjectSpaceModule(IRegionModule):
         
     def cmd_commit(self, *args):
         
-        cd = rexprojectspacenotificationcenter.CommitDispatcher.dispatcherForProject("naali")
+        cd = rexprojectspacenotificationcenter.VersionControlDataDispatcher.dispatcherForProject("naali")
         
         commit = {}
-        commit["message"] = "test commit from region module with very long description, or is this long enough???"
+        commit["message"] = "test commit from region module with very long description, or is this long enough??? Add some random strings here...."
         
         commit["authored_date"] = "2010-07-23T09:54:40-07:00"
+        commit["id"] = random.randint(0,1000000)
         
         commit["Removed"] = ["doc","bin"]
         commit["added"] = []
@@ -409,16 +409,18 @@ class RexProjectSpaceModule(IRegionModule):
     
     def cmd_commit2(self, *args):
         
-        cd = rexprojectspacenotificationcenter.CommitDispatcher.dispatcherForProject("naali")
+        cd = rexprojectspacenotificationcenter.VersionControlDataDispatcher.dispatcherForProject("naali")
         
         commit = {}
-        commit["message"] = "test commit from region module"
+        commit["message"] = "test commit from region module , and again with a long test string...----...---..---"
         
         commit["authored_date"] = "2010-07-24T09:54:40-07:00"
         
         commit["Removed"] = ["Foundation"]
         commit["added"] = []
         commit["modified"] = []
+        commit["id"] = random.randint(0,1000000)
+        
         
         ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
         print "hakemistot: ", ci.directories
@@ -438,6 +440,8 @@ class RexProjectSpaceModule(IRegionModule):
         commit["removed"] = ["bin"]
         commit["added"] = ["doc"]
         commit["modified"] = []
+        commit["id"] = random.randint(0,1000000)
+        
         
         ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
 
@@ -464,7 +468,7 @@ class RexProjectSpaceModule(IRegionModule):
         
     def cmd_commit_new_dev(self, *args):
         
-        cd = rexprojectspacenotificationcenter.CommitDispatcher.dispatcherForProject("naali")
+        cd = rexprojectspacenotificationcenter.VersionControlDataDispatcher.dispatcherForProject("naali")
         
         commit = {}
         commit["message"] = "test commit from region module"
@@ -474,6 +478,8 @@ class RexProjectSpaceModule(IRegionModule):
         commit["Removed"] = ["doc","bin"]
         commit["added"] = []
         commit["modified"] = []
+        commit["id"] = random.randint(0,1000000)
+        
         
         generated_name = str(random.randint(0,1000000))
         
@@ -483,7 +489,7 @@ class RexProjectSpaceModule(IRegionModule):
     
     def cmd_commit_new_comp(self, *args):
         
-        cd = rexprojectspacenotificationcenter.CommitDispatcher.dispatcherForProject("naali")
+        cd = rexprojectspacenotificationcenter.VersionControlDataDispatcher.dispatcherForProject("naali")
         
         commit = {}
         commit["message"] = "test commit from region module"
@@ -495,6 +501,7 @@ class RexProjectSpaceModule(IRegionModule):
         commit["Removed"] = [generated_name]
         commit["added"] = []
         commit["modified"] = []
+        commit["id"] = random.randint(0,1000000)
         
         generated_name = str(random.randint(0,1000000))
         
@@ -543,7 +550,7 @@ class RexProjectSpaceModule(IRegionModule):
         
     
     def cmd_developer(self, *args):
-        dinfo = rexprojectspacedataobjects.DeveloperInfo("ma2sfddass2","maukka user")
+        dinfo = rexprojectspacedataobjects.DeveloperInfo("MaukkaS","maukka user")
         
         commit = {}
         commit["message"] = "test commit from region \n module with very long description \n, or is this long enough???"
@@ -554,7 +561,7 @@ class RexProjectSpaceModule(IRegionModule):
         commit["added"] = []
         commit["modified"] = []
         
-        ci = rexprojectspacedataobjects.CommitInfo("maukka_tester",commit,"maukka_tester")
+        ci = rexprojectspacedataobjects.CommitInfo("MaukkaS",commit,"MaukkaS")
         dinfo.latestcommit = ci
         
         self.dev = swdeveloper.SWDeveloper(self.scene,dinfo,False)

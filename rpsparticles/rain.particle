@@ -3,7 +3,7 @@ v
 {
 	quota	2000
 	material	Flare
-	particle_width	4
+	particle_width	2
 	particle_height	4
 	cull_each	true
 	renderer	billboard

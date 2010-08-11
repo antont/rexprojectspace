@@ -310,7 +310,7 @@ class SWProject:
         
         if len(vCommit.directories) > 0:
             
-            #print "commit directory: ",vCommit.directories[0]
+            print "commit directory: ",vCommit.directories[0]
             
             try:
                 component = self.components[vCommit.directories[0]]
@@ -342,7 +342,7 @@ class SWProject:
                         dev = previouscomponentsdevs[j]
                         dev.move(devPos)
                         
-                    #print "developer: ", committer , "removed from ", self.components[k].name
+                    print "developer: ", committer , "removed from ", self.components[k].name
                     break #developer can be only in one component at the same time
         else:
             component = self.component #no directories, so put dev into "container component"
@@ -376,14 +376,15 @@ class SWProject:
             #update also the developervisualization
             self.latestcommitter.developerinfo.commitcount += 1
             self.latestcommitter.developerinfo.latestcommit = vCommit
-            self.latestcommitter.developerinfo.latestcommitid = vCommit["id"]
-            
+            self.latestcommitter.developerinfo.latestcommitid = vCommit.id
+
             self.latestcommitter.updateVisualization()
             
             #print "developer %s is current committer"%(self.latestcommitter.developerinfo.login)
             self.latestcommitter.updateIsLatestCommitter(True)
             
             self.visualizeLatestCommitModifications()
+            print "new test..."
             
     from operator import itemgetter,attrgetter
     def sortDevelopers(self,vDevelopers):
@@ -405,22 +406,22 @@ class SWProject:
         if len(vBuilds) < 1:
             return
         
-        for build in vBuilds:
-            if build.result != "success":
-                bResult = False
-                break
-        
         build = vBuilds[0]
         
+        if build.result != "success":
+            bResult = False
+            
         if bResult == False:
             if self.bLatestBuildFailed == True:
                 #don't update blamelist, because build was allready failing...
                 return
             else:
                 bLatestBuildFailed = True
+                latestSuccess = vBuilds[1]
+                 
                 #make blamelist
                 for d in self.developers:
-                    if d.developerinfo.latestcommit.date > self.lastBuildTime:
+                    if d.developerinfo.latestcommit.date > latestSuccess.time:
                         print "dev added to blamelist: ", d.developerinfo.login
                         self.blameList.append(d)
                         

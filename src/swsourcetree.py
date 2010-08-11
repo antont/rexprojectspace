@@ -264,14 +264,13 @@ class SWSourceTree:
         self.addNewBranches(vBranchInfos)
         
         #uncomment this
-        """
+
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         
         nc.OnBuild += self.updateBuildResult
         
         nc.OnBranchesUpdated += self.updateBranches
         nc.OnNewBranches += self.addNewBranches
-        """
         
         self.timer.start()
 
@@ -300,11 +299,10 @@ class SWSourceTree:
     def updateBuildResult(self,vBuilds):
         """ Handle build notifications """
         res = True
-        for build in vBuilds:
-            if build.result != "success":
-                res = False
-                break
-            
+        build = vBuilds[0]
+        if build.result != "success":
+            res = False
+        
         if res == True:
             self.setBuildSuccesfull()
         else:
