@@ -4,7 +4,7 @@ import RXCore.rxavatar
 import sys
 import clr
 
-import random
+import random 
 import math
 
 asm = clr.LoadAssemblyByName('OpenSim.Region.ScriptEngine.Shared')
