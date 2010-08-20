@@ -75,6 +75,7 @@ class Tree:
         
         
         sop =  vScene.GetSceneObjectPart("rps_treebase_" + vName)
+        tex = rexprojectspaceutils.load_texture(self.scene,"rpstextures/treebranch_green.jp2")
         
         if sop:
             self.treebasesog = sop.ParentGroup
@@ -86,9 +87,8 @@ class Tree:
             self.treebasesog.RootPart.Name =  "rps_treebase_" + vName
             self.scene.AddNewSceneObject(self.treebasesog, False)
             self.treebasesog.AbsolutePosition = V3(self.sog.AbsolutePosition)
-            self.treebasesog.SetText("master",V3(1.0,1.0,0.0),1.0)
-            print "setting texture to treebase"
-            tex = rexprojectspaceutils.load_texture(self.scene,"rpstextures/treebranch_green.jp2")
+            #self.treebasesog.SetText("master",V3(1.0,1.0,0.0),1.0)
+            
             self.treebaserop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         
         sop = None
@@ -104,6 +104,7 @@ class Tree:
             temp = self.treebasesog.AbsolutePosition
             self.treetopsog,self.treetoprop = rexprojectspaceutils.load_mesh(self.scene,"treetop.mesh","treetop.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),V3(temp.X,temp.Y,temp.Z+1))
             self.treetopsog.RootPart.Name =  "rps_treetop_" + vName
+            
             self.scene.AddNewSceneObject(self.treetopsog, False)
             self.treetoprop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         
@@ -155,17 +156,17 @@ class TreeTile:
         self.currentIndex = 0  #increment on add
         self.scene = vScene
         self.pos = vPos
-        self.w = 0
+        self.w = 0.2
         self.height = vHeight
-        print "_______Tile height:_______",self.height
+        #print "_______Tile height:_______",self.height
         
         self.locations = []
         for i in range(4):
             tempPos = None
             if i%2 == 0:
-                tempPos = V3(self.pos.X, self.pos.Y + self.w/2,self.pos.Z + (i*self.height/4 + 0.15))
+                tempPos = V3(self.pos.X - self.w/2, self.pos.Y,self.pos.Z + (i*self.height/4 + 0.15))
             else:
-                tempPos = V3(self.pos.X, self.pos.Y - self.w/2,self.pos.Z + (i*self.height/4 + 0.15))
+                tempPos = V3(self.pos.X + self.w/2, self.pos.Y,self.pos.Z + (i*self.height/4 + 0.15))
             self.locations.append(tempPos)
             
         self.rotations = [rexprojectspaceutils.euler_to_quat(20,0,0),
@@ -263,6 +264,15 @@ class SWSourceTree:
 
         self.addNewBranches(vBranchInfos)
         
+        masterbranch = None
+        
+        for b in vBranchInfos:
+            if b.name == "master":
+                masterbranch = b
+                break
+        
+        if masterbranch:
+            self.clickhandlers.append(clickhandler.URLOpener(self.scene,self.tree.treetopsog,self.tree.treetoprop,masterbranch.url))
         #uncomment this
 
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
@@ -313,7 +323,7 @@ class SWSourceTree:
         """ If build was broken, make it rain """
         if self.bCurrentBuildFailed == True:
             self.rainPlaceHolderRop.RexParticleScriptUUID = self.rainparticleid
-            self.buildresultparticletimer = threading.Timer(30,self.onBuildResultParticleTimer)
+            self.buildresultparticletimer = threading.Timer(5,self.onBuildResultParticleTimer)
             self.buildresultparticletimer.start()
             
         self.bCurrentBuildFailed = False
@@ -336,8 +346,11 @@ class SWSourceTree:
         tday = time.time()
             
         for branch in vBranchInfos:
-            if self.branches.keys().count(branch.name) > 0:
+            bname = branch.name.strip()
+            if self.branches.keys().count(branch.name) > 0 or bname == "master":
                 continue
+            
+            print "---Creating branch:", branch.name
             
             #Evaluate latest commit data and create branch
             texpath = "rpstextures/treebranch_green.jp2"

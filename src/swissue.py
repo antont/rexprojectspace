@@ -39,20 +39,19 @@ class IssueFactory():
         self.enhancements = {} #issueid,issue object dictionary
         
         #uncomment this
-        """
+        
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
         nc.OnNewIssue +=  self.CreateIssue
         nc.OnIssueUpdated += self.UpdateIssue
-        """
+        
     
     def __del__(self):
         #uncomment this
-        """
+        
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
         nc.OnNewIssue -=  self.CreateIssue
         nc.OnIssueUpdated -= self.UpdateIssue
-        """
-        pass
+        
         
     def CreateIssue(self,vIssueData):
         """ Returns object inherited from SWIssue
@@ -201,7 +200,7 @@ class SWEnhancement(SWIssue):
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
             self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
-            print "enhancement: %s found from scene"%(self.issueinfo.id)
+            #print "enhancement: %s found from scene"%(self.issueinfo.id)
             SWEnhancement.MESHUUID = self.rop.RexMeshUUID.ToString()
         else:
             self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWEnhancement.MESHUUID,"enhgenerated.material",rexprojectspaceutils.euler_to_quat(0,0,0),vPos,V3(0.1,0.1,0.1))
@@ -241,16 +240,19 @@ class SWEnhancement(SWIssue):
     def selectAnimation(self):
         """ Choose animation by evaluating status of the enhancement
         """
-        if self.issueinfo.status == "new":
+        print "enhan status: ", self.issueinfo.status
+        if self.issueinfo.status == "New":
             self.rop.RexAnimationName = "flying"
         
-        elif self.issueinfo.status == "started":
+        elif self.issueinfo.status == "Started":
             print "started bug"
             self.rop.RexAnimationName = "flying_with_movement"
             
         else:
             pass
             #self.rop.RexAnimationName = "idle"
+            
+        self.rop.RexAnimationRate = 4.0
 
 class SWBug(SWIssue):
     """ SWIssue subclass representing a software bug
@@ -277,7 +279,7 @@ class SWBug(SWIssue):
             self.sog = sop.ParentGroup
             rexObjects = vScene.Modules["RexObjectsModule"]
             self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
-            print "bug: %s found from scene"%(self.issueinfo.id)
+            #print "bug: %s found from scene"%(self.issueinfo.id)
             SWBug.MESHUUID = self.rop.RexMeshUUID.ToString()
         else:
             self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWBug.MESHUUID,"enhgenerated.material",rexprojectspaceutils.euler_to_quat(0,0,0),vPos,V3(0.1,0.1,0.1))
@@ -316,14 +318,17 @@ class SWBug(SWIssue):
     def selectAnimation(self):
         """ Choose animation by evaluating status of the enhancement
         """
-        if self.issueinfo.status == "new":
+        print "bugin status: ", self.issueinfo.status
+        
+        if self.issueinfo.status == "New":
             self.rop.RexAnimationName = "flying"
         
-        elif self.issueinfo.status == "started":
+        elif self.issueinfo.status == "Started":
             print "bug started"
             self.rop.RexAnimationName = "flying_with_movement"
             
         else:
             pass
             #self.rop.RexAnimationName = "idle"
-    
+            
+        self.rop.RexAnimationRate = 4.0

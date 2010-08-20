@@ -103,7 +103,9 @@ class SWDeveloper:
             """
             
             self.initVisualization(self.sog)
-        
+        if self.developerinfo.login == "":
+            self.developerinfo.login = self.developerinfo.name
+            
         self.SetText(self.developerinfo.login + " : "  + self.developerinfo.latestcommit.message)        
         
         self.newposition = self.sog.AbsolutePosition
@@ -116,7 +118,7 @@ class SWDeveloper:
         self.follower.OnAvatarExited += self.AvatarExited
         
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
-        #nc.OnNewCommit += self.OnNewCommit
+        nc.OnNewCommit += self.OnNewCommit
         
         self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.developerinfo.url)
         
@@ -125,7 +127,7 @@ class SWDeveloper:
             text to be developers login...
         """
         sog.RootPart.Name =  "rps_dev_" + self.developerinfo.login
-        sog.RootPart.Scale = V3(0.2, 0.2,  0.2)
+        #sog.RootPart.Scale = V3(0.2, 0.2,  0.2)
         self.updateVisualization()
         print "Current texture id_____",self.currenttexid
         self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
@@ -138,8 +140,10 @@ class SWDeveloper:
         
         if scalefactor > 100:
             scalefactor = 100
+        elif scalefactor < 50:
+            scalefactor = 50
             
-        self.sog.RootPart.Scale = V3(scale.X + scalefactor*0.01,scale.Y + scalefactor*0.01,scale.Z + scalefactor*0.01)
+        self.sog.RootPart.Scale = V3(scalefactor*0.01,scalefactor*0.01,scalefactor*0.01)
     
     def updateIsLatestCommitter(self,vIsLatestCommitter):
         """ Change animation
@@ -155,7 +159,8 @@ class SWDeveloper:
     def updateDidBrakeBuild(self,vDidBrakeBuild):
         """ Change texture if you brake the build 
         """
-        if vDidBrakeBuild and self.currenttexid == SWDeveloper.redtextureid:
+        print "developer did brake build?"
+        if vDidBrakeBuild == True and self.currenttexid == SWDeveloper.redtextureid:
             return
         elif vDidBrakeBuild == False and self.currenttexid == SWDeveloper.greentextureid:
             return
@@ -188,17 +193,32 @@ class SWDeveloper:
             self.sog.NonPhysicalGrabMovement(vTargetPos)
     
     def OnNewCommit(self,vCommit):
-        print "Login: ", vCommit.login
+        #print "Login: ", vCommit.login
         if vCommit.login == self.developerinfo.login:
-            self.SetText(vCommit.message)
+            #so, these commits are processed at runtime, not at initializing phase
+            #update also the developervisualization
+            """
+            self.developerinfo.commitcount += 1
+            self.developerinfo.latestcommit = vCommit
+            self.developerinfo.latestcommitid = vCommit.id
+            
+            self.updateVisualization()
+            """
+            self.SetText(self.developerinfo.login + " : "  + vCommit.message)
     
     def SetText(self,text):
         """ Sets sceneobjectgroups text to be the text. In case of
             long string add some line breaks"""
         
         line_length = 25
+        temp = ""
+        if len(text) > 75:
+            temp = text[0:72]#max 3 lines
+            temp = temp + "..."
+        else:
+            temp = text
         
-        temp = text
+        
         if len(temp) > line_length:
             #print "splitting lines"
             linecount = int(len(temp)/line_length) 

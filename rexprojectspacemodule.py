@@ -154,10 +154,14 @@ class RexProjectSpaceModule(IRegionModule):
         issuespawnpos = V3(125,125,25.2)
         
         self.tree = self.initTree("naali")
+        
         self.project = self.initSWProject()
         
-        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+6,projectpos.Y+6,projectpos.Z + 2),issuespawnpos)
-        #self.initSWIssues()
+        temp = self.project.sog.AbsolutePosition
+        projectpos = V3(temp.X,temp.Y,temp.Z + 0.75)
+        
+        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+8.0,projectpos.Y+8.5,projectpos.Z + 3),issuespawnpos)
+        self.initSWIssues()
         
         self.shouter = RexProjectSpaceInformationShouter(self.scene)
         
@@ -187,11 +191,20 @@ class RexProjectSpaceModule(IRegionModule):
         pass
     
     def initSWIssues(self):
-        """ Create issue objects by using issuefactory. """
+        """ Create issue objects by using issuefactory. Also initialize 
+            issuedispatcher with the received data, so that dispatcher
+            is able to know if issue is new...
+        """
+        
         self.issuetracker = issuetracker.IssueTracker()
-        issues = self.issuetracker.getIssues()
+        issues = self.issuetracker.GetIssues()
+        issuesdict = {}
         for i in issues:
             issue = self.issuefactory.CreateIssue(i)
+            issuesdict[i.id] = i
+            
+        issuedispatcher = rexprojectspacenotificationcenter.IssueDispatcher.dispatcher()
+        issuedispatcher.issues = issuesdict
             
     def initTree(self,vProjectName):
         """ Get branches and create tree """
@@ -233,10 +246,15 @@ class RexProjectSpaceModule(IRegionModule):
         
         commits_for_devs = {}
         
-        #get previous 1500 commits 
+        #get previous 1000 commits 
         coms = self.vcs.GetCommitsFromNetworkData(1000)
         
         coms.reverse()#oldest first, so reverse!
+        
+        #just to make things more easier. Make notification center to notify only
+        #new commits...
+        commitdispatcher = rexprojectspacenotificationcenter.VersionControlDataDispatcher.dispatcherForProject("naali")
+        commitdispatcher.latestcommit = coms[0]["id"]
         
         for commit in coms:
            
@@ -251,7 +269,7 @@ class RexProjectSpaceModule(IRegionModule):
                     if dev.name == author or dev.login == commit["login"]  or dev.login == author:
                         if dev.latestcommitid == 0:
                             dev.latestcommitid = commit["id"]
-                            print "commit found for: ",dev.login
+                            #print "commit found for: ",dev.login
                             count -= 1
                             break
             if count < 1:
@@ -275,12 +293,12 @@ class RexProjectSpaceModule(IRegionModule):
                
                 devCommit = rexprojectspacedataobjects.CommitInfo(dev.login,c)
                 dev.latestcommit = devCommit
-                print "---hakemistot commitissa: ", devCommit.directories
+                #print "---hakemistot commitissa: ", devCommit.directories
             
             #init every developer so that each has latest commits, commit count and names in place
             swdevs.append(swdeveloper.SWDeveloper(self.scene,dev,False))
-            print "Developer-----", dev.name
-            
+            print "Developer's name-----%s and login:-------%s"%( dev.name , dev.login )
+        
         #get all the components...
         componentNames = self.getProjectRootFolders()
         
@@ -310,6 +328,7 @@ class RexProjectSpaceModule(IRegionModule):
         scene.AddCommand(self, "commit","","",self.cmd_commit)
         scene.AddCommand(self, "commit2","","",self.cmd_commit2)
         scene.AddCommand(self, "blame","","",self.cmd_blame)#commit and fail build
+        scene.AddCommand(self, "fix_blame","","",self.cmd_fix_blame)#commit and fail build
         scene.AddCommand(self, "commit_new_dev","","",self.cmd_commit_new_dev)#commit done by new dev
         scene.AddCommand(self, "commit_new_comp","","",self.cmd_commit_new_comp)#commit done by new dev
         
@@ -399,13 +418,13 @@ class RexProjectSpaceModule(IRegionModule):
         cd = rexprojectspacenotificationcenter.VersionControlDataDispatcher.dispatcherForProject("naali")
         
         commit = {}
-        commit["message"] = "test commit from region module with very long description, or is this long enough??? Add some random strings here...."
+        commit["message"] = "Test commit from region module, changed files from doc, tools and Core "
         
-        commit["authored_date"] = "2010-07-23T09:54:40-07:00"
+        commit["authored_date"] = "2010-09-23T09:54:40-07:00"
         commit["id"] = random.randint(0,1000000)
         
-        commit["Removed"] = ["doc","bin"]
-        commit["added"] = []
+        commit["Removed"] = []
+        commit["added"] = ["doc/a.txt","tools/b.cpp","Core/b.cpp"]
         commit["modified"] = []
         
         ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
@@ -421,9 +440,9 @@ class RexProjectSpaceModule(IRegionModule):
         commit = {}
         commit["message"] = "test commit from region module , and again with a long test string...----...---..---"
         
-        commit["authored_date"] = "2010-07-24T09:54:40-07:00"
+        commit["authored_date"] = "2010-09-24T09:54:40-07:00"
         
-        commit["Removed"] = ["Foundation"]
+        commit["Removed"] = ["Foundation/file2.h"]
         commit["added"] = []
         commit["modified"] = []
         commit["id"] = random.randint(0,1000000)
@@ -442,10 +461,56 @@ class RexProjectSpaceModule(IRegionModule):
         commit = {}
         commit["message"] = "test commit from region module"
         
-        commit["authored_date"] = "2010-07-31T09:54:40-07:00"
+        commit["authored_date"] = "2010-09-18T09:54:40-07:00"
         
-        commit["removed"] = ["bin"]
-        commit["added"] = ["doc"]
+        commit["removed"] = ["bin/j.j2k"]
+        commit["added"] = ["doc/help.txt"]
+        commit["modified"] = []
+        commit["id"] = random.randint(0,1000000)
+        
+        
+        ci = rexprojectspacedataobjects.CommitInfo("antont",commit,"antont")
+
+        #locate antont
+        dev =  None
+        
+        for d in self.project.developers:
+            if d.developerinfo.login == "antont":
+                dev = d
+                break
+                
+        if dev == None:
+            return
+        
+        
+        dev.developerinfo.latestcommit = ci
+        
+        print "Muutos: ", dev.developerinfo.latestcommit.date
+        
+        t = time.time() #Epoch time
+        ti = time.gmtime(t)
+        
+        binfo = rexprojectspacedataobjects.BuildInfo("","failure",ti)
+        
+        t = time.time() #Epoch time
+        ti = time.gmtime(t-1000)
+        
+        binfo_old = rexprojectspacedataobjects.BuildInfo("","success",ti)
+        
+        self.project.buildFinished([binfo,binfo_old])
+        
+    def cmd_fix_blame(self, *args):
+        
+        t = time.time() #Epoch time, set the new commit after this moment of time
+        self.project.lastBuildTime = time.gmtime(t)
+        
+        commit = {}
+        commit["message"] = "test commit from region module"
+        
+        commit["authored_date"] = "2010-09-18T09:54:40-07:00"
+        
+        commit["removed"] = ["bin/j.j2k"]
+        commit["added"] = ["doc/help.txt"]
         commit["modified"] = []
         commit["id"] = random.randint(0,1000000)
         
@@ -469,9 +534,14 @@ class RexProjectSpaceModule(IRegionModule):
         t = time.time() #Epoch time
         ti = time.gmtime(t)
         
-        binfo = rexprojectspacedataobjects.BuildInfo("",False,ti)
+        binfo = rexprojectspacedataobjects.BuildInfo("","success",ti)
         
-        self.project.buildFinished([binfo])
+        t = time.time() #Epoch time
+        ti = time.gmtime(t-1000)
+        
+        binfo_old = rexprojectspacedataobjects.BuildInfo("","failure",ti)
+        
+        self.project.buildFinished([binfo,binfo_old])
         
     def cmd_commit_new_dev(self, *args):
         
@@ -480,9 +550,9 @@ class RexProjectSpaceModule(IRegionModule):
         commit = {}
         commit["message"] = "test commit from region module"
         
-        commit["authored_date"] = "2010-07-23T09:54:40-07:00"
+        commit["authored_date"] = "2010-09-23T09:54:40-07:00"
         
-        commit["Removed"] = ["doc","bin"]
+        commit["Removed"] = ["doc/file5.h","bin/helpme.txt"]
         commit["added"] = ["doc"]
         commit["modified"] = []
         commit["id"] = random.randint(0,1000000)
@@ -503,12 +573,12 @@ class RexProjectSpaceModule(IRegionModule):
         commit = {}
         commit["message"] = "test commit from region module"
         
-        commit["authored_date"] = "2010-07-23T09:54:40-07:00"
+        commit["authored_date"] = "2010-09-23T09:54:40-07:00"
         
         generated_name = str(random.randint(0,1000000))
         
-        commit["Removed"] = [generated_name]
-        commit["added"] = []
+        commit["Removed"] = []
+        commit["added"] = [generated_name]
         commit["modified"] = []
         commit["id"] = random.randint(0,1000000)
         
@@ -524,7 +594,7 @@ class RexProjectSpaceModule(IRegionModule):
         issueData = rexprojectspacedataobjects.IssueInfo(empty)
         issueData.type = "Defect"
         issueData.owner = "maukka user"
-        issueData.status = "new"
+        issueData.status = "New"
         issueData.id = str(random.randint(0,1000000))
         issueData.url = "http://code.google.com/p/realxtend-naali/issues/detail?=9"
         bug =  self.issuefactory.CreateIssue(issueData)
@@ -538,7 +608,7 @@ class RexProjectSpaceModule(IRegionModule):
         issueData = rexprojectspacedataobjects.IssueInfo(empty)
         issueData.type = "Enhancement"
         issueData.owner = "maukka user"
-        issueData.status = "new"
+        issueData.status = "New"
         issueData.id = str(random.randint(0,1000000))
         issueData.url = "http://code.google.com/p/realxtend-naali/issues/detail?=24"
         bug =  self.issuefactory.CreateIssue(issueData)
@@ -552,7 +622,7 @@ class RexProjectSpaceModule(IRegionModule):
         issueData = rexprojectspacedataobjects.IssueInfo(empty)
         issueData.type = "Enhancement"
         issueData.owner = "maukka user"
-        issueData.status = "started"
+        issueData.status = "Started"
         issueData.id = self.bugid
         
         self.issuefactory.UpdateIssue(issueData)

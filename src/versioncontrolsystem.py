@@ -37,7 +37,7 @@ class VersionControlSystem:
 
                 b = rexprojectspacedataobjects.BranchInfo(keys,date)
                 branches.append(b)  
-                print b.latestcommitdate
+                #print b.latestcommitdate
         return branches    
     
     def GetBlobs(self,vPath = "http://github.com/api/v2/json/blob/all/realxtend/naali/develop"):

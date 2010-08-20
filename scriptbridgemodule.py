@@ -51,7 +51,7 @@ class ScriptBridgeModule(IRegionModule):
             rexpy = self.scene.Modules["RexPythonScriptModule"]
         except KeyError:
             self.rexif = None
-            #print "Couldn't get a ref to RexSCriptInterface"
+            print "Couldn't get a ref to RexSCriptInterface"
         
         if rexpy:
             print "spawning actor"
@@ -59,7 +59,7 @@ class ScriptBridgeModule(IRegionModule):
             #pos = self.sog.AbsolutePosition
             pos_lsl = LSL_Types.Vector3(125,125,25)
             self.rexif.SpawnActor(pos_lsl,0,False,"rexprojectspace.RexProjectSpace")
-
+            print "spawned actor..."
         
     def PostInitialise(self):
         #print "postinit..."

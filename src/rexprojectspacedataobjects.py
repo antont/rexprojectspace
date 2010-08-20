@@ -92,7 +92,11 @@ class CommitInfo:
     def __init__(self,vLogin,vCommit,vAuthor=""):
         """ Parses data out from vCommit string received from github
         """
-        self.login = vLogin
+        if vLogin != "":
+            self.login = vLogin
+        else:
+            self.login = "empty"
+        
         self.name = vAuthor
         self.files,self.directories = [],[]
         self.removed = []
@@ -154,10 +158,10 @@ class CommitInfo:
         
         for file in modifiedfiles:
             files.append(file)
-            
-            temp = file.split("/")
-            if len(temp) > 0:
-                folders.append(temp[0])
+          
+            t = file.split("/")
+            if len(t) > 1:
+                folders.append(t[0])
             else:
                 folders.append("/")
         #leave no duplicates

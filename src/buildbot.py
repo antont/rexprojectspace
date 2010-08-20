@@ -35,7 +35,7 @@ class BuildBot:
             build = self.proxy.getLastBuilds(platform, 1)
             build = build[0]
             result = build[6]
-            print "tulos:", result      
+            #print "tulos:", result      
             t = time.gmtime(build[2])
  
             binfo = rexprojectspacedataobjects.BuildInfo(platform,result,t)

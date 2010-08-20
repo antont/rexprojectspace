@@ -30,6 +30,7 @@ class URLOpener:
             if not self.mod:
                 try:
                     self.mod = self.scene.Modules["ScriptBridgeModule"]
+                    print "Got bridge module...", self.mod
                 except:
                     return
                 

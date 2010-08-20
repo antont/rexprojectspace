@@ -92,7 +92,8 @@ class Component(ComponentBase):
             print "loading  textures"
             Component.modifiedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/modifiedcomponent.jp2")
             Component.removedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/removedcomponent.jp2")
-            Component.addedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/addedcomponent.jp2")
+            #Component.addedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/addedcomponent.jp2")
+            Component.addedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/bluecomponent.jp2")
         
         sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
         self.currenttexid = Component.addedtextureid
@@ -147,7 +148,7 @@ class Component(ComponentBase):
             
     def SetState(self,vState):
         """ Changes texture if needed. vState can be modified,removed or added """
-        print "component: ",self.name, "is at state: ",vState
+        #print "component: ",self.name, "is at state: ",vState
         tex = self.currenttexid
         if vState == "modified":
             tex = Component.modifiedtextureid
@@ -188,7 +189,7 @@ class SWProject:
         #print "-----------------",self.developers[0].developerinfo.login
         
         if len(self.developers) > 0:
-            self.latestcommitter = self.developers[0]
+            #self.latestcommitter = self.developers[0]
             self.latestcommitter = self.resolveLatestCommitter()
             self.latestcommitter.updateIsLatestCommitter(True)
         
@@ -213,12 +214,12 @@ class SWProject:
         #self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
         #self.rop = rexObjects.GetObject(self.UUID)
         
-        rootfolder = rexprojectspacedataobjects.FolderInfo("naali_root_component",0)
+        rootfolder = rexprojectspacedataobjects.FolderInfo("/",0)
         
         self.component = Component(vScene, rootfolder, self.sog.AbsolutePosition, None, 6,6,V3(0,0,0))
         self.component.sog.RootPart.Scale = V3(0,0,0)
-        
-        self.componentsAndDevelopersDict["naali_root_component"] = []
+        self.components["/"] = self.component
+        self.componentsAndDevelopersDict["/"] = []
         
         for component in vComponents:
             self.addComponent(component)
@@ -254,7 +255,7 @@ class SWProject:
             #change every components color that was mod,added or removed
             #within a latest commit
             for item in self.latestcommitter.developerinfo.latestcommit.directories:
-                #locate component
+                #locate component, there is a change that this is not on a map yet...
                 print item
                 component = self.components[item]
                 #perhaps one day we might tell component/file if
@@ -308,17 +309,20 @@ class SWProject:
         #locate correct component 
         component = None
         
+        print "---hakemistot commitissa___projekti: ", vCommit.directories
+        
         if len(vCommit.directories) > 0:
             
-            print "commit directory: ",vCommit.directories[0]
-            
-            try:
-                component = self.components[vCommit.directories[0]]
-            except:
-                print "No component named:%s  , must be a new component"%(vCommit.directories[0])
-                folder = rexprojectspacedataobjects.FolderInfo(vCommit.directories[0],0)#new directory
-                component = self.addComponent(folder)
-                
+            #print "commit directory: ",vCommit.directories[0]
+            for i in range(0,len(vCommit.directories)):
+                try:
+                    component = self.components[vCommit.directories[i]]
+                except:
+                    print "No component named:%s  , must be a new component"%(vCommit.directories[0])
+                    folder = rexprojectspacedataobjects.FolderInfo(vCommit.directories[0],0)#new directory
+                    component = self.addComponent(folder)
+                    
+            component = self.components[vCommit.directories[0]]  
             #remove developer from previous componenent, k is component name and c lists developers to
             #component named k... 
             for k,c in self.componentsAndDevelopersDict.iteritems():
@@ -368,6 +372,8 @@ class SWProject:
         #finally set latest committer if wanted
         if vMakeCurrent == True:
             
+            print "Ennen updatea: ", self.latestcommitter.developerinfo.login
+            
             self.latestcommitter.updateIsLatestCommitter(False)
             
             self.latestcommitter = committer
@@ -384,16 +390,17 @@ class SWProject:
             self.latestcommitter.updateIsLatestCommitter(True)
             
             self.visualizeLatestCommitModifications()
-            print "new test..."
+            print "jalkeen updaten: ", self.latestcommitter.developerinfo.login
             
     from operator import itemgetter,attrgetter
     def sortDevelopers(self,vDevelopers):
         """ sort developers based on their commit date, so that newest is at the top
         """
-        vDevelopers.sort(self.compareCommitDates)
-        #for d in vDevelopers:
+        devs = vDevelopers
+        devs.sort(self.compareCommitDates)
+        #for d in devs:
         #    print d.developerinfo.login ," committed on : ",d.developerinfo.latestcommit.date
-        return vDevelopers
+        return devs
     
     def compareCommitDates(self,x,y):
         return cmp(x.developerinfo.latestcommit.date,y.developerinfo.latestcommit.date)
@@ -401,6 +408,7 @@ class SWProject:
     def buildFinished(self,vBuilds):
         """ Handle build notifications by creating a blame list containing
             developers that might have broken the build. """
+        print "Build finished..."
         bResult = True
         
         if len(vBuilds) < 1:
@@ -418,7 +426,7 @@ class SWProject:
             else:
                 bLatestBuildFailed = True
                 latestSuccess = vBuilds[1]
-                 
+                print "edellinen onnistunut: ",latestSuccess.time 
                 #make blamelist
                 for d in self.developers:
                     if d.developerinfo.latestcommit.date > latestSuccess.time:

@@ -43,7 +43,6 @@ class RexProjectSpaceNotificationCenter:
         
         #vcs
         self.OnNewCommit = rxevent.RexPythonEvent()
-        self.OnNewCommitter = rxevent.RexPythonEvent()
         self.OnBranchesUpdated = rxevent.RexPythonEvent()
         self.OnNewBranches = rxevent.RexPythonEvent()
         
@@ -107,10 +106,10 @@ class VersionControlDataDispatcher:
         self.newbranchlisteners = []
         self.branchupdatedlisteners = []
         
-        
         self.timer = None
         self.latestcommit = "" #id of latest commit
-        self.timer = threading.Timer(10.0,self.update)#once a minute
+        self.committers = [] #login, developer info dict
+        self.timer = threading.Timer(61.0,self.update)#once a minute
         self.timer.start()
     
     @classmethod
@@ -132,7 +131,7 @@ class VersionControlDataDispatcher:
             listeners, developer specific listener not implemented yet."""
   
         cls.dispatcherForProject(vProject).targets[vDeveloper] = vTarget
-        
+    
     @classmethod
     def dispatcherForProject(cls,vProject):
         """ Returns dispatcher for given project, singeleton instance
@@ -158,10 +157,10 @@ class VersionControlDataDispatcher:
         commits.reverse()
         
         if( len(commits) < 1 or commits[0]["id"] == self.latestcommit):
+            print "No commits from versioncontrol"
             pass
     
         else:   
-            self.latestcommit = commits[0]["id"]
             
             newCommits = []
             
@@ -186,11 +185,12 @@ class VersionControlDataDispatcher:
                 ci = self.vcs.GetCommitInformation(c["id"])
                 
                 commit = ci["commit"]
-                
-                
+
                 devCommit = rexprojectspacedataobjects.CommitInfo(login,commit,author)
                 newCommits.append(devCommit)
-                
+            
+            self.latestcommit = commits[0]["id"]
+            
             self.dispatchCommits(newCommits)
             
         branches = self.vcs.GetBranches()
@@ -221,12 +221,12 @@ class VersionControlDataDispatcher:
                 #must be something wrong here, just updated branches...
                 pass
     
-        self.dispatchNewBranches(updatedBranches)
+        self.dispatchUpdatedBranches(updatedBranches)
         
         self.timer.cancel()
         self.timer = 0
         
-        self.timer = threading.Timer(60.0,self.update)#once a minute
+        self.timer = threading.Timer(61.0,self.update)#once a minute
         self.timer.start()
     
     def dispatchNewBranches(self,branches):
@@ -324,8 +324,8 @@ class IssueDispatcher:
         self.newIssueTargets = []
         self.issueUpdatedTargets = []
         
-        self.timer = threading.Timer(30,self.updateIssues)
-        self.issues = {}
+        self.timer = threading.Timer(60,self.updateIssues)
+        self.issues = {} #id to issueinfo dict
     
     @classmethod
     def registerOnNewIssues(cls, vTarget):
