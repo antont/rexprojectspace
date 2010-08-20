@@ -50,10 +50,20 @@ class IrcBot(Thread):
                     elif line[1] == "PRIVMSG" and line[2] == "#"+IRCROOM:
                         
                         #combine list items to a string
-                        mes = ""
-                        temp = line[3:]
+                        print line
                         
-                        for word in temp:
+                        sender = line[0]
+                        loc = sender.find("!")
+                        
+                        sender = sender[1:loc]
+                        
+                        strings = line[4:]
+                        first_word = line[3]
+
+                        mes =  "<" + sender + "> "
+                        mes = mes + first_word[1:]
+                        
+                        for word in strings:
                             mes = mes + " " +word
                         
                         print "message to room:%s"%(mes)

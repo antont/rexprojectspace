@@ -89,7 +89,9 @@ class RexProjectSpaceInformationShouter:
     def OnNewIRCMessage(self,vMessage):
         """ Shout message """
         self.GetBridge()
-        self.scriptingbridge.Actor().llShout(0,vMessage)
+        actor = self.scriptingbridge.Actor()
+        actor.llSetObjectName("irc-bot")
+        actor.llShout(0,vMessage)
         
     
     def GetBridge(self):
@@ -99,6 +101,7 @@ class RexProjectSpaceInformationShouter:
             self.timer = 0
         except:
             #get it later
+            print "Did not get bridge..."
             self.timer = threading.Timer(5.0,self.GetBridge)
     
     

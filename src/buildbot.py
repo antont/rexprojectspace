@@ -47,7 +47,7 @@ class BuildBot:
             if result != "success":
                 while result != "success":
                     temp = index
-                    print "---getting new build---"
+                    #print "---getting new build---"
                     builds = self.proxy.getLastBuilds(platform, count)
                     for i in range(temp,count):
                         
@@ -67,7 +67,7 @@ class BuildBot:
             else:
                 while result != "failure":
                     temp = index
-                    print "---getting new build---"
+                    #print "---getting new build---"
                     builds = self.proxy.getLastBuilds(platform, count)
                     for i in range(temp,count):
                         

@@ -6,10 +6,19 @@ import rxevent
 import rexprojectspacedataobjects
 
 class RexProjectSpaceNotificationCenter:
-    """ Clusters all the dispatcher classes in to a single
+    """ 
+        Clusters all the dispatcher classes in to a single
         easily usable class (Facade class). Users can subscribe in to events
         that they are interested in and provide their callback/delegate
         functions.
+        
+        Write a handler function/delegate and
+        Register to these notifications/events like this (c#-style)
+        nc = RexProjectSpaceNotificationCenter.NotificationCenter("naali")
+        nc.OnNewCommit += self.handleNewCommit
+        Remember also to unregister
+        nc.OnNewCommit -= self.handleNewCommit
+        
     """    
     instances = {}
 
@@ -45,7 +54,6 @@ class RexProjectSpaceNotificationCenter:
         self.OnNewCommit = rxevent.RexPythonEvent()
         self.OnBranchesUpdated = rxevent.RexPythonEvent()
         self.OnNewBranches = rxevent.RexPythonEvent()
-        
         
         #issue tracking system
         self.OnNewIssue = rxevent.RexPythonEvent()
@@ -264,7 +272,7 @@ class BuildResultDispatcher:
         self.targets = []
         self.buildbot = buildbot.BuildBot()
         
-        self.timer = threading.Timer(60,self.updateBuildResults)
+        self.timer = threading.Timer(80,self.updateBuildResults)
         
     
     @classmethod
