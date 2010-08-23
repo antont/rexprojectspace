@@ -233,6 +233,17 @@ def bind_mesh(scene, mesh_assetidstr, materialpath,
     
         return sceneobjgroup, robject
     
+def StoreBytesAsTexture(vScene,vBytes):
+    uid = OpenMetaverse.UUID.Random()
+    asset = OpenSim.Framework.AssetBase()
+    asset.Name = "tekstuuri"
+    asset.FullID = uid
+    asset.Type = 0 # ?? texture??
+    asset.Description = "tekstuuri"
+    asset.Data = vBytes
+    val = vScene.AssetService.Store(asset)
+    
+    return val
     
     
 #not used    

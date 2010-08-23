@@ -33,6 +33,10 @@ class BuildBot:
         
         for platform in buildPlatforms:
             build = self.proxy.getLastBuilds(platform, 1)
+            
+            if not build:
+                continue
+            
             build = build[0]
             result = build[6]
             #print "tulos:", result      

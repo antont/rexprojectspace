@@ -56,19 +56,19 @@ class VersionControlSystem:
         """ Gets a vNbrOfCommits amount of commits from the github network data. 
             Returns commits as list of dicts, contents directly from github"""
         url = "http://github.com/realxtend/%s/network_meta"%(self.projectName)
-        f = urllib.urlopen(url)
-        s = f.read()
+        fmeta = urllib.urlopen(url)
+        smeta = fmeta.read()
             
-        jsonstring = json.loads(s)
+        jsonstring = json.loads(smeta)
         nethash = jsonstring["nethash"]
         end = len(jsonstring["dates"])
 
         url = "http://github.com/realxtend/%s/network_data_chunk?nethash=%s&start=%s&end=%s"%(self.projectName,nethash,str(end - vNbrOfCommits),str(end-1))
 
-        f = urllib.urlopen(url)
-        s = f.read()
+        fdata = urllib.urlopen(url)
+        sdata = fdata.read()
 
-        jsonstring = json.loads(s)
+        jsonstring = json.loads(sdata)
         commits = jsonstring["commits"]
         
         return commits    

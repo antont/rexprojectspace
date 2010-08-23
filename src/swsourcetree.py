@@ -273,7 +273,7 @@ class SWSourceTree:
         
         if masterbranch:
             self.clickhandlers.append(clickhandler.URLOpener(self.scene,self.tree.treetopsog,self.tree.treetoprop,masterbranch.url))
-        #uncomment this
+            self.tree.treetopsog.SetText("master",V3(0.0,1.0,0.0),1.0)
 
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         

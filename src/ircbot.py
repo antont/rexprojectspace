@@ -11,8 +11,8 @@ from threading import Thread
 
 HOST="chat.freenode.net"
 PORT=6667
-NICK="ProjectSpaceBot4"
-IDENT="projectspacebot4"
+NICK="ProjectSpaceBot"
+IDENT="projectspacebot"
 REALNAME="Project space-bot"
 IRCROOM = "rpstestroom"
 

@@ -18,6 +18,13 @@ asm = clr.LoadAssemblyByName('OpenSim.Region.ScriptEngine.Shared')
 import OpenMetaverse
 from OpenMetaverse import Vector3 as V3
 
+clr.AddReference('System.Drawing')
+import OpenMetaverse.Imaging.OpenJPEG
+
+import System.Drawing.Bitmap
+import System.Drawing.Color
+import System.Drawing.Graphics
+
 import rexprojectspaceutils
 
 import rexprojectspacenotificationcenter
@@ -60,7 +67,7 @@ class File(ComponentBase):
 class Component(ComponentBase):
     """ Representing a single directory, can have children."""
         
-    offset = 0.5
+    offset = 0.75
     
     modifiedtextureid = None
     removedtextureid = None
@@ -88,15 +95,14 @@ class Component(ComponentBase):
         self.scale = vScale
         self.color = 0 #blue
         
-        if not Component.modifiedtextureid:
-            print "loading  textures"
-            Component.modifiedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/modifiedcomponent.jp2")
-            Component.removedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/removedcomponent.jp2")
-            #Component.addedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/addedcomponent.jp2")
-            Component.addedtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/bluecomponent.jp2")
+
+        self.modifiedtextureid, self.removedtextureid,self.addedtextureid = None,None,None
         
         sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
-        self.currenttexid = Component.addedtextureid
+        #self.currenttexid = Component.addedtextureid
+        self.addedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.SkyBlue)
+        
+        self.currenttexid = self.addedtextureid
         
         if sop:
             self.sog = sop.ParentGroup
@@ -121,7 +127,7 @@ class Component(ComponentBase):
             self.scene.AddNewSceneObject(self.sog, False)
 
         #print "mesh id for component: ", self.rop.RexMeshUUID
-        self.sog.SetText(self.name,V3(1.0,1.0,0.0),1.0)
+        #self.sog.SetText(self.name,V3(1.0,1.0,0.0),1.0)
 
         self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.folderinfo.url)
         
@@ -134,7 +140,7 @@ class Component(ComponentBase):
                self.curRow + temp.Y + self.curRow*Component.offset,
                temp.Z + 0.5)
                
-        child =  Component(self.scene, vFolderInfo, p, self, 1,1,V3(0.85,0.85,0.85))
+        child =  Component(self.scene, vFolderInfo, p, self, 1,1,V3(0.9,0.9,0.9))
         
         #child.sog.RootPart.Scale = V3(0.85,0.85,1)
         
@@ -150,16 +156,56 @@ class Component(ComponentBase):
         """ Changes texture if needed. vState can be modified,removed or added """
         #print "component: ",self.name, "is at state: ",vState
         tex = self.currenttexid
-        if vState == "modified":
-            tex = Component.modifiedtextureid
-        elif vState == "removed" or vState == "Removed":
-            tex = Component.removedtextureid
-        elif vState == "added":
-            tex = Component.addedtextureid
+        temp = self.currenttexid
         
-        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
-        self.currenttexid = tex
+        if vState == "modified":
+            if not self.modifiedtextureid:
+                self.modifiedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.Yellow)
+            
+            tex = self.modifiedtextureid
+        elif vState == "removed" or vState == "Removed":
+            if not self.removedtextureid:
+                self.removedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.Red)
+            
+            tex = self.removedtextureid
+        elif vState == "added":
+            tex = self.addedtextureid
+        
+        if tex != temp:
+            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
 
+        self.currenttexid = tex
+        
+    def CreateTexture(self,vText,vTextColor,vBackgroundColor):
+
+        width,height = 256,256
+        
+        bitmap = System.Drawing.Bitmap(width,height,System.Drawing.Imaging.PixelFormat.Format32bppRgb)
+        
+        bgbrush = System.Drawing.SolidBrush(vBackgroundColor)
+        
+        graph = System.Drawing.Graphics.FromImage(bitmap);
+        graph.FillRectangle(bgbrush, 0, 0, width, height)
+
+        textFont = System.Drawing.Font("Courier", 25, System.Drawing.FontStyle.Bold)
+        textBrush = System.Drawing.SolidBrush(vTextColor)
+        layoutrect = System.Drawing.RectangleF(0,10,256,45)
+        text = ""
+
+        if len(vText) > 11:
+            text = vText[0:11]
+            text = text + "..."
+        else:
+            text = vText
+            
+        graph.DrawString(text, textFont, textBrush, layoutrect)
+
+        imageJ2000 = OpenMetaverse.Imaging.OpenJPEG.EncodeFromImage(bitmap, True);
+        
+        tex = rexprojectspaceutils.StoreBytesAsTexture(self.scene,imageJ2000)
+
+        return tex
+    
 class SWProject:
     """ Controller class for software projects that knows of it's developers,
         components and compilation results of the source code. """
