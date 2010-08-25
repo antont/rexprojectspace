@@ -186,13 +186,9 @@ class SWEnhancement(SWIssue):
         super(SWEnhancement,self).__init__(vScene,vIssueInfo,vPos)
         self.issueinfo = vIssueInfo
         
-        vMaterialPath = "enhgenerated.material"
-        
-        #self.sog,self.rop = super(SWEnhancement,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_green.jp2"],vPos)
-        
         if SWEnhancement.MESHUUID == OpenMetaverse.UUID.Zero:
             print "loading enhancement mesh"
-            SWEnhancement.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"bugi.mesh","issue mesh")
+            SWEnhancement.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/bugi.mesh","issue mesh")
         
         sop =  vScene.GetSceneObjectPart("rps_issue_" + self.issueinfo.id)
         
@@ -203,7 +199,7 @@ class SWEnhancement(SWIssue):
             #print "enhancement: %s found from scene"%(self.issueinfo.id)
             SWEnhancement.MESHUUID = self.rop.RexMeshUUID.ToString()
         else:
-            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWEnhancement.MESHUUID,"enhgenerated.material",rexprojectspaceutils.euler_to_quat(0,0,0),vPos,V3(0.1,0.1,0.1))
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWEnhancement.MESHUUID,"rpsmeshes/enhgenerated.material",rexprojectspaceutils.euler_to_quat(0,0,0),vPos,V3(0.1,0.1,0.1))
             self.sog.RootPart.Name =  "rps_issue_" + self.issueinfo.id
         
         if SWEnhancement.TEXTUREUUID == OpenMetaverse.UUID.Zero:
@@ -264,14 +260,10 @@ class SWBug(SWIssue):
         """
         super(SWBug,self).__init__(vScene,vIssueInfo,vPos)
         self.issueinfo = vIssueInfo
-        
-        vMaterialPath = "enhgenerated.material"
-        
-        #self.sog,self.rop = super(SWBug,self).LoadMeshWithMaterialAndTextures("bugi.mesh",vMaterialPath,["rpstextures/bugi_green.jp2"],vPos)
-        
+         
         if SWBug.MESHUUID == OpenMetaverse.UUID.Zero:
             print "loading enhancement mesh"
-            SWBug.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"bugi.mesh","issue mesh")
+            SWBug.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/bugi.mesh","issue mesh")
         
         sop =  vScene.GetSceneObjectPart("rps_issue_" + self.issueinfo.id)
         
@@ -282,7 +274,7 @@ class SWBug(SWIssue):
             #print "bug: %s found from scene"%(self.issueinfo.id)
             SWBug.MESHUUID = self.rop.RexMeshUUID.ToString()
         else:
-            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWBug.MESHUUID,"enhgenerated.material",rexprojectspaceutils.euler_to_quat(0,0,0),vPos,V3(0.1,0.1,0.1))
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWBug.MESHUUID,"rpsmeshes/enhgenerated.material",rexprojectspaceutils.euler_to_quat(0,0,0),vPos,V3(0.1,0.1,0.1))
             self.sog.RootPart.Name =  "rps_issue_" + self.issueinfo.id
         
         if SWBug.TEXTUREUUID == OpenMetaverse.UUID.Zero:

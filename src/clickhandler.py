@@ -26,7 +26,7 @@ class URLOpener:
         """ Handler for opensim touch event, check if correct item was touched
             and then open url"""
         if vLocalID == self.sog.RootPart.LocalId:
-            
+            print "click to URL:", self.url
             if not self.mod:
                 try:
                     self.mod = self.scene.Modules["ScriptBridgeModule"]

@@ -111,15 +111,13 @@ class Component(ComponentBase):
             #self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
              #print "Component: %s found from scene"%("rps_component_" + self.name)
         else:
-            #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"component.mesh","component.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
             if Component.MESHUUID == OpenMetaverse.UUID.Zero:
                 print "loading component mesh"
-                Component.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"component.mesh","component mesh")
+                Component.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/component.mesh","component mesh")
                 
-            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,Component.MESHUUID,"component.material",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,Component.MESHUUID,"rpsmeshes/component.material",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
             
             self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
-            #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"diamond.mesh","diamond.material","comp",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
             
             self.sog.RootPart.Scale = V3(vX,vY,1)
             self.sog.RootPart.Name =  "rps_component_" + self.name

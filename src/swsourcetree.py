@@ -83,7 +83,7 @@ class Tree:
             self.treebaserop = rexObjects.GetObject(self.sog.RootPart.UUID)
             #print "Tree: %s found from scene"%(vName)
         else:    
-            self.treebasesog,self.treebaserop = rexprojectspaceutils.load_mesh(self.scene,"treebase.mesh","treebase.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
+            self.treebasesog,self.treebaserop = rexprojectspaceutils.load_mesh(self.scene,"rpsmeshes/treebase.mesh","rpsmeshes/treebase.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
             self.treebasesog.RootPart.Name =  "rps_treebase_" + vName
             self.scene.AddNewSceneObject(self.treebasesog, False)
             self.treebasesog.AbsolutePosition = V3(self.sog.AbsolutePosition)
@@ -105,7 +105,7 @@ class Tree:
             #print "Tree: %s found from scene"%(vName)
         else:
             temp = self.treebasesog.AbsolutePosition
-            self.treetopsog,self.treetoprop = rexprojectspaceutils.load_mesh(self.scene,"treetop.mesh","treetop.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),V3(temp.X,temp.Y,temp.Z+1))
+            self.treetopsog,self.treetoprop = rexprojectspaceutils.load_mesh(self.scene,"rpsmeshes/treetop.mesh","rpsmeshes/treetop.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0),V3(temp.X,temp.Y,temp.Z+1))
             self.treetopsog.RootPart.Name =  "rps_treetop_" + vName
             
             self.scene.AddNewSceneObject(self.treetopsog, False)
@@ -194,10 +194,9 @@ class TreeTile:
         else:
             if TreeTile.MESHUUID == OpenMetaverse.UUID.Zero:
                 print "loading tile mesh"
-                TreeTile.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"treetile.mesh","treetile mesh")
+                TreeTile.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/treetile.mesh","rpsmeshes/treetile mesh")
             
-            #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treetile.mesh","treetile.material","tile…",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
-            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,TreeTile.MESHUUID,"treetile.material",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,TreeTile.MESHUUID,"rpsmeshes/treetile.material",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
             
             if TreeTile.TEXTUREUUID == OpenMetaverse.UUID.Zero:
                 TreeTile.TEXTUREUUID = rexprojectspaceutils.load_texture(self.scene,"rpstextures/treebranch_green.jp2")
@@ -227,12 +226,9 @@ class Branch:
         
         self.currenttexid = OpenMetaverse.UUID.Zero
         
-        #upwards...
-        #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos,V3(0,0,0))
-        
         if Branch.MESHUUID == OpenMetaverse.UUID.Zero:
             print "loading branch mesh"
-            Branch.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"treebranch.mesh","treebranch mesh")
+            Branch.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/treebranch.mesh","rpsmeshes/treebranch mesh")
         
         sop =  vScene.GetSceneObjectPart("rps_branch_" + vBranchName)
         
@@ -243,7 +239,7 @@ class Branch:
             print "branch: %s found from scene"%(vBranchName)
             Branch.MESHUUID = self.rop.RexMeshUUID.ToString()
         else:
-            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,Branch.MESHUUID,"treebranch.material",vRot,vPos,vScale)
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,Branch.MESHUUID,"rpsmeshes/treebranch.material",vRot,vPos,vScale)
             self.sog.RootPart.Name =  "rps_branch_" + vBranchName
         
         
@@ -280,7 +276,7 @@ class TopBranch:
             print "branch: %s found from scene"%(vBranchName)
             
         else:
-            self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"treetop.mesh","treetop.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+            self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"rpsmeshes/treetop.mesh","rpsmeshes/treetop.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
             self.sog.RootPart.Name =  "rps_treetop_" + vBranchName
         
         

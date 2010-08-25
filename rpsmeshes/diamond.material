@@ -1,0 +1,15 @@
+material Material/SOLID/TEX/diamond_green..jpg.bmp
+{
+	technique
+	{
+		pass
+		{
+			diffuse 0.071690 0.883239 0.255091
+			specular 0.500000 0.500000 0.500000 12.500000
+			texture_unit
+			{
+				texture diamond_green..jpg.bmp
+			}
+		}
+	}
+}

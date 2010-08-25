@@ -1,0 +1,35 @@
+
+material Material.001/SOLID/TEX/bugi_unwrapped_n_w_bones_Sphere.jpg
+{
+	technique
+	{
+		pass
+		{
+			diffuse 0.800000 0.800000 0.800000
+			specular 0.500000 0.500000 0.500000 12.500000
+			texture_unit
+			{
+				texture bricks.jp2
+			}
+		}
+	}
+}
+
+material Material
+{
+	technique
+	{
+		pass
+		{
+			diffuse 0.800000 0.800000 0.800000
+			specular 0.500000 0.500000 0.500000 12.500000
+			texture_unit
+			{
+				texture bricks.jp2
+			}
+		}
+	}
+}
+
+            
+            

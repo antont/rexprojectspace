@@ -1,0 +1,15 @@
+material Material.003/SOLID/TEX/kokeilutekstuuri.bmp
+{
+	technique
+	{
+		pass
+		{
+			diffuse 0.800000 0.800000 0.800000
+			specular 0.309873 0.283395 0.283395 12.500000
+			texture_unit
+			{
+				texture kokeilutekstuuri.bmp
+			}
+		}
+	}
+}

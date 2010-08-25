@@ -216,21 +216,23 @@ def bind_mesh(scene, mesh_assetidstr, materialpath,
         robject.RexCastShadows = True
         robject.RexDrawType = 1;
         robject.RexCollisionMeshUUID = asset.FullID;
-
-        matdata = open(materialpath).read()
-        matparser = OgreSceneImporter.OgreMaterialParser(scene)
-        rc, mat2uuid, mat2texture = matparser.ParseAndSaveMaterial(
-                matdata)
-        mat2uuid = dict(mat2uuid)
-        #print "mat-uuid dict:", mat2uuid
-        if not rc:
-            raise MaterialParsingError("material parsing failed")
-    
-        matnames, errors = DotMeshLoader.ReadDotMeshMaterialNames(asset.Data)
-        for i, mname in enumerate(matnames):
-            robject.RexMaterials.AddMaterial(i, mat2uuid[mname])
-            #print "material added:", mname
-    
+        
+        if materialpath != "":
+            
+            matdata = open(materialpath).read()
+            matparser = OgreSceneImporter.OgreMaterialParser(scene)
+            rc, mat2uuid, mat2texture = matparser.ParseAndSaveMaterial(
+                    matdata)
+            mat2uuid = dict(mat2uuid)
+            #print "mat-uuid dict:", mat2uuid
+            if not rc:
+                raise MaterialParsingError("material parsing failed")
+        
+            matnames, errors = DotMeshLoader.ReadDotMeshMaterialNames(asset.Data)
+            for i, mname in enumerate(matnames):
+                robject.RexMaterials.AddMaterial(i, mat2uuid[mname])
+                #print "material added:", mname
+        
         return sceneobjgroup, robject
     
 def StoreBytesAsTexture(vScene,vBytes):

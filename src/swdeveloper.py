@@ -85,9 +85,9 @@ class SWDeveloper:
         else:
             if SWDeveloper.MESHUUID == OpenMetaverse.UUID.Zero:
                 print "loading dev mesh"
-                SWDeveloper.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"diamond.mesh","developer mesh")
+                SWDeveloper.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/diamond.mesh","developer mesh")
                 
-            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWDeveloper.MESHUUID,"diamond.material",OpenMetaverse.Quaternion(0, 0, 0, 1), V3(128, 128, 30),
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWDeveloper.MESHUUID,"rpsmeshes/diamond.material",OpenMetaverse.Quaternion(0, 0, 0, 1), V3(128, 128, 30),
                                                                 V3(0.5, 0.5, 0.5))
             
             """
