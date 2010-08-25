@@ -93,6 +93,9 @@ class Tree:
         
         sop = None
         
+        self.treetop = TopBranch(self.scene,"master")
+        
+        """
         sop =  vScene.GetSceneObjectPart("rps_treetop_" + vName)
         
         if sop:
@@ -109,7 +112,8 @@ class Tree:
             self.treetoprop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         
         #print "mesh id for tree: ", self.rop.RexMeshUUID
-
+        """
+        
     def addNewBranch(self,vBranchInfo,vTexturePath,vParentName=""):
         """ Creates a new branch and a tile if needed """         
            
@@ -117,9 +121,9 @@ class Tree:
         if(nbr == 0):
             temp = self.pos
             z = temp.Z + self.tree_base_height
-            self.tiles.append(TreeTile(self.scene,V3(temp.X,temp.Y,z),self.tile_height))
+            self.tiles.append(TreeTile(self.scene,V3(temp.X,temp.Y,z),self.tile_height,"tile" + str(nbr)))
             nbr = 1
-        
+           
         tile = self.tiles[nbr-1]
         currentPlace = tile.currentIndex
         
@@ -127,12 +131,12 @@ class Tree:
             temp = self.pos
             z = self.pos.Z + nbr*self.tile_height + self.tree_base_height
             newLoc = V3(self.pos.X,self.pos.Y,z)
-            tile = TreeTile(self.scene,newLoc,self.tile_height)
+            tile = TreeTile(self.scene,newLoc,self.tile_height,str(nbr))
             self.tiles.append(tile)
             #put top in to a place
             temp = tile.sog.AbsolutePosition
             newpos = V3(temp.X,temp.Y,temp.Z+self.tile_height)
-            self.treetopsog.NonPhysicalGrabMovement(newpos)
+            self.treetop.sog.NonPhysicalGrabMovement(newpos)
             print "paikka: ", newpos
         
         
@@ -149,7 +153,10 @@ class TreeTile:
     """ View class for single treetile. Knows positions and rotations/euler angles to
         branches
     """
-    def __init__(self,vScene,vPos,vHeight):
+    MESHUUID = OpenMetaverse.UUID.Zero
+    TEXTUREUUID = OpenMetaverse.UUID.Zero
+    
+    def __init__(self,vScene,vPos,vHeight,vName):
         """ Load mesh and calculate positions and rotations to branches 
             (that may or may not be created later on).
         """
@@ -177,17 +184,37 @@ class TreeTile:
         
         rexObjects = self.scene.Modules["RexObjectsModule"]
         
-        self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treetile.mesh","treetile.material","tile…",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
-        tex = rexprojectspaceutils.load_texture(self.scene,"rpstextures/treebranch_green.jp2")
-        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
-        ##print "mesh id for tile: ", self.rop.RexMeshUUID
+        sop =  vScene.GetSceneObjectPart("rps_treetile_" + vName)
+        
+        if sop:
+            self.sog = sop.ParentGroup
+            self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
+            TreeTile.MESHUUID = self.rop.RexMeshUUID.ToString()
+            
+        else:
+            if TreeTile.MESHUUID == OpenMetaverse.UUID.Zero:
+                print "loading tile mesh"
+                TreeTile.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"treetile.mesh","treetile mesh")
+            
+            #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treetile.mesh","treetile.material","tile…",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
+            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,TreeTile.MESHUUID,"treetile.material",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos)
+            
+            if TreeTile.TEXTUREUUID == OpenMetaverse.UUID.Zero:
+                TreeTile.TEXTUREUUID = rexprojectspaceutils.load_texture(self.scene,"rpstextures/treebranch_green.jp2")
+            
+            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(TreeTile.TEXTUREUUID))
+            self.sog.RootPart.Name =  "rps_treetile_" + vName
+            ##print "mesh id for tile: ", self.rop.RexMeshUUID
         
         self.scene.AddNewSceneObject(self.sog, False)
-        
+
+
 class Branch:
     """ View class for a single branch """
     MESHUUID = OpenMetaverse.UUID.Zero
+    textures = {}  #texturepath, textureid map
     w = 1
+    
     
     def __init__(self,vScene,vBranchName,vTexturePath,vPos,vScale,vRot):
         """ Load mesh and set the texture.
@@ -197,7 +224,9 @@ class Branch:
         self.pos = vPos
         self.scale = vScale
         self.rot = vRot
-
+        
+        self.currenttexid = OpenMetaverse.UUID.Zero
+        
         #upwards...
         #self.sog, self.rop = rexprojectspaceutils.load_mesh(self.scene,"treebranch.mesh","treebranch.material","tile…",vRot,self.pos,V3(0,0,0))
         
@@ -226,9 +255,51 @@ class Branch:
 
     def SetTexture(self,vTexturePath):
         """ Loads and sets the given texture to a branch (uv-mapped) """
-        tex = rexprojectspaceutils.load_texture(self.scene,vTexturePath)
-        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+        texid = OpenMetaverse.UUID.Zero
+        try:
+            texid = Branch.textures[vTexturePath] 
+        except:
+            texid = rexprojectspaceutils.load_texture(self.scene,vTexturePath)
+            Branch.textures[vTexturePath] = texid
+
+        if texid != self.currenttexid and texid != OpenMetaverse.UUID.Zero:
+            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(texid))
+            self.currenttexid = texid
+
+class TopBranch:
+    def __init__(self,vScene,vBranchName):
+        sop =  vScene.GetSceneObjectPart("rps_treetop_" + vBranchName)
+        self.scene = vScene
+        self.currenttexid = OpenMetaverse.UUID.Zero
+        self.textures = {}
         
+        if sop:
+            self.sog = sop.ParentGroup
+            rexObjects = vScene.Modules["RexObjectsModule"]
+            self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
+            print "branch: %s found from scene"%(vBranchName)
+            
+        else:
+            self.sog,self.rop = rexprojectspaceutils.load_mesh(self.scene,"treetop.mesh","treetop.material","test mesh data",rexprojectspaceutils.euler_to_quat(0,0,0))
+            self.sog.RootPart.Name =  "rps_treetop_" + vBranchName
+        
+        
+        #self.SetTexture(vTexturePath)
+        self.sog.SetText(vBranchName,V3(0.0,1.0,0.0),1.0)
+        
+    def SetTexture(self,vTexturePath):
+        """ Loads and sets the given texture to a branch (uv-mapped) """
+        texid = OpenMetaverse.UUID.Zero
+        try:
+            texid = self.textures[vTexturePath] 
+        except:
+            texid = rexprojectspaceutils.load_texture(self.scene,vTexturePath)
+            self.textures[vTexturePath] = texid
+
+        if texid != self.currenttexid and texid != OpenMetaverse.UUID.Zero:
+            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(texid))
+            self.currenttexid = texid
+            
 import threading
 class SWSourceTree:
     """ Controller part of the tree """
@@ -272,8 +343,8 @@ class SWSourceTree:
                 break
         
         if masterbranch:
-            self.clickhandlers.append(clickhandler.URLOpener(self.scene,self.tree.treetopsog,self.tree.treetoprop,masterbranch.url))
-            self.tree.treetopsog.SetText("master",V3(0.0,1.0,0.0),1.0)
+            self.clickhandlers.append(clickhandler.URLOpener(self.scene,self.tree.treetop.sog,self.tree.treetop.rop,masterbranch.url))
+            #self.tree.treetop.sog.SetText("master",V3(0.0,1.0,0.0),1.0)
 
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
         
@@ -347,10 +418,18 @@ class SWSourceTree:
             
         for branch in vBranchInfos:
             bname = branch.name.strip()
-            if self.branches.keys().count(branch.name) > 0 or bname == "master":
-                continue
             
-            print "---Creating branch:", branch.name
+            if self.branches.keys().count(branch.name) > 0:
+                continue #not new
+            
+            if bname == "master":
+                texpath = "rpstextures/treebranch_green.jp2"
+                if tday - self.commitsThreshold > time.mktime(branch.latestcommitdate):
+                    texpath = "rpstextures/treebranch_rust.jp2" 
+                
+                self.tree.treetop.SetTexture(texpath)
+                print "tree tops texture", texpath
+                continue
             
             #Evaluate latest commit data and create branch
             texpath = "rpstextures/treebranch_green.jp2"
@@ -372,18 +451,21 @@ class SWSourceTree:
     def updateBranches(self,branches):
         """ Handle branch update notification by changing texture if needed
         """
+        texpath = "rpstextures/treebranch_green.jp2"
+        
         for branch in branches:
             try:
                 b = self.branches[branch.name]
-                texpath = "rpstextures/treebranch_green.jp2"
+                
                 b.SetTexture(texpath)
                 
                 bi = self.branchinfos[branch.name]
                 bi.latestcommitdate = branch.latestcommitdate
                 
             except:
-                continue
-    
+                if branch.name == "master":
+                    self.tree.treetop.SetTexture(texpath)
+                    
     def onCommitTimer(self):
         """ Check if some branch has been too long without commits
             so that the texture has to be changed"""
