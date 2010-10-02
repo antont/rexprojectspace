@@ -29,7 +29,7 @@ class BuildBot:
             buildPlatforms = self.proxy.getAllBuilders()
         except:
             pass
-            #print "exception in buildbot xmlrpc"
+            print "exception in buildbot xmlrpc"
         
         for platform in buildPlatforms:
             build = self.proxy.getLastBuilds(platform, 1)
@@ -39,7 +39,8 @@ class BuildBot:
             
             build = build[0]
             result = build[6]
-            #print "tulos:", result      
+            print "tulos:", build
+                  
             t = time.gmtime(build[2])
  
             binfo = rexprojectspacedataobjects.BuildInfo(platform,result,t)
@@ -47,16 +48,24 @@ class BuildBot:
             
             index = 1
             count = 10
+            bNoMoreBuilds = False
             
             if result != "success":
-                while result != "success":
+                
+                while result != "success" and bNoMoreBuilds == False:
                     temp = index
                     #print "---getting new build---"
                     builds = self.proxy.getLastBuilds(platform, count)
                     for i in range(temp,count):
-                        
-                        build = builds[i]
-                        
+                        try:
+                            build = builds[i]
+                        except:
+                            #no more builds
+                            print "No more builds"
+                            results.append(rexprojectspacedataobjects.BuildInfo(platform,result))
+                            bNoMoreBuilds = True
+                            break
+                            
                         result = build[6]
                         if result != "success":
                             count = count + 10
@@ -69,13 +78,20 @@ class BuildBot:
                         results.append(binfo)
                         break
             else:
-                while result != "failure":
+                while result != "failure" and  bNoMoreBuilds == False:
                     temp = index
                     #print "---getting new build---"
                     builds = self.proxy.getLastBuilds(platform, count)
                     for i in range(temp,count):
                         
-                        build = builds[i]
+                        try:
+                            build = builds[i]
+                        except:
+                            #no more builds
+                            print "No more builds"
+                            results.append(rexprojectspacedataobjects.BuildInfo(platform,result))
+                            bNoMoreBuilds = True
+                            break
                         
                         result = build[6]
                         if result != "failure":
