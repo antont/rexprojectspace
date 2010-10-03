@@ -57,7 +57,7 @@ class ScriptBridgeModule(IRegionModule):
             print "spawning actor"
             self.rexif = rexpy.mCSharp
             #pos = self.sog.AbsolutePosition
-            pos_lsl = LSL_Types.Vector3(125,125,25)
+            pos_lsl = LSL_Types.Vector3(0,0,255)
             self.rexif.SpawnActor(pos_lsl,0,False,"rexprojectspace.RexProjectSpace")
             print "spawned actor..."
         
@@ -85,7 +85,7 @@ class ScriptBridgeModule(IRegionModule):
     def Actor(self):
         print "hello"
         if not self.actor:
-            self.actor = self.SpawnActor("rxactor.Actor",V3(120,120,120))
+            self.actor = self.SpawnActor("rxactor.Actor",V3(0,0,255))
             print self.actor
         return self.actor
     
@@ -94,7 +94,7 @@ class ScriptBridgeModule(IRegionModule):
         self.world = vWorld
         
     def SpawnActor(self,vClassName,pos):   
-        pos_lsl = LSL_Types.Vector3(125,125,25)
+        pos_lsl = LSL_Types.Vector3(pos.X,pos.Y,pos.Z)
         localid = self.rexif.SpawnActor(pos_lsl,0,False,vClassName)
         actor = self.GetActorWithLocalID(localid)
         #print actor
