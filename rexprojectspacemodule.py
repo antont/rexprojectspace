@@ -18,6 +18,7 @@ clr.AddReference('OpenSim.Framework')
 import OpenSim.Framework
 clr.AddReference('OpenSim.Region.Framework')
 from OpenSim.Region.Framework.Interfaces import IRegionModule
+from OpenSim.Region.Framework.Interfaces import IDynamicTextureManager
 
 clr.AddReference('OgreSceneImporter')
 import OgreSceneImporter
@@ -26,6 +27,9 @@ clr.AddReference('RexDotMeshLoader')
 from RexDotMeshLoader import DotMeshLoader
 
 from OpenMetaverse import Vector3 as V3
+
+clr.AddReference('System.Drawing')
+clr.AddReference('OpenMetaverse')
 
 import sys, os, sha
 import threading
@@ -160,13 +164,14 @@ class RexProjectSpaceModule(IRegionModule):
         
         self.project = self.initSWProject()
         
-        temp = self.project.sog.AbsolutePosition
-        projectpos = V3(temp.X,temp.Y,temp.Z + 0.75)
+
+        #temp = self.project.sog.AbsolutePosition
+        #projectpos = V3(temp.X,temp.Y,temp.Z + 0.75)
         
-        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+8.0,projectpos.Y+8.5,projectpos.Z + 3),issuespawnpos)
-        self.initSWIssues()
+        #self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+9.5,projectpos.Y+9.5,projectpos.Z + 3),issuespawnpos)
+        #self.initSWIssues()
         
-        self.shouter = RexProjectSpaceInformationShouter(self.scene)
+        #self.shouter = RexProjectSpaceInformationShouter(self.scene)
         
         self.setUpTests()
         
@@ -351,25 +356,65 @@ class RexProjectSpaceModule(IRegionModule):
         #testing project
         scene.AddCommand(self, "project","","",self.cmd_project)
     
-    def cmd_hitMe(self, *args):
-        self.shouter.OnNewCommit("")
-        """
-        self.bugs = []
+    def createBall(self):
+        sphereRadius = 1
+        sphereHeigth = 1
         
-        for i in range(0,5):
-            empty = []
-            issueData = rexprojectspacedataobjects.IssueInfo(empty)
-            
-            issueData.type = "Enhancement"
-            issueData.owner = "maukka user"
-            issueData.status = "new"
-            issueData.summary = "enhancement made by test user..."
-            issueData.id = str(random.randint(0,1000000))
-            bug =  self.issuefactory.CreateIssue(issueData)
-            self.bugid = issueData.id
-            self.bugs.append(bug)
-            bug.start()
-        """
+        pbs = OpenSim.Framework.PrimitiveBaseShape.CreateSphere()
+        pbs.SetRadius(sphereRadius)
+        pbs.SetHeigth(sphereHeigth)        
+        sog = OpenSim.Region.Framework.Scenes.SceneObjectGroup(
+        OpenMetaverse.UUID.Random(),V3(127,130,26),pbs)
+
+        texcolor = OpenMetaverse.Color4(1, 0, 0, 1)
+        tex = sog.RootPart.Shape.Textures
+        tex.DefaultTexture.RGBA = texcolor
+        sog.RootPart.UpdateTexture(tex)
+        self.scene.AddNewSceneObject(sog, False)
+        sog.SetText("pallo",V3(1.0,1.0,0.0),1.0)
+        return sog    
+    
+    
+    def cmd_hitMe(self, *args):
+        #fi = rexprojectspacedataobjects.FolderInfo("LongName4",20)
+        #self.comp = swproject.Component(self.scene,fi,V3(125,125,27),None)
+        
+        import OpenMetaverse.Imaging.OpenJPEG
+        
+        import System.Drawing.Bitmap
+        import System.Drawing.Color
+        import System.Drawing.Graphics
+        width,height = 256,256
+        
+        bitmap = System.Drawing.Bitmap(width,height,System.Drawing.Imaging.PixelFormat.Format32bppRgb)
+
+        graph = System.Drawing.Graphics.FromImage(bitmap);
+
+        color = System.Drawing.SolidBrush(System.Drawing.Color.Yellow)
+        graph.FillRectangle(color, 0, 0, width, height)
+
+        myFont = System.Drawing.Font("Courier", 25, System.Drawing.FontStyle.Bold)
+        myBrush = System.Drawing.SolidBrush(System.Drawing.Color.Black)
+        startPoint = System.Drawing.Point(10,10)
+        
+        layoutrect = System.Drawing.RectangleF(0,10,256,45)
+        
+        #graph.DrawString("Hello world", myFont, myBrush, startPoint)
+        graph.DrawString("InventoryModule", myFont, myBrush, layoutrect)
+
+        bitmap.Save("kokeilutekstuuri.bmp")
+        
+        sog,rop = rexprojectspaceutils.load_mesh(self.scene,"rpsmeshes/component.mesh","rpsmeshes/component.material","comp")
+        
+        imageJ2000 = OpenMetaverse.Imaging.OpenJPEG.EncodeFromImage(bitmap, True);
+        
+        tex = rexprojectspaceutils.StoreBytesAsTexture(self.scene,imageJ2000)
+        
+        #return tex
+        
+        rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+
+        
     def cmd_organize(self, *args):
         
         newpositions = []
@@ -421,7 +466,7 @@ class RexProjectSpaceModule(IRegionModule):
         cd = rexprojectspacenotificationcenter.VersionControlDataDispatcher.dispatcherForProject("naali")
         
         commit = {}
-        commit["message"] = "Test commit from region module, changed files from doc, tools and Core "
+        commit["message"] = "Test commit from region module, changed files from Core, tools and doc "
         
         commit["authored_date"] = "2010-09-23T09:54:40-07:00"
         commit["id"] = random.randint(0,1000000)
@@ -466,8 +511,8 @@ class RexProjectSpaceModule(IRegionModule):
         
         commit["authored_date"] = "2010-09-18T09:54:40-07:00"
         
-        commit["removed"] = ["bin/j.j2k"]
-        commit["added"] = ["doc/help.txt"]
+        commit["removed"] = ["WorldMapModule/j.j2k"]
+        commit["added"] = ["WorldMapModule/help.txt"]
         commit["modified"] = []
         commit["id"] = random.randint(0,1000000)
         
@@ -500,7 +545,13 @@ class RexProjectSpaceModule(IRegionModule):
         
         binfo_old = rexprojectspacedataobjects.BuildInfo("","success",ti)
         
-        self.project.buildFinished([binfo,binfo_old])
+        cd = rexprojectspacenotificationcenter.VersionControlDataDispatcher.dispatcherForProject("naali")
+        commits = [ci]
+        cd.dispatchCommits( commits )
+        
+        bd = rexprojectspacenotificationcenter.BuildResultDispatcher.dispatcher()
+        bd.dispatchBuildResults([binfo,binfo_old])
+        #self.project.buildFinished([binfo,binfo_old])
         
     def cmd_fix_blame(self, *args):
         
@@ -512,8 +563,8 @@ class RexProjectSpaceModule(IRegionModule):
         
         commit["authored_date"] = "2010-09-18T09:54:40-07:00"
         
-        commit["removed"] = ["bin/j.j2k"]
-        commit["added"] = ["doc/help.txt"]
+        commit["removed"] = ["WorldMapModule/j.j2k"]
+        commit["added"] = ["WorldMapModule/help.txt"]
         commit["modified"] = []
         commit["id"] = random.randint(0,1000000)
         
@@ -542,7 +593,14 @@ class RexProjectSpaceModule(IRegionModule):
         t = time.time() #Epoch time
         ti = time.gmtime(t-1000)
         
+        cd = rexprojectspacenotificationcenter.VersionControlDataDispatcher.dispatcherForProject("naali")
+        commits = [ci]
+        cd.dispatchCommits( commits )
+        
         binfo_old = rexprojectspacedataobjects.BuildInfo("","failure",ti)
+        
+        bd = rexprojectspacenotificationcenter.BuildResultDispatcher.dispatcher()
+        bd.dispatchBuildResults([binfo,binfo_old])
         
         self.project.buildFinished([binfo,binfo_old])
         
