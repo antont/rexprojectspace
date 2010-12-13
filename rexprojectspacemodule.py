@@ -165,11 +165,11 @@ class RexProjectSpaceModule(IRegionModule):
         self.project = self.initSWProject()
         
 
-        #temp = self.project.sog.AbsolutePosition
-        #projectpos = V3(temp.X,temp.Y,temp.Z + 0.75)
+        temp = self.project.sog.AbsolutePosition
+        projectpos = V3(temp.X,temp.Y,temp.Z + 0.75)
         
-        #self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+9.5,projectpos.Y+9.5,projectpos.Z + 3),issuespawnpos)
-        #self.initSWIssues()
+        self.issuefactory = swissue.IssueFactory(self.scene,V3(projectpos.X,projectpos.Y,projectpos.Z),V3(projectpos.X+9.5,projectpos.Y+9.5,projectpos.Z + 3),issuespawnpos)
+        self.initSWIssues()
         
         #self.shouter = RexProjectSpaceInformationShouter(self.scene)
         

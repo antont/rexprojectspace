@@ -207,8 +207,8 @@ class SWEnhancement(SWIssue):
         
         self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(SWEnhancement.TEXTUREUUID))
         
-        skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"bug.skeleton")
-        self.rop.RexAnimationPackageUUID = skeleton_anim_id
+        #skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"bug.skeleton")
+        #self.rop.RexAnimationPackageUUID = skeleton_anim_id
         
         self.rop.RexParticleScriptUUID = rexprojectspaceutils.load_particle_script(vScene,"rpsparticles/spark_green.particle","")
         self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.issueinfo.url)
@@ -282,8 +282,8 @@ class SWBug(SWIssue):
 
         self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(SWBug.TEXTUREUUID))
         
-        skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"bug.skeleton")
-        self.rop.RexAnimationPackageUUID = skeleton_anim_id
+        #skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"bug.skeleton")
+        #self.rop.RexAnimationPackageUUID = skeleton_anim_id
         
         self.rop.RexParticleScriptUUID = rexprojectspaceutils.load_particle_script(vScene,"rpsparticles/spark_red.particle","")
         self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.issueinfo.url)

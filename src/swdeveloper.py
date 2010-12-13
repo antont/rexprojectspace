@@ -149,9 +149,9 @@ class SWDeveloper:
         """ Change animation
         """
         if vIsLatestCommitter:
-            self.skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"diamond.skeleton")
+            #self.skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"diamond.skeleton")
             
-            self.rop.RexAnimationPackageUUID = self.skeleton_anim_id
+            #self.rop.RexAnimationPackageUUID = self.skeleton_anim_id
             self.rop.RexAnimationName = "jump"
         else:
             self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero

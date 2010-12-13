@@ -180,7 +180,9 @@ def load_material_from_string(scene,materialpath,description):
 
 def load_mesh_new(scene, meshpath, description):
     mesh_uuid = OpenMetaverse.UUID.Random()
-    asset = OpenSim.Framework.AssetBase(mesh_uuid, description, 43)
+    asset = OpenSim.Framework.AssetBase()
+    asset.Type = 43
+    asset.FullID = mesh_uuid 
     asset.Description = description
     asset.Data = System.IO.File.ReadAllBytes(meshpath)
     val = scene.AssetService.Store(asset)
