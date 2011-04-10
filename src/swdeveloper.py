@@ -110,7 +110,7 @@ class SWDeveloper:
         """ Choose scale based on commit count and set opensim sceneobjectgroups
             text to be developers login...
         """
-        sog.RootPart.Name =  "rps_dev_" + self.developerinfo.login
+        # sog.RootPart.Name =  "rps_dev_" + self.developerinfo.login
         #sog.RootPart.Scale = V3(0.2, 0.2,  0.2)
         self.updateVisualization()
         print "Current texture id_____",self.currenttexid
@@ -119,7 +119,7 @@ class SWDeveloper:
     def updateVisualization(self):
         """ Updates scale based on commit count 
         """
-        scale = self.sog.RootPart.Scale
+        # scale = self.sog.RootPart.Scale
         scalefactor = self.developerinfo.commitcount
         
         if scalefactor > 100:
@@ -127,7 +127,7 @@ class SWDeveloper:
         elif scalefactor < 50:
             scalefactor = 50
             
-        self.sog.RootPart.Scale = V3(scalefactor*0.01,scalefactor*0.01,scalefactor*0.01)
+        # self.sog.RootPart.Scale = V3(scalefactor*0.01,scalefactor*0.01,scalefactor*0.01)
     
     def updateIsLatestCommitter(self,vIsLatestCommitter):
         """ Change animation
@@ -164,7 +164,7 @@ class SWDeveloper:
     def AvatarEntered(self):
         """ Store current position, so that we remember where to
             go when avatar exits """
-        self.newposition = self.sog.AbsolutePosition
+        pass # self.newposition = self.sog.AbsolutePosition
     
     def AvatarExited(self):
         """ Move developer to a place where it was before avatar entered
@@ -176,7 +176,7 @@ class SWDeveloper:
     def move(self, vTargetPos):
         self.newposition = vTargetPos
         if self.follower.bFollowing == False:
-            self.sog.NonPhysicalGrabMovement(vTargetPos)
+            pass # self.sog.NonPhysicalGrabMovement(vTargetPos)
     
     def OnNewCommit(self,vCommit):
         #print "Login: ", vCommit.login
@@ -226,5 +226,5 @@ class SWDeveloper:
             
             #print temp
         
-        self.sog.SetText(temp,V3(0.0,1.0,0.5),1.0)
+        # self.sog.SetText(temp,V3(0.0,1.0,0.5),1.0)
     

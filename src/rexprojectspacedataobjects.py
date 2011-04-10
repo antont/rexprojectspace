@@ -51,7 +51,7 @@ class DeveloperInfo:
         self.name = ""
         self.commitcount = 0
         self.latestcommitid = 0
-        self.latescommit = None
+        self.latestcommit = None
         self.url = "http://github.com/%s/"%(self.login)
         
 class IssueInfo:

@@ -254,46 +254,47 @@ class RexProjectSpace(circuits.BaseComponent):
         return project
 
     def setUpTests(self):
-        def addCommand(*args):
-            pass
+        def addCommand(cmd, handler):
+            c = naali.console.RegisterCommand(cmd, "%s test of RexProjectSpace" % cmd)
+            c.connect("Invoked(QStringList)", handler)
 
-        addCommand(self, "hitMe", "", "", self.cmd_hitMe)
-        addCommand(self, "organize", "", "", self.cmd_organize)
+        addCommand("hitMe", self.cmd_hitMe)
+        addCommand("organize", self.cmd_organize)
 
         #testing component grid
-        addCommand(self, "ac", "", "", self.cmd_ac)
-        addCommand(self, "modcom", "", "", self.cmd_modify)
-        addCommand(self, "remcom", "", "", self.cmd_remove)
-        addCommand(self, "addcom", "", "", self.cmd_add)
+        addCommand("ac", self.cmd_ac)
+        addCommand("modcom", self.cmd_modify)
+        addCommand("remcom", self.cmd_remove)
+        addCommand("addcom", self.cmd_add)
 
 
         #testing builds
-        addCommand(self, "bf", "", "", self.cmd_bf)
-        addCommand(self, "bs", "", "", self.cmd_bs)
+        addCommand("bf", self.cmd_bf)
+        addCommand("bs", self.cmd_bs)
 
         #testing commits
-        addCommand(self, "commit", "", "", self.cmd_commit)
-        addCommand(self, "commit2", "", "", self.cmd_commit2)
-        addCommand(self, "blame", "", "", self.cmd_blame)#commit and fail build
-        addCommand(self, "fix_blame", "", "", self.cmd_fix_blame)#commit and fail build
-        addCommand(self, "commit_new_dev", "", "", self.cmd_commit_new_dev)#commit done by new dev
-        addCommand(self, "commit_new_comp", "", "", self.cmd_commit_new_comp)#commit done by new dev
+        addCommand("commit", self.cmd_commit)
+        addCommand("commit2", self.cmd_commit2)
+        addCommand("blame", self.cmd_blame)#commit and fail build
+        addCommand("fix_blame", self.cmd_fix_blame)#commit and fail build
+        addCommand("commit_new_dev", self.cmd_commit_new_dev)#commit done by new dev
+        addCommand("commit_new_comp", self.cmd_commit_new_comp)#commit done by new dev
 
 
         #testing branches
-        addCommand(self, "cb", "", "", self.cmd_cb)
+        addCommand("cb", self.cmd_cb)
 
         #testing issues
-        addCommand(self, "bug", "", "", self.cmd_create_bug)
-        addCommand(self, "enhan", "", "", self.cmd_create_en)
-        addCommand(self, "changebugdata", "", "", self.cmd_change_bug_data)
+        addCommand("bug", self.cmd_create_bug)
+        addCommand("enhan", self.cmd_create_en)
+        addCommand("changebugdata", self.cmd_change_bug_data)
 
 
         #testing developers
-        addCommand(self, "developer", "", "", self.cmd_developer)
+        addCommand("developer", self.cmd_developer)
 
         #testing project
-        addCommand(self, "project", "", "", self.cmd_project)
+        addCommand("project", self.cmd_project)
 
     def createBall(self):
         sphereRadius = 1
@@ -315,46 +316,13 @@ class RexProjectSpace(circuits.BaseComponent):
 
 
     def cmd_hitMe(self, *args):
-        #fi = rexprojectspacedataobjects.FolderInfo("LongName4",20)
-        #self.comp = swproject.Component(self.scene,fi,V3(125,125,27),None)
-
-        import OpenMetaverse.Imaging.OpenJPEG
-
-        import System.Drawing.Bitmap
-        import System.Drawing.Color
-        import System.Drawing.Graphics
-
-        width, height = 256, 256
-
-        bitmap = System.Drawing.Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppRgb)
-
-        graph = System.Drawing.Graphics.FromImage(bitmap);
-
-        color = System.Drawing.SolidBrush(System.Drawing.Color.Yellow)
-        graph.FillRectangle(color, 0, 0, width, height)
-
-        myFont = System.Drawing.Font("Courier", 25, System.Drawing.FontStyle.Bold)
-        myBrush = System.Drawing.SolidBrush(System.Drawing.Color.Black)
-        startPoint = System.Drawing.Point(10, 10)
-
-        layoutrect = System.Drawing.RectangleF(0, 10, 256, 45)
-
-        #graph.DrawString("Hello world", myFont, myBrush, startPoint)
-        graph.DrawString("InventoryModule", myFont, myBrush, layoutrect)
-
-        bitmap.Save("kokeilutekstuuri.bmp")
-
-        sog, rop = rexprojectspaceutils.load_mesh(self.scene, "rpsmeshes/component.mesh", "rpsmeshes/component.material"
-                                                  , "comp")
-
-        imageJ2000 = OpenMetaverse.Imaging.OpenJPEG.EncodeFromImage(bitmap, True);
-
-        tex = rexprojectspaceutils.StoreBytesAsTexture(self.scene, imageJ2000)
-
-        #return tex
-
-        rop.RexMaterials.AddMaterial(0, OpenMetaverse.UUID(tex))
-
+        # graph.DrawString("InventoryModule", myFont, myBrush, layoutrect)
+        # bitmap.Save("kokeilutekstuuri.bmp")
+        # sog, rop = rexprojectspaceutils.load_mesh(self.scene, "rpsmeshes/component.mesh", "rpsmeshes/component.material"
+        #                                           , "comp")
+        # tex = rexprojectspaceutils.StoreBytesAsTexture(self.scene, imageJ2000)
+        # rop.RexMaterials.AddMaterial(0, OpenMetaverse.UUID(tex))
+        print "DRAW!"
 
     def cmd_organize(self, *args):
         newpositions = []

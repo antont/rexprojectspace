@@ -274,7 +274,10 @@ class SWProject:
             for item in self.latestcommitter.developerinfo.latestcommit.directories:
                 #locate component, there is a change that this is not on a map yet...
                 print item
-                component = self.components[item]
+                try:
+                    component = self.components[item]
+                except KeyError:
+                    print "RexProjectSpace: unknown component in commit?:", item, "not in:", self.components.keys()
                 #perhaps one day we might tell component/file if
                 #it was removed,added or modified, but now we have
                 #only root level folders...
@@ -361,7 +364,7 @@ class SWProject:
                         # pos = comp.sog.AbsolutePosition
                         # devPos = V3(pos.X,pos.Y,pos.Z + h)
                         dev = previouscomponentsdevs[j]
-                        dev.move(devPos)
+                        # dev.move(devPos)
                         
                     print "developer: ", committer , "removed from ", self.components[k].name
                     break #developer can be only in one component at the same time

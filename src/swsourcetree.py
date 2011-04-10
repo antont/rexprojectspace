@@ -302,8 +302,8 @@ class SWSourceTree:
         self.rainPlaceHolderSog = self.createRainPlaceHolder(V3(tempPos.x(),tempPos.y(),tempPos.z())) #XXX + 45))
         # self.rainPlaceHolderRop = rexObjects.GetObject(self.rainPlaceHolderSog.UUID)
         
-        # self.rainparticleid = rexprojectspaceutils.load_particle_script(self.scene,"rpsparticles/rain.particle","")
-        # self.fireparticleid = rexprojectspaceutils.load_particle_script(self.scene,"rpsparticles/fire.particle","")
+        self.rainparticleid = "rpsparticles/rain.particle"
+        self.fireparticleid = "rpsparticles/fire.particle"
 
         self.addNewBranches(vBranchInfos)
         
@@ -376,7 +376,8 @@ class SWSourceTree:
         """ If this was the first failing build in a row,
             set the tree on fire. """
         if self.bCurrentBuildFailed == False:
-            self.treerop.RexParticleScriptUUID = self.fireparticleid
+            #self.treerop.RexParticleScriptUUID = self.fireparticleid
+            pass
         self.bCurrentBuildFailed = True
         
     def addNewBranches(self,vBranchInfos,vParentName=""):
@@ -467,8 +468,8 @@ class SWSourceTree:
         """ called after succesfull build, stops the rain and fire """
         print "---timer...---"
         
-        self.treerop.RexParticleScriptUUID = OpenMetaverse.UUID.Zero
-        self.rainPlaceHolderRop.RexParticleScriptUUID = OpenMetaverse.UUID.Zero
+        # self.treerop.RexParticleScriptUUID = OpenMetaverse.UUID.Zero
+        # self.rainPlaceHolderRop.RexParticleScriptUUID = OpenMetaverse.UUID.Zero
         
         self.buildresultparticletimer = 0
      
