@@ -1,26 +1,10 @@
-import rexprojectspaceutils
 import rexprojectspacedataobjects
 import rexprojectspacemodule
-import scriptbridgemodule
 import avatarfollower
-import rexprojectspacenotificationcenter
-import clickhandler
-
-import clr
+#import rexprojectspacenotificationcenter
+#import clickhandler
 
 import threading
-
-clr.AddReference('ModularRex.RexFramework')
-from ModularRex.RexFramework import IModrexObjectsProvider
-
-clr.AddReference('OpenSim.Framework')
-import OpenSim.Framework
-
-import OpenMetaverse
-from OpenMetaverse import Vector3 as V3
-
-clr.AddReference('OpenSim.Region.ScriptEngine.Shared')
-from OpenSim.Region.ScriptEngine.Shared import LSL_Types
 
 def material(vTextureId):
     return """
@@ -51,8 +35,8 @@ class SWDeveloper:
     redtextureid = 0
     
     HEIGHT = 0.85
-    MESHUUID = OpenMetaverse.UUID.Zero
-    SKELETON_ANIM_ID = OpenMetaverse.UUID.Zero
+    MESHUUID = "" #OpenMetaverse.UUID.Zero
+    SKELETON_ANIM_ID = "" #OpenMetaverse.UUID.Zero
 
     def __init__(self,vScene,vDeveloperInfo, vIsAtProjectSpace ,vAvatar = None):
         """ Load mesh and animation package. Create avatar follower that registers
@@ -64,63 +48,63 @@ class SWDeveloper:
         self.isAtProjectSpace = vIsAtProjectSpace
         self.avatar = vAvatar #rxavatar
         self.script = None
-        self.skeleton_anim_id = OpenMetaverse.UUID.Zero
+        self.skeleton_anim_id = "" #OpenMetaverse.UUID.Zero
         
         
-        if SWDeveloper.greentextureid == 0:
-            SWDeveloper.greentextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devgreen.jp2")
-            SWDeveloper.redtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devred.jp2")
+        # if SWDeveloper.greentextureid == 0:
+        #     SWDeveloper.greentextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devgreen.jp2")
+        #     SWDeveloper.redtextureid = rexprojectspaceutils.load_texture(self.scene,"rpstextures/devred.jp2")
         
-        self.currenttexid = SWDeveloper.greentextureid
+        # self.currenttexid = SWDeveloper.greentextureid
         
-        sop =  vScene.GetSceneObjectPart("rps_dev_" + self.developerinfo.login)
+        # sop =  vScene.GetSceneObjectPart("rps_dev_" + self.developerinfo.login)
         
-        if sop:
-            self.sog = sop.ParentGroup
-            rexObjects = vScene.Modules["RexObjectsModule"]
-            self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
-            print "Developer: %s found from scene"%(self.developerinfo.login)
-            SWDeveloper.MESHUUID = self.rop.RexMeshUUID.ToString()
+        # if sop:
+        #     self.sog = sop.ParentGroup
+        #     rexObjects = vScene.Modules["RexObjectsModule"]
+        #     self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
+        #     print "Developer: %s found from scene"%(self.developerinfo.login)
+        #     SWDeveloper.MESHUUID = self.rop.RexMeshUUID.ToString()
             
-        else:
-            if SWDeveloper.MESHUUID == OpenMetaverse.UUID.Zero:
-                print "loading dev mesh"
-                SWDeveloper.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/diamond.mesh","developer mesh")
+        # else:
+        #     if SWDeveloper.MESHUUID == "": #OpenMetaverse.UUID.Zero:
+        #         print "loading dev mesh"
+        #         SWDeveloper.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/diamond.mesh","developer mesh")
                 
-            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWDeveloper.MESHUUID,"rpsmeshes/diamond.material",OpenMetaverse.Quaternion(0, 0, 0, 1), V3(128, 128, 30),
-                                                                V3(0.5, 0.5, 0.5))
+        #     self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,SWDeveloper.MESHUUID,"rpsmeshes/diamond.material",OpenMetaverse.Quaternion(0, 0, 0, 1), V3(128, 128, 30),
+        #                                                         V3(0.5, 0.5, 0.5))
             
-            """
-            mat = material(SWDeveloper.greentextureid)
-            FILE = open("matgen.material","w")
-            FILE.write(mat)
-            FILE.close()
+            # """
+            # mat = material(SWDeveloper.greentextureid)
+            # FILE = open("matgen.material","w")
+            # FILE.write(mat)
+            # FILE.close()
             
-            uuid  = rexprojectspaceutils.load_material_from_string(self.scene,"matgen.material","devmat")
-            print "uidi", uuid
-            self.rop.RexMaterials.AddMaterial(1,OpenMetaverse.UUID(SWDeveloper.greentextureid))
-            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(uuid))
-            """
+            # uuid  = rexprojectspaceutils.load_material_from_string(self.scene,"matgen.material","devmat")
+            # print "uidi", uuid
+            # self.rop.RexMaterials.AddMaterial(1,OpenMetaverse.UUID(SWDeveloper.greentextureid))
+            # self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(uuid))
+            # """
             
-            self.initVisualization(self.sog)
-        if self.developerinfo.login == "":
-            self.developerinfo.login = self.developerinfo.name
+        #     self.initVisualization(self.sog)
+        # if self.developerinfo.login == "":
+        #     self.developerinfo.login = self.developerinfo.name
             
-        self.SetText(self.developerinfo.login + " : "  + self.developerinfo.latestcommit.message)        
+        # self.SetText(self.developerinfo.login + " : "  + self.developerinfo.latestcommit.message)        
         
-        self.newposition = self.sog.AbsolutePosition
-        self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
-        self.rop.RexAnimationName = ""
+        # self.newposition = self.sog.AbsolutePosition
+        # self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
+        # self.rop.RexAnimationName = ""
         
-        self.follower = avatarfollower.AvatarFollower(vScene,self.sog,[vDeveloperInfo.login,vDeveloperInfo.name])
+        # self.follower = avatarfollower.AvatarFollower(vScene,self.sog,[vDeveloperInfo.login,vDeveloperInfo.name])
 
-        self.follower.OnAvatarEntered += self.AvatarEntered
-        self.follower.OnAvatarExited += self.AvatarExited
+        # self.follower.OnAvatarEntered += self.AvatarEntered
+        # self.follower.OnAvatarExited += self.AvatarExited
         
-        nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
-        nc.OnNewCommit += self.OnNewCommit
+        # nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter("naali")
+        # nc.OnNewCommit += self.OnNewCommit
         
-        self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.developerinfo.url)
+        # self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.developerinfo.url)
         
     def initVisualization(self,sog):
         """ Choose scale based on commit count and set opensim sceneobjectgroups
@@ -130,7 +114,7 @@ class SWDeveloper:
         #sog.RootPart.Scale = V3(0.2, 0.2,  0.2)
         self.updateVisualization()
         print "Current texture id_____",self.currenttexid
-        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
+        # self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
 
     def updateVisualization(self):
         """ Updates scale based on commit count 
@@ -152,9 +136,11 @@ class SWDeveloper:
             #self.skeleton_anim_id = rexprojectspaceutils.load_skeleton_animation(self.scene,"diamond.skeleton")
             
             #self.rop.RexAnimationPackageUUID = self.skeleton_anim_id
-            self.rop.RexAnimationName = "jump"
+            #self.rop.
+            RexAnimationName = "jump"
         else:
-            self.rop.RexAnimationPackageUUID = OpenMetaverse.UUID.Zero
+            #self.rop.
+            RexAnimationPackageUUID = "" #OpenMetaverse.UUID.Zero
     
     def updateDidBrakeBuild(self,vDidBrakeBuild):
         """ Change texture if you brake the build 
@@ -171,7 +157,7 @@ class SWDeveloper:
         else:
             tex =  SWDeveloper.greentextureid
            
-        self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+        # self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
         self.currenttexid = tex
         
     

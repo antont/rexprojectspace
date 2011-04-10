@@ -1,8 +1,6 @@
 import sys
 import threading
 
-import rxevent
-
 import rexprojectspacedataobjects
 
 class RexProjectSpaceNotificationCenter:
@@ -51,50 +49,49 @@ class RexProjectSpaceNotificationCenter:
         IrcMessageDispatcher.registerOnNewMessage(self.NewIrcMessage)
         
         #vcs
-        self.OnNewCommit = rxevent.RexPythonEvent()
-        self.OnBranchesUpdated = rxevent.RexPythonEvent()
-        self.OnNewBranches = rxevent.RexPythonEvent()
+        # self.OnNewCommit = rxevent.RexPythonEvent()
+        # self.OnBranchesUpdated = rxevent.RexPythonEvent()
+        # self.OnNewBranches = rxevent.RexPythonEvent()
+        # 
+        # #issue tracking system
+        # self.OnNewIssue = rxevent.RexPythonEvent()
+        # self.OnIssueUpdated = rxevent.RexPythonEvent()
+        # 
+        # #build bot
+        # self.OnBuild = rxevent.RexPythonEvent()
         
-        #issue tracking system
-        self.OnNewIssue = rxevent.RexPythonEvent()
-        self.OnIssueUpdated = rxevent.RexPythonEvent()
-        
-        #build bot
-        self.OnBuild = rxevent.RexPythonEvent()
-        
-        #irc bot
-        self.OnNewIrcMessage = rxevent.RexPythonEvent()
+        # #irc bot
+        # self.OnNewIrcMessage = rxevent.RexPythonEvent()
         
     def NewCommit(self,vCommit):
-        ##print "---commit----"
-        self.OnNewCommit(vCommit)
-        
+        print "---commit----"
+        #self.OnNewCommit(vCommit)
+
     def BranchesUpdated(self,branches):
-        ##print "---new branch---"
-        self.OnBranchesUpdated(branches)
-    
+        print "---new branch---"
+        #self.OnBranchesUpdated(branches)
+
     def NewBranches(self,branches):
-        ##print "---new branch---"
-        self.OnNewBranches(branches)
+        print "---new branch---"
+        #self.OnNewBranches(branches)
 
     def NewBuild(self,vBuild):
-        ##print "---build----"
-        self.OnBuild(vBuild)
+        print "---build----"
+        #self.OnBuild(vBuild)
         
     def NewIssue(self,vIssue):
-        #print "---new issue----, ", vIssue
-        self.OnNewIssue(vIssue)
+        print "---new issue----, ", vIssue
+        #self.OnNewIssue(vIssue)
         
     def IssueUpdated(self,vIssue):
-        #print "---issue updated----"
-        self.OnIssueUpdated(vIssue)
+        print "---issue updated----"
+        #self.OnIssueUpdated(vIssue)
         
     def NewIrcMessage(self,vMessage):
-        self.OnNewIrcMessage(vMessage)
+        print "---irc message---", vMessage
+        #self.OnNewIrcMessage(vMessage)
 
 ########
-
-
 import versioncontrolsystem
 
 class VersionControlDataDispatcher:

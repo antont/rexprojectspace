@@ -1,19 +1,4 @@
 import threading
-import clr
-
-clr.AddReference('ModularRex.RexFramework')
-from ModularRex.RexFramework import IModrexObjectsProvider
-
-clr.AddReference('OpenSim.Framework')
-import OpenSim.Framework
-
-import OpenMetaverse
-from OpenMetaverse import Vector3 as V3
-
-clr.AddReference('OpenSim.Region.ScriptEngine.Shared')
-from OpenSim.Region.ScriptEngine.Shared import LSL_Types
-
-import rxevent
 
 class AvatarFollower(object):
     """ Listens to opensim's avatar entered/exited events and 

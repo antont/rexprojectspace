@@ -1,40 +1,12 @@
-import clr, math
-
-clr.AddReference('OpenMetaverseTypes')
-import OpenMetaverse
-
-clr.AddReference("mscorlib.dll")
-import System
-
-clr.AddReference('ModularRex.RexFramework')
-from ModularRex.RexFramework import IModrexObjectsProvider
-
-clr.AddReference('OpenSim.Region.ScriptEngine.Shared')
-from OpenSim.Region.ScriptEngine.Shared import LSL_Types
-clr.AddReference('OpenSim.Framework')
-
-asm = clr.LoadAssemblyByName('OpenSim.Region.ScriptEngine.Shared')
-
-import OpenMetaverse
-from OpenMetaverse import Vector3 as V3
-
-clr.AddReference('System.Drawing')
-import OpenMetaverse.Imaging.OpenJPEG
-
-import System.Drawing.Bitmap
-import System.Drawing.Color
-import System.Drawing.Graphics
-
-import rexprojectspaceutils
+import naali
+V3 = naali.Vector3df
 
 import rexprojectspacenotificationcenter
 import rexprojectspacedataobjects
-
 import swdeveloper
-
 import rexprojectspacemodule
 
-import clickhandler
+#import clickhandler
 
 class ComponentBase(object):
     """ Base class for composite objects """
@@ -72,7 +44,7 @@ class Component(ComponentBase):
     modifiedtextureid = None
     removedtextureid = None
     addedtextureid = None
-    MESHUUID = OpenMetaverse.UUID.Zero 
+    MESHUUID = "" #OpenMetaverse.UUID.Zero 
     
     def __init__(self,vScene,vFolderInfo,vPos,vParent,vX=1,vY=1,vScale = V3(0,0,0)):
         """ Load mesh and texture and set state as added
@@ -98,45 +70,45 @@ class Component(ComponentBase):
 
         self.modifiedtextureid, self.removedtextureid,self.addedtextureid = None,None,None
         
-        sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
-        #self.currenttexid = Component.addedtextureid
-        self.addedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.SkyBlue)
+        # sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
+        # #self.currenttexid = Component.addedtextureid
+        # self.addedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.SkyBlue)
         
-        self.currenttexid = self.addedtextureid
+        self.currenttexid = "" #self.addedtextureid
         
-        if sop:
-            self.sog = sop.ParentGroup
-            rexObjects = vScene.Modules["RexObjectsModule"]
-            self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
-            #self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
-             #print "Component: %s found from scene"%("rps_component_" + self.name)
-        else:
-            if Component.MESHUUID == OpenMetaverse.UUID.Zero:
-                print "loading component mesh"
-                Component.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/component.mesh","component mesh")
+        # if sop:
+        #     self.sog = sop.ParentGroup
+        #     rexObjects = vScene.Modules["RexObjectsModule"]
+        #     self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
+        #     #self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
+        #      #print "Component: %s found from scene"%("rps_component_" + self.name)
+        # else:
+        #     if Component.MESHUUID == OpenMetaverse.UUID.Zero:
+        #         print "loading component mesh"
+        #         Component.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/component.mesh","component mesh")
                 
-            self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,Component.MESHUUID,"rpsmeshes/component.material",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
+        #     self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,Component.MESHUUID,"rpsmeshes/component.material",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
             
-            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
+        #     self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
             
-            self.sog.RootPart.Scale = V3(vX,vY,1)
-            self.sog.RootPart.Name =  "rps_component_" + self.name
+        #     self.sog.RootPart.Scale = V3(vX,vY,1)
+        #     self.sog.RootPart.Name =  "rps_component_" + self.name
             
-            self.scene.AddNewSceneObject(self.sog, False)
+        #     self.scene.AddNewSceneObject(self.sog, False)
 
-        #print "mesh id for component: ", self.rop.RexMeshUUID
-        #self.sog.SetText(self.name,V3(1.0,1.0,0.0),1.0)
+        # #print "mesh id for component: ", self.rop.RexMeshUUID
+        # #self.sog.SetText(self.name,V3(1.0,1.0,0.0),1.0)
 
-        self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.folderinfo.url)
+        # self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.folderinfo.url)
         
-        self.modified = False
+        # self.modified = False
         
     def AddChild(self,vFolderInfo):
 
-        temp = self.sog.AbsolutePosition
-        p = V3(self.curColumn + temp.X + self.curColumn*Component.offset,
-               self.curRow + temp.Y + self.curRow*Component.offset,
-               temp.Z + 0.5)
+        temp = V3() #XXX self.sog.AbsolutePosition
+        p = V3() # V3(self.curColumn + temp.X + self.curColumn*Component.offset,
+               # self.curRow + temp.Y + self.curRow*Component.offset,
+               # temp.Z + 0.5)
                
         child =  Component(self.scene, vFolderInfo, p, self, 1,1,V3(0.9,0.9,0.9))
         
@@ -156,53 +128,53 @@ class Component(ComponentBase):
         tex = self.currenttexid
         temp = self.currenttexid
         
-        if vState == "modified":
-            if not self.modifiedtextureid:
-                self.modifiedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.Yellow)
+        # if vState == "modified":
+        #     if not self.modifiedtextureid:
+        #         self.modifiedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.Yellow)
             
-            tex = self.modifiedtextureid
-        elif vState == "removed" or vState == "Removed":
-            if not self.removedtextureid:
-                self.removedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.Red)
+        #     tex = self.modifiedtextureid
+        # elif vState == "removed" or vState == "Removed":
+        #     if not self.removedtextureid:
+        #         self.removedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.Red)
             
-            tex = self.removedtextureid
-        elif vState == "added":
-            tex = self.addedtextureid
+        #     tex = self.removedtextureid
+        # elif vState == "added":
+        #     tex = self.addedtextureid
         
-        if tex != temp:
-            self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
+        # if tex != temp:
+        #     self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(tex))
 
         self.currenttexid = tex
         
-    def CreateTexture(self,vText,vTextColor,vBackgroundColor):
+    # def CreateTexture(self,vText,vTextColor,vBackgroundColor):
 
-        width,height = 256,256
+    #     width,height = 256,256
         
-        bitmap = System.Drawing.Bitmap(width,height,System.Drawing.Imaging.PixelFormat.Format32bppRgb)
+    #     bitmap = System.Drawing.Bitmap(width,height,System.Drawing.Imaging.PixelFormat.Format32bppRgb)
         
-        bgbrush = System.Drawing.SolidBrush(vBackgroundColor)
+    #     bgbrush = System.Drawing.SolidBrush(vBackgroundColor)
         
-        graph = System.Drawing.Graphics.FromImage(bitmap);
-        graph.FillRectangle(bgbrush, 0, 0, width, height)
+    #     graph = System.Drawing.Graphics.FromImage(bitmap);
+    #     graph.FillRectangle(bgbrush, 0, 0, width, height)
 
-        textFont = System.Drawing.Font("Courier", 25, System.Drawing.FontStyle.Bold)
-        textBrush = System.Drawing.SolidBrush(vTextColor)
-        layoutrect = System.Drawing.RectangleF(0,10,256,45)
-        text = ""
+    #     textFont = System.Drawing.Font("Courier", 25, System.Drawing.FontStyle.Bold)
+    #     textBrush = System.Drawing.SolidBrush(vTextColor)
+    #     layoutrect = System.Drawing.RectangleF(0,10,256,45)
+    #     text = ""
 
-        if len(vText) > 11:
-            text = vText[0:11]
-            text = text + "..."
-        else:
-            text = vText
+    #     if len(vText) > 11:
+    #         text = vText[0:11]
+    #         text = text + "..."
+    #     else:
+    #         text = vText
             
-        graph.DrawString(text, textFont, textBrush, layoutrect)
+    #     graph.DrawString(text, textFont, textBrush, layoutrect)
 
-        imageJ2000 = OpenMetaverse.Imaging.OpenJPEG.EncodeFromImage(bitmap, True);
+    #     imageJ2000 = OpenMetaverse.Imaging.OpenJPEG.EncodeFromImage(bitmap, True);
         
-        tex = rexprojectspaceutils.StoreBytesAsTexture(self.scene,imageJ2000)
+    #     tex = rexprojectspaceutils.StoreBytesAsTexture(self.scene,imageJ2000)
 
-        return tex
+    #     return tex
     
 class SWProject:
     """ Controller class for software projects that knows of it's developers,
@@ -238,17 +210,17 @@ class SWProject:
             self.latestcommitter.updateIsLatestCommitter(True)
         
         #create first component representing self
-        rexObjects = self.scene.Modules["RexObjectsModule"]
-        self.UUID = OpenMetaverse.UUID("41cb4157-80e1-45d4-b2a1-fb1ea3f9c303")
+        # rexObjects = self.scene.Modules["RexObjectsModule"]
+        # self.UUID = OpenMetaverse.UUID("41cb4157-80e1-45d4-b2a1-fb1ea3f9c303")
         
         
         
-        if not self.scene.GetSceneObjectPart("first_component"):
-            print "No first sw component..."
-            return
+        # if not self.scene.GetSceneObjectPart("first_component"):
+        #     print "No first sw component..."
+        #     return
         
-        self.sog = self.scene.GetSceneObjectPart("first_component").ParentGroup
-        self.rop = rexObjects.GetObject(self.sog.UUID)
+        # self.sog = self.scene.GetSceneObjectPart("first_component").ParentGroup
+        # self.rop = rexObjects.GetObject(self.sog.UUID)
         
         
         #if not self.scene.GetSceneObjectPart(self.UUID):
@@ -260,8 +232,9 @@ class SWProject:
         
         rootfolder = rexprojectspacedataobjects.FolderInfo("/",0)
         
-        self.component = Component(vScene, rootfolder, self.sog.AbsolutePosition, None, 6,6,V3(0,0,0))
-        self.component.sog.RootPart.Scale = V3(0,0,0)
+        self.pos = V3()
+        self.component = Component(vScene, rootfolder, self.pos, None, 6,6,V3(0,0,0)) #XXX WAS: self.sog.AbsolutePosition
+        # self.component.sog.RootPart.Scale = V3(0,0,0)
         self.components["/"] = self.component
         self.componentsAndDevelopersDict["/"] = []
         
@@ -279,9 +252,9 @@ class SWProject:
         
         #get all commits
         nc = rexprojectspacenotificationcenter.RexProjectSpaceNotificationCenter.NotificationCenter(self.projectName)
-        nc.OnNewCommit += self.updateDeveloperLocationWithNewCommitData
+        # nc.OnNewCommit += self.updateDeveloperLocationWithNewCommitData
         
-        nc.OnBuild += self.buildFinished
+        # nc.OnBuild += self.buildFinished
         
     def __del__(self):
         """ """
@@ -380,13 +353,13 @@ class SWProject:
                     for j in range(len(previouscomponentsdevs)):
                         print "removed dev"
                         dev = previouscomponentsdevs[j]
-                        h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
-                        h += 0.2
+                        # h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
+                        # h += 0.2
                         
                         comp = self.components[k]#get component instance from dict
                         
-                        pos = comp.sog.AbsolutePosition
-                        devPos = V3(pos.X,pos.Y,pos.Z + h)
+                        # pos = comp.sog.AbsolutePosition
+                        # devPos = V3(pos.X,pos.Y,pos.Z + h)
                         dev = previouscomponentsdevs[j]
                         dev.move(devPos)
                         
@@ -405,13 +378,13 @@ class SWProject:
         h = 0
         for j in range(len(devs)):
             dev = devs[j]
-            pos = component.sog.AbsolutePosition
-            devPos = V3(pos.X,pos.Y,pos.Z + h)
+            # pos = component.sog.AbsolutePosition
+            # devPos = V3(pos.X,pos.Y,pos.Z + h)
             
-            dev.move(devPos)
+            # dev.move(devPos)
             
-            h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
-            h += 0.2
+            # h += dev.sog.RootPart.Scale.Z * swdeveloper.SWDeveloper.HEIGHT
+            # h += 0.2
         
         #finally set latest committer if wanted
         if vMakeCurrent == True:
