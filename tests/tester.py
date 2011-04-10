@@ -21,7 +21,7 @@ class Tester:
         self.bb = buildbot.BuildBot()
 
     def Run(self):
-        print self.GetBuildResult()
+        #print self.GetBuildResult()
         print self.GetBranches()
         print self.GetAllBlobs()
         print self.GetCommitsFromNetworkData()
@@ -103,6 +103,7 @@ class Tester:
         if commits[0]["id"] == networkcommits[0]["id"]:
             return True
             
+        print commits[0]["id"], networkcommits[0]["id"]
         return False
     
     def GetIssues(self):
@@ -117,5 +118,5 @@ class Tester:
         
         return ret
     
-t = Tester();
+t = Tester()
 t.Run()
