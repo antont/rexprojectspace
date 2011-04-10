@@ -1,5 +1,6 @@
 import naali
 V3 = naali.Vector3df
+import circuits
 
 import math
 import sys, os, sha
@@ -46,7 +47,12 @@ class RexProjectSpaceInformationShouter:
         #actor.llShout(0, vMessage)
         pass
 
-class RexProjectSpace:
+class RexProjectSpace(circuits.BaseComponent):
+    def __init__(self):
+        circuits.BaseComponent.__init__(self)
+        self.scene = None
+        naali.scene.connect("SceneAdded(QString)", self.Initialise)
+
     def getProjectRootFolders(self):
         """ Gets all the blobs from version control and
             parses the data so that the root folders
@@ -79,11 +85,11 @@ class RexProjectSpace:
         return folderinfos
 
 
-    def Initialise(self, scene):
+    def Initialise(self, scenename):
         """ Create IssueFactory, SWTree and SWProject """
 
         self.removed = False
-        self.scene = scene
+        self.scene = naali.getScene(scenename)
         # self.config = configsource
 
         self.developers = []
@@ -248,45 +254,46 @@ class RexProjectSpace:
         return project
 
     def setUpTests(self):
-        scene = self.scene
+        def addCommand(*args):
+            pass
 
-        scene.AddCommand(self, "hitMe", "", "", self.cmd_hitMe)
-        scene.AddCommand(self, "organize", "", "", self.cmd_organize)
+        addCommand(self, "hitMe", "", "", self.cmd_hitMe)
+        addCommand(self, "organize", "", "", self.cmd_organize)
 
         #testing component grid
-        scene.AddCommand(self, "ac", "", "", self.cmd_ac)
-        scene.AddCommand(self, "modcom", "", "", self.cmd_modify)
-        scene.AddCommand(self, "remcom", "", "", self.cmd_remove)
-        scene.AddCommand(self, "addcom", "", "", self.cmd_add)
+        addCommand(self, "ac", "", "", self.cmd_ac)
+        addCommand(self, "modcom", "", "", self.cmd_modify)
+        addCommand(self, "remcom", "", "", self.cmd_remove)
+        addCommand(self, "addcom", "", "", self.cmd_add)
 
 
         #testing builds
-        scene.AddCommand(self, "bf", "", "", self.cmd_bf)
-        scene.AddCommand(self, "bs", "", "", self.cmd_bs)
+        addCommand(self, "bf", "", "", self.cmd_bf)
+        addCommand(self, "bs", "", "", self.cmd_bs)
 
         #testing commits
-        scene.AddCommand(self, "commit", "", "", self.cmd_commit)
-        scene.AddCommand(self, "commit2", "", "", self.cmd_commit2)
-        scene.AddCommand(self, "blame", "", "", self.cmd_blame)#commit and fail build
-        scene.AddCommand(self, "fix_blame", "", "", self.cmd_fix_blame)#commit and fail build
-        scene.AddCommand(self, "commit_new_dev", "", "", self.cmd_commit_new_dev)#commit done by new dev
-        scene.AddCommand(self, "commit_new_comp", "", "", self.cmd_commit_new_comp)#commit done by new dev
+        addCommand(self, "commit", "", "", self.cmd_commit)
+        addCommand(self, "commit2", "", "", self.cmd_commit2)
+        addCommand(self, "blame", "", "", self.cmd_blame)#commit and fail build
+        addCommand(self, "fix_blame", "", "", self.cmd_fix_blame)#commit and fail build
+        addCommand(self, "commit_new_dev", "", "", self.cmd_commit_new_dev)#commit done by new dev
+        addCommand(self, "commit_new_comp", "", "", self.cmd_commit_new_comp)#commit done by new dev
 
 
         #testing branches
-        scene.AddCommand(self, "cb", "", "", self.cmd_cb)
+        addCommand(self, "cb", "", "", self.cmd_cb)
 
         #testing issues
-        scene.AddCommand(self, "bug", "", "", self.cmd_create_bug)
-        scene.AddCommand(self, "enhan", "", "", self.cmd_create_en)
-        scene.AddCommand(self, "changebugdata", "", "", self.cmd_change_bug_data)
+        addCommand(self, "bug", "", "", self.cmd_create_bug)
+        addCommand(self, "enhan", "", "", self.cmd_create_en)
+        addCommand(self, "changebugdata", "", "", self.cmd_change_bug_data)
 
 
         #testing developers
-        scene.AddCommand(self, "developer", "", "", self.cmd_developer)
+        addCommand(self, "developer", "", "", self.cmd_developer)
 
         #testing project
-        scene.AddCommand(self, "project", "", "", self.cmd_project)
+        addCommand(self, "project", "", "", self.cmd_project)
 
     def createBall(self):
         sphereRadius = 1
@@ -356,7 +363,7 @@ class RexProjectSpace:
         count = 0
 
         for bug in self.bugs:
-            newposition = V3(pos.X, pos.Y, pos.Z + count * 0.3)
+            newposition = V3(pos.x(), pos.y(), pos.z() + count * 0.3)
             bug.sog.NonPhysicalGrabMovement(newposition)
             count += 1
 

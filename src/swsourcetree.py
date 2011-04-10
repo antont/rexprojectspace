@@ -146,9 +146,9 @@ class TreeTile:
         for i in range(4):
             tempPos = None
             if i%2 == 0:
-                tempPos = V3(self.pos.X - self.w/2, self.pos.Y,self.pos.Z + (i*self.height/4 + 0.15))
+                tempPos = V3(self.pos.x() - self.w/2, self.pos.y(),self.pos.z() + (i*self.height/4 + 0.15))
             else:
-                tempPos = V3(self.pos.X + self.w/2, self.pos.Y,self.pos.Z + (i*self.height/4 + 0.15))
+                tempPos = V3(self.pos.x() + self.w/2, self.pos.y(),self.pos.z() + (i*self.height/4 + 0.15))
             self.locations.append(tempPos)
             
         self.rotations = [rexprojectspaceutils.euler_to_quat(20,0,0),
@@ -299,7 +299,7 @@ class SWSourceTree:
         
         tempPos = self.tree.pos
         
-        self.rainPlaceHolderSog = self.createRainPlaceHolder(V3(tempPos.X,tempPos.Y,tempPos.Z)) #XXX + 45))
+        self.rainPlaceHolderSog = self.createRainPlaceHolder(V3(tempPos.x(),tempPos.y(),tempPos.z())) #XXX + 45))
         # self.rainPlaceHolderRop = rexObjects.GetObject(self.rainPlaceHolderSog.UUID)
         
         # self.rainparticleid = rexprojectspaceutils.load_particle_script(self.scene,"rpsparticles/rain.particle","")
