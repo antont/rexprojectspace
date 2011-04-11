@@ -51,7 +51,19 @@ class RexProjectSpace(circuits.BaseComponent):
     def __init__(self):
         circuits.BaseComponent.__init__(self)
         self.scene = None
-        naali.scene.connect("SceneAdded(QString)", self.Initialise)
+        #this is signalled *before* the scene is loaded from txml, so not suitable.
+        naali.scene.connect("SceneAdded(QString)", self.onSceneAdded)
+
+    def onSceneAdded(self, scenename):
+        self.scene = naali.getScene(scenename)
+        self.scene.connect("EntityCreated(Scene::Entity*, AttributeChange::Type)", self.onNewEntity)
+
+    def onNewEntity(self, entity, changeType):
+        #print entity.Name
+        if entity.Name == "swproject":
+            #print "IRC: Found ChatApp!"
+            self.scene.disconnect("EntityCreated(Scene::Entity*, AttributeChange::Type)", self.onNewEntity)
+            self.Initialise()
 
     def getProjectRootFolders(self):
         """ Gets all the blobs from version control and
@@ -84,12 +96,10 @@ class RexProjectSpace(circuits.BaseComponent):
 
         return folderinfos
 
-
-    def Initialise(self, scenename):
+    def Initialise(self):
         """ Create IssueFactory, SWTree and SWProject """
 
         self.removed = False
-        self.scene = naali.getScene(scenename)
         # self.config = configsource
 
         self.developers = []
