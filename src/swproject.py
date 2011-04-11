@@ -6,7 +6,7 @@ import rexprojectspacedataobjects
 import swdeveloper
 import rexprojectspacemodule
 
-#import clickhandler
+from rexprojectspaceutils import new_mesh
 
 class ComponentBase(object):
     """ Base class for composite objects """
@@ -44,7 +44,8 @@ class Component(ComponentBase):
     modifiedtextureid = None
     removedtextureid = None
     addedtextureid = None
-    MESHUUID = "" #OpenMetaverse.UUID.Zero 
+    MESHUUID = "component.mesh"
+    MATERIAL = "component.material"
     
     def __init__(self,vScene,vFolderInfo,vPos,vParent,vX=1,vY=1,vScale = V3(0,0,0)):
         """ Load mesh and texture and set state as added
@@ -66,28 +67,23 @@ class Component(ComponentBase):
         self.pos = vPos
         self.scale = vScale
         self.color = 0 #blue
-        
 
         self.modifiedtextureid, self.removedtextureid,self.addedtextureid = None,None,None
         
-        # sop =  vScene.GetSceneObjectPart("rps_component_" + self.name)
-        # #self.currenttexid = Component.addedtextureid
+        ent = vScene.GetEntityByNameRaw("rps_component_" + self.name)
+        #self.currenttexid = Component.addedtextureid
         # self.addedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.SkyBlue)
         
         self.currenttexid = "" #self.addedtextureid
         
-        # if sop:
-        #     self.sog = sop.ParentGroup
-        #     rexObjects = vScene.Modules["RexObjectsModule"]
-        #     self.rop = rexObjects.GetObject(self.sog.RootPart.UUID)
+        if ent:
         #     #self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
-        #      #print "Component: %s found from scene"%("rps_component_" + self.name)
-        # else:
-        #     if Component.MESHUUID == OpenMetaverse.UUID.Zero:
-        #         print "loading component mesh"
-        #         Component.MESHUUID = rexprojectspaceutils.load_mesh_new(self.scene,"rpsmeshes/component.mesh","component mesh")
-                
-        #     self.sog,self.rop = rexprojectspaceutils.bind_mesh(self.scene,Component.MESHUUID,"rpsmeshes/component.material",rexprojectspaceutils.euler_to_quat(0,0,0),self.pos,self.scale)
+            print "Component: %s found from scene" % ("rps_component_" + self.name)
+            self.ent = ent
+        else:
+            print "loading component mesh"
+            new_mesh(self.scene, Component.MESHUUID, Component.MATERIAL, "Component-%s" % self.name,  
+                     V3(), self.pos, self.scale)
             
         #     self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
             
@@ -105,10 +101,10 @@ class Component(ComponentBase):
         
     def AddChild(self,vFolderInfo):
 
-        temp = V3() #XXX self.sog.AbsolutePosition
-        p = V3() # V3(self.curColumn + temp.X + self.curColumn*Component.offset,
-               # self.curRow + temp.Y + self.curRow*Component.offset,
-               # temp.Z + 0.5)
+        temp = self.pos
+        p = V3(self.curColumn + temp.x() + self.curColumn * Component.offset,
+               self.curRow + temp.y() + self.curRow * Component.offset,
+               temp.z() + 0.5)
                
         child =  Component(self.scene, vFolderInfo, p, self, 1,1,V3(0.9,0.9,0.9))
         
@@ -210,31 +206,12 @@ class SWProject:
             self.latestcommitter.updateIsLatestCommitter(True)
         
         #create first component representing self
-        # rexObjects = self.scene.Modules["RexObjectsModule"]
-        # self.UUID = OpenMetaverse.UUID("41cb4157-80e1-45d4-b2a1-fb1ea3f9c303")
-        
-        
-        
-        # if not self.scene.GetSceneObjectPart("first_component"):
-        #     print "No first sw component..."
-        #     return
-        
-        # self.sog = self.scene.GetSceneObjectPart("first_component").ParentGroup
-        # self.rop = rexObjects.GetObject(self.sog.UUID)
-        
-        
-        #if not self.scene.GetSceneObjectPart(self.UUID):
-        #    print "No first sw component..."
-        #    return
-            
-        #self.sog = self.scene.GetSceneObjectPart(self.UUID).ParentGroup
-        #self.rop = rexObjects.GetObject(self.UUID)
+        self.ent = self.scene.GetEntityByNameRaw("swproject")
         
         rootfolder = rexprojectspacedataobjects.FolderInfo("/",0)
         
-        self.pos = V3()
-        self.component = Component(vScene, rootfolder, self.pos, None, 6,6,V3(0,0,0)) #XXX WAS: self.sog.AbsolutePosition
-        # self.component.sog.RootPart.Scale = V3(0,0,0)
+        self.pos = self.ent.placeable.transform.position()
+        self.component = Component(vScene, rootfolder, self.pos, None, 6,6, self.pos)
         self.components["/"] = self.component
         self.componentsAndDevelopersDict["/"] = []
         
@@ -277,7 +254,7 @@ class SWProject:
                 try:
                     component = self.components[item]
                 except KeyError:
-                    print "RexProjectSpace: unknown component in commit?:", item, "not in:", self.components.keys()
+                    print "RexProjectSpace: unknown component in commit -- possibly a new dir in a branch, and different branch used as reference:", item, "not in:", self.components.keys()
                 #perhaps one day we might tell component/file if
                 #it was removed,added or modified, but now we have
                 #only root level folders...
