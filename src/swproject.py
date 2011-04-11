@@ -70,7 +70,8 @@ class Component(ComponentBase):
 
         self.modifiedtextureid, self.removedtextureid,self.addedtextureid = None,None,None
         
-        ent = vScene.GetEntityByNameRaw("rps_component_" + self.name)
+        entname = "Component-%s" % self.name
+        ent = vScene.GetEntityByNameRaw(entname)
         #self.currenttexid = Component.addedtextureid
         # self.addedtextureid = self.CreateTexture(self.name,System.Drawing.Color.Black,System.Drawing.Color.SkyBlue)
         
@@ -82,7 +83,7 @@ class Component(ComponentBase):
             self.ent = ent
         else:
             print "loading component mesh"
-            new_mesh(self.scene, Component.MESHUUID, Component.MATERIAL, "Component-%s" % self.name,  
+            new_mesh(self.scene, Component.MESHUUID, Component.MATERIAL, entname,
                      V3(), self.pos, self.scale)
             
         #     self.rop.RexMaterials.AddMaterial(0,OpenMetaverse.UUID(self.currenttexid))
