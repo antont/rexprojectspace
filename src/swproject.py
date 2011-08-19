@@ -98,10 +98,9 @@ class Component(ComponentBase):
 
         # self.clickhandler = clickhandler.URLOpener(self.scene,self.sog,self.rop,self.folderinfo.url)
         
-        # self.modified = False
+        self.modified = False
         
     def AddChild(self,vFolderInfo):
-
         temp = self.pos
         p = V3(self.curColumn + temp.x() + self.curColumn * Component.offset,
                self.curRow + temp.y() + self.curRow * Component.offset,

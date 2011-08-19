@@ -39,6 +39,7 @@ class RexProjectSpaceInformationShouter:
         #nc.OnNewCommit += self.OnNewCommit
 
     def OnNewCommit(self, vCommit):
+        print "commit!"
         pass #self.scriptingbridge.Actor().llShout(0, vCommit.message)
 
     def OnNewIRCMessage(self, vMessage):
@@ -60,8 +61,8 @@ class RexProjectSpace(circuits.BaseComponent):
 
     def onNewEntity(self, entity, changeType):
         #print entity.Name
-        if entity.Name == "swproject":
-            #print "IRC: Found ChatApp!"
+        if entity.name == "swproject":
+            print "RexProjectSpace: found swproject entity!"
             self.scene.disconnect("EntityCreated(Scene::Entity*, AttributeChange::Type)", self.onNewEntity)
             self.Initialise()
 
@@ -105,14 +106,11 @@ class RexProjectSpace(circuits.BaseComponent):
         self.developers = []
 
         self.vcs = versioncontrolsystem.VersionControlSystem("naali")
-
-        projectpos = V3(131, 130, 25.2)
-        issuespawnpos = V3(125, 125, 25.2)
-
         self.tree = self.initTree("naali")
-
         self.project = self.initSWProject()
 
+        # projectpos = V3(131, 130, 25.2)
+        # issuespawnpos = V3(125, 125, 25.2)
         # temp = self.project.sog.AbsolutePosition
         projectpos = V3() #temp.X, temp.Y, temp.Z + 0.75)
         startpos = V3() #projectpos.X, projectpos.Y, projectpos.Z),
